@@ -4,15 +4,15 @@ import (
 	"fmt"
 	"runtime"
 
-	"./eight"
-	"./fetch"
-	"./five"
-	"./four"
-	"./one"
-	"./seven"
-	"./six"
-	"./three"
-	"./two"
+	"github.com/joshprzybyszewski/aoc2022/eight"
+	"github.com/joshprzybyszewski/aoc2022/fetch"
+	"github.com/joshprzybyszewski/aoc2022/five"
+	"github.com/joshprzybyszewski/aoc2022/four"
+	"github.com/joshprzybyszewski/aoc2022/one"
+	"github.com/joshprzybyszewski/aoc2022/seven"
+	"github.com/joshprzybyszewski/aoc2022/six"
+	"github.com/joshprzybyszewski/aoc2022/three"
+	"github.com/joshprzybyszewski/aoc2022/two"
 )
 
 func main() {
