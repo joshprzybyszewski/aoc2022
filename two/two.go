@@ -2,6 +2,7 @@ package two
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -19,7 +20,7 @@ func Two(
 		total += s
 	}
 
-	return fmt.Sprintf("%d", total), nil
+	return strconv.Itoa(total), nil
 }
 
 func score2(

@@ -2,6 +2,7 @@ package seven
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -27,8 +28,8 @@ func Two(
 		if newFreeSpace < requiredUnusedSpace {
 			continue
 		}
-		fmt.Printf("found %q\n\twith size: %d\n", d.name, mySize)
-		fmt.Printf("\tdeleting would bring free space to %d\n", newFreeSpace)
+		// fmt.Printf("found %q\n\twith size: %d\n", d.name, mySize)
+		// fmt.Printf("\tdeleting would bring free space to %d\n", newFreeSpace)
 
 		if dSize == -1 || mySize < dSize {
 			dSize = mySize
@@ -38,5 +39,5 @@ func Two(
 		return ``, fmt.Errorf("answer not found")
 	}
 
-	return fmt.Sprintf("%d", dSize), nil
+	return strconv.Itoa(dSize), nil
 }

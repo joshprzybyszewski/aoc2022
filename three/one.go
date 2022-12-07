@@ -2,6 +2,7 @@ package three
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -22,7 +23,7 @@ func One(
 		total += priority(c)
 	}
 
-	return fmt.Sprintf("%d", total), nil
+	return strconv.Itoa(total), nil
 }
 
 func common(
