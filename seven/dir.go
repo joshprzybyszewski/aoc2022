@@ -11,11 +11,14 @@ type dir struct {
 
 	parent   *dir
 	children []*dir
+
+	knownSize int
 }
 
 func newRootDir() *dir {
 	return &dir{
-		name: rootDirName,
+		name:      rootDirName,
+		knownSize: -1,
 	}
 }
 
@@ -42,8 +45,9 @@ func newDir(
 	}
 
 	return &dir{
-		parent: parent,
-		name:   name,
+		parent:    parent,
+		name:      name,
+		knownSize: -1,
 	}, nil
 }
 
@@ -64,8 +68,18 @@ func (d *dir) addFile(f *file) {
 	d.files = append(d.files, f)
 }
 
+func (d *dir) complete() {
+	d.knownSize = d.size()
+	for _, c := range d.children {
+		c.complete()
+	}
+}
+
 func (d *dir) size() int {
-	// TODO memoize
+	if d.knownSize >= 0 {
+		return d.knownSize
+	}
+
 	total := 0
 	for _, f := range d.files {
 		total += f.size
@@ -76,11 +90,34 @@ func (d *dir) size() int {
 	return total
 }
 
-func (d *dir) getAllChildren() []*dir {
+func (d *dir) getChildrenWithMaxSize(
+	maxSize int,
+) []*dir {
+
 	output := make([]*dir, 0, len(d.children))
 	for _, c := range d.children {
-		output = append(output, c)
-		output = append(output, c.getAllChildren()...)
+		if c.size() <= maxSize {
+			output = append(output, c)
+		}
+		output = append(output, c.getChildrenWithMaxSize(maxSize)...)
 	}
 	return output
+}
+
+func (d *dir) getMinSizeGreaterThan(
+	floor int,
+) int {
+	if d.size() < floor {
+		return -1
+	}
+
+	min := d.size()
+	var otherMin int
+	for _, c := range d.children {
+		otherMin = c.getMinSizeGreaterThan(floor)
+		if otherMin != -1 && otherMin < min {
+			min = otherMin
+		}
+	}
+	return min
 }

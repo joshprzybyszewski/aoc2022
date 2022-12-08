@@ -31,30 +31,14 @@ func newDirBuilder() *dirBuilder {
 	}
 }
 
-func (db *dirBuilder) allDirs() []*dir {
-	children := db.root.getAllChildren()
-
-	output := make([]*dir, 0, 1+len(children))
-	output = append(output, db.root)
-	output = append(output, children...)
-
-	return output
-}
-
 func (db *dirBuilder) allDirsWithMaxSize(
 	maxSize int,
 ) []*dir {
 
-	var output []*dir
-	if db.root.size() < maxSize {
+	output := db.root.getChildrenWithMaxSize(maxSize)
+	if db.root.size() <= maxSize {
+		// double check that the root shouldn't also be included
 		output = append(output, db.root)
-	}
-
-	children := db.root.getAllChildren()
-	for _, c := range children {
-		if c.size() < maxSize {
-			output = append(output, c)
-		}
 	}
 
 	return output
@@ -67,6 +51,8 @@ func (db *dirBuilder) processLines(
 	for _, line := range lines {
 		db.processLine(line)
 	}
+
+	db.root.complete()
 
 	return nil
 }
