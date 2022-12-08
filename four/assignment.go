@@ -32,12 +32,3 @@ func newAssignment(r string) (assignment, error) {
 		end:   end,
 	}, nil
 }
-
-func (a assignment) isSubset(other assignment) bool {
-	return a.start >= other.start && a.end <= other.end
-}
-
-func (a assignment) overlaps(other assignment) bool {
-	return (a.start >= other.start && a.start <= other.end) ||
-		(a.end >= other.start && a.end <= other.end)
-}

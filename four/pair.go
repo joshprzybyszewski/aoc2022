@@ -31,12 +31,3 @@ func (p pair) overlapping() bool {
 		(p[1].start >= p[0].start && p[1].start <= p[0].end) ||
 		(p[1].end >= p[0].start && p[1].end <= p[0].end)
 }
-
-// func (a assignment) isSubset(other assignment) bool {
-// 	return a.start >= other.start && a.end <= other.end
-// }
-
-// func (a assignment) overlaps(other assignment) bool {
-// 	return (a.start >= other.start && a.start <= other.end) ||
-// 		(a.end >= other.start && a.end <= other.end)
-// }

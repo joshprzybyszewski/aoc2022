@@ -153,13 +153,15 @@ func BenchmarkAll(b *testing.B) {
 			var err error
 			for n := 0; n < b.N; n++ {
 				answer, err = four.One(input)
+				if err != nil {
+					b.Logf("got error: %q", err)
+					b.Fail()
+				}
 				if answer != `500` {
 					b.Logf("got answer: %q", answer)
 					b.Fail()
 				}
-				if err != nil {
-					b.Fail()
-				}
+
 			}
 		})
 
@@ -168,11 +170,12 @@ func BenchmarkAll(b *testing.B) {
 			var err error
 			for n := 0; n < b.N; n++ {
 				answer, err = four.Two(input)
-				if answer != `815` {
-					b.Logf("got answer: %q", answer)
+				if err != nil {
+					b.Logf("got error: %q", err)
 					b.Fail()
 				}
-				if err != nil {
+				if answer != `815` {
+					b.Logf("got answer: %q", answer)
 					b.Fail()
 				}
 			}
