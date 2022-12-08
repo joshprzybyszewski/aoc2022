@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func Answer(
+func postAnswerToWebsite(
 	day int,
 	level int,
 	answer string,
