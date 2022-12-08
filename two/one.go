@@ -11,9 +11,12 @@ func One(
 ) (string, error) {
 	lines := strings.Split(input, "\n")
 
+	var s int
+	var err error
+
 	total := 0
 	for _, line := range lines {
-		s, err := score(line)
+		s, err = score(line)
 		if err != nil {
 			return ``, err
 		}
@@ -30,17 +33,12 @@ func score(
 		return 0, nil
 	}
 
-	values := strings.Split(line, ` `)
-	if len(values) != 2 {
-		return 0, fmt.Errorf(`should have two values: %q`, line)
-	}
-
-	ss, err := shapeScore(values[1])
+	ss, err := shapeScore(line[2])
 	if err != nil {
 		return 0, err
 	}
 
-	ws, err := winScore(values[0], values[1])
+	ws, err := winScore(line[0], line[2])
 	if err != nil {
 		return 0, err
 	}
@@ -49,14 +47,14 @@ func score(
 }
 
 func shapeScore(
-	encChar string,
+	encChar byte,
 ) (int, error) {
 	switch encChar {
-	case `X`:
+	case 'X':
 		return 1, nil
-	case `Y`:
+	case 'Y':
 		return 2, nil
-	case `Z`:
+	case 'Z':
 		return 3, nil
 	}
 
@@ -64,34 +62,34 @@ func shapeScore(
 }
 
 func winScore(
-	encChar1, encChar2 string,
+	encChar1, encChar2 byte,
 ) (int, error) {
 	switch encChar2 {
-	case `X`: // rock
+	case 'X': // rock
 		switch encChar1 {
-		case `A`: // rock
+		case 'A': // rock
 			return 3, nil
-		case `B`: // paper
+		case 'B': // paper
 			return 0, nil
-		case `C`: // scissors
+		case 'C': // scissors
 			return 6, nil
 		}
-	case `Y`: // paper
+	case 'Y': // paper
 		switch encChar1 {
-		case `A`: // rock
+		case 'A': // rock
 			return 6, nil
-		case `B`: // paper
+		case 'B': // paper
 			return 3, nil
-		case `C`: // scissors
+		case 'C': // scissors
 			return 0, nil
 		}
-	case `Z`: // scissors
+	case 'Z': // scissors
 		switch encChar1 {
-		case `A`: // rock
+		case 'A': // rock
 			return 0, nil
-		case `B`: // paper
+		case 'B': // paper
 			return 6, nil
-		case `C`: // scissors
+		case 'C': // scissors
 			return 3, nil
 		}
 	}
