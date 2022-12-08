@@ -33,9 +33,9 @@ func runParts(
 	input string,
 	part1, part2 func(string) (string, error),
 ) error {
-	fmt.Printf("==============\n")
+	fmt.Printf("=====================================\n")
 	fmt.Printf("Day %d\n", day)
-	fmt.Printf("--------------\n")
+	fmt.Printf("-------------------------------------\n")
 	fmt.Printf("Part 1\n")
 	answer, err := part1(input)
 	if err != nil {
@@ -43,7 +43,7 @@ func runParts(
 	}
 	fmt.Printf("Part 1 Answer: %q\n", answer)
 
-	fmt.Printf("--------------\n")
+	fmt.Printf("-------------------------------------\n")
 	fmt.Printf("Part 2\n")
 	answer, err = part2(input)
 	if err != nil {

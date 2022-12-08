@@ -3,6 +3,7 @@ package fetch
 import (
 	"fmt"
 	"runtime"
+	"time"
 )
 
 func Instrument(
@@ -18,12 +19,15 @@ func report(solver func(string) (string, error)) func(string) (string, error) {
 	return func(input string) (string, error) {
 		runtime.ReadMemStats(&ms)
 
+		t0 := time.Now()
+
 		answer, err := solver(input)
 
+		t1 := time.Now()
 		runtime.ReadMemStats(&ms2)
 
-		fmt.Printf("\ttotal alloc: %d\n", ms2.TotalAlloc-ms.TotalAlloc)
-		fmt.Printf("\theap alloc: %d\n", ms2.HeapAlloc-ms.HeapAlloc)
+		fmt.Printf("\tduration  :\t%s\n", t1.Sub(t0))
+		fmt.Printf("\theap alloc:\t%d\n", ms2.HeapAlloc-ms.HeapAlloc)
 
 		return answer, err
 	}
