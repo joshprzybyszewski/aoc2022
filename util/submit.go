@@ -42,7 +42,7 @@ func submitAnswer(
 	var resp string
 	fmt.Printf("Submit %q as answer for day %d part %d? (Y/n)\n", answer, day, level)
 	fmt.Scanf("%s", &resp)
-	if len(resp) == 0 || (resp != `y` && resp != `Y`) {
+	if resp != `y` && resp != `Y` {
 		return
 	}
 	resp, err := postAnswerToWebsite(day, level, answer)

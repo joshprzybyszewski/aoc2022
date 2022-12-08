@@ -9,7 +9,8 @@ func One(
 	input string,
 ) (string, error) {
 	lines := strings.Split(input, "\n")
-	nv := numVisible(toGrid(lines))
+	g := toGrid(lines)
+	nv := numVisible(&g)
 
 	return strconv.Itoa(nv), nil
 }
@@ -18,9 +19,7 @@ func toGrid(
 	lines []string,
 ) [99][99]int {
 	var output [99][99]int
-	// output := make([99][99]int, len(lines)-1)
 	for i := range output {
-		// output[i] = make([]int, len(lines[i]))
 		for j := range lines[i] {
 			output[i][j] = int(lines[i][j] - '0')
 		}
@@ -28,8 +27,9 @@ func toGrid(
 	return output
 }
 
+// nolint:gocyclo yes i know
 func numVisible(
-	grid [99][99]int,
+	grid *[99][99]int,
 ) int {
 	total := (4 * len(grid)) - 4
 

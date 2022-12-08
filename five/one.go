@@ -4,7 +4,7 @@ import (
 	"strings"
 )
 
-func newStacks() ([]*stack, error) {
+func newStacks() []*stack {
 	// :badpokerface: yes, I just manually created the stacks instead of reading them in.
 	// I figured it was faster to get an answer than to build a generic reader.
 	/*
@@ -32,7 +32,7 @@ func newStacks() ([]*stack, error) {
 	output[7].push([]byte(`ZNWGVBRT`)...)
 	output[8].push([]byte(`WGDNPL`)...)
 
-	return output, nil
+	return output
 }
 
 func One(
@@ -70,17 +70,17 @@ func One(
 func convertInputToStacksAndInstructions(
 	instructionLines []string,
 ) ([]*stack, []instruction, error) {
-	stacks, err := newStacks()
-	if err != nil {
-		return nil, nil, err
-	}
+	stacks := newStacks()
+
+	var inst instruction
+	var err error
 
 	insts := make([]instruction, 0, len(instructionLines))
 	for _, line := range instructionLines {
 		if line == `` {
 			continue
 		}
-		inst, err := newInstruction(line)
+		inst, err = newInstruction(line)
 		if err != nil {
 			return nil, nil, err
 		}

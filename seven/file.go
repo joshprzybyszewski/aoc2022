@@ -14,7 +14,7 @@ type file struct {
 func newFile(line string) (*file, error) {
 	parts := strings.Split(line, ` `)
 	if len(parts) != 2 {
-		return nil, fmt.Errorf("line should have two parts: %q", line)
+		return nil, fmt.Errorf("file line should have two parts: %q", line)
 	}
 
 	size, err := strconv.Atoi(parts[0])

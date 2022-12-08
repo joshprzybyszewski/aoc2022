@@ -32,7 +32,7 @@ func newDir(
 
 	parts := strings.Split(line, ` `)
 	if len(parts) != 2 {
-		return nil, fmt.Errorf("line should have two parts: %q", line)
+		return nil, fmt.Errorf("dir line should have two parts: %q", line)
 	}
 
 	if parts[0] != `dir` {

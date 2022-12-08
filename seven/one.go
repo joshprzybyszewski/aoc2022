@@ -15,7 +15,10 @@ func One(
 	lines := strings.Split(input, "\n")
 
 	db := newDirBuilder()
-	db.processLines(lines)
+	err := db.processLines(lines)
+	if err != nil {
+		return ``, err
+	}
 
 	dirs := db.allDirsWithMaxSize(100000)
 

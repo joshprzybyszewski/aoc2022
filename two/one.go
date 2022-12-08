@@ -63,7 +63,7 @@ func shapeScore(
 
 func winScore(
 	encChar1, encChar2 byte,
-) (int, error) {
+) (int, error) { // nolint:gocyclo yes i know
 	switch encChar2 {
 	case 'X': // rock
 		switch encChar1 {

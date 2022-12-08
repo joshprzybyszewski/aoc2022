@@ -21,9 +21,9 @@ func init() {
 func getInputFromWebsite(
 	day int,
 ) (string, error) {
-	url := fmt.Sprintf(`https://adventofcode.com/%d/day/%d/input`, year, day)
+	inputURL := fmt.Sprintf(`https://adventofcode.com/%d/day/%d/input`, year, day)
 
-	req, err := http.NewRequest(`GET`, url, nil)
+	req, err := http.NewRequest(`GET`, inputURL, nil)
 	if err != nil {
 		return ``, err
 	}

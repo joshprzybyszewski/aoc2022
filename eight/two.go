@@ -9,14 +9,14 @@ func Two(
 	input string,
 ) (string, error) {
 	lines := strings.Split(input, "\n")
-	max := getMaxSceneryScore(toGrid(lines))
+	g := toGrid(lines)
+	max := getMaxSceneryScore(&g)
 
 	return strconv.Itoa(max), nil
 }
 
 func getMaxSceneryScore(
-	grid [99][99]int,
-	// grid [][]int,
+	grid *[99][99]int,
 ) int {
 
 	// all of the trees on the edge have a viewing score of zero in one direction

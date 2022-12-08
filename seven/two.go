@@ -12,7 +12,10 @@ func Two(
 	lines := strings.Split(input, "\n")
 
 	db := newDirBuilder()
-	db.processLines(lines)
+	err := db.processLines(lines)
+	if err != nil {
+		return ``, err
+	}
 
 	totalSpace := 70000000
 	requiredUnusedSpace := 30000000

@@ -35,7 +35,7 @@ func newInstruction(line string) (instruction, error) {
 	}
 
 	i1 = i2 + 4 // skip past " to "
-	// i2 = strings.Index(line[i1:], ` `) // the last number goes to the end of the line
+	// the last number goes to the end of the line, so we don't use i2 again
 
 	d, err = strconv.Atoi(line[i1:])
 	if err != nil {

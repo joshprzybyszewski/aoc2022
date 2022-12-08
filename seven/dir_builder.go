@@ -48,8 +48,13 @@ func (db *dirBuilder) processLines(
 	lines []string,
 ) error {
 
+	var err error
+
 	for _, line := range lines {
-		db.processLine(line)
+		err = db.processLine(line)
+		if err != nil {
+			return err
+		}
 	}
 
 	db.root.complete()
@@ -58,6 +63,10 @@ func (db *dirBuilder) processLines(
 }
 
 func (db *dirBuilder) processLine(line string) error {
+	if line == `` {
+		return nil
+	}
+
 	if isDir(line) {
 		d, err := newDir(
 			db.curDir,
