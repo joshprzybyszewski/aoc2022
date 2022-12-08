@@ -1,8 +1,6 @@
 package one
 
 import (
-	"fmt"
-	"sort"
 	"strconv"
 	"strings"
 )
@@ -12,7 +10,9 @@ func Two(
 ) (string, error) {
 	lines := strings.Split(input, "\n")
 
-	var elves []int
+	var val int
+	var err error
+	elves := make([]int, 0, 236)
 	cur := 0
 	for _, line := range lines {
 		if line == `` {
@@ -21,21 +21,26 @@ func Two(
 			continue
 		}
 
-		val, err := strconv.Atoi(line)
+		val, err = strconv.Atoi(line)
 		if err != nil {
 			return ``, err
 		}
 		cur += val
 	}
-	sort.Ints(elves)
-	total := 0
-	for e := 1; e <= 3; e++ {
-		i := len(elves) - e
-		if i < 0 {
-			break
+	top3 := [3]int{-1. - 1, -1}
+
+	for _, e := range elves {
+		if e > top3[0] {
+			top3[2] = top3[1]
+			top3[1] = top3[0]
+			top3[0] = e
+		} else if e > top3[1] {
+			top3[2] = top3[1]
+			top3[1] = e
+		} else if e > top3[2] {
+			top3[2] = e
 		}
-		total += elves[i]
 	}
 
-	return fmt.Sprintf("%d", total), nil
+	return strconv.Itoa(top3[0] + top3[1] + top3[2]), nil
 }

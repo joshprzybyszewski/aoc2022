@@ -1,7 +1,6 @@
 package one
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 )
@@ -10,6 +9,9 @@ func One(
 	input string,
 ) (string, error) {
 	lines := strings.Split(input, "\n")
+
+	var val int
+	var err error
 
 	max := -1
 	cur := 0
@@ -22,12 +24,12 @@ func One(
 			continue
 		}
 
-		val, err := strconv.Atoi(line)
+		val, err = strconv.Atoi(line)
 		if err != nil {
 			return ``, err
 		}
 		cur += val
 	}
 
-	return fmt.Sprintf("%d", max), nil
+	return strconv.Itoa(max), nil
 }
