@@ -8,13 +8,14 @@ var (
 
 func BenchmarkFind(b *testing.B) {
 	/*
-		goos: darwin
+		goos: linux
 		goarch: amd64
-		cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
-		BenchmarkFind/One-12         	  151975	      9082 ns/op	   16388 B/op	       2 allocs/op
-		BenchmarkFind/Two-12         	  549766	      2255 ns/op	       4 B/op	       1 allocs/op
+		pkg: github.com/joshprzybyszewski/aoc2022/six
+		cpu: Intel(R) Core(TM) i5-3570 CPU @ 3.40GHz
+		BenchmarkFind/One-4         	  360752	      3122 ns/op	       4 B/op	       1 allocs/op
+		BenchmarkFind/Two-4         	  435723	      2796 ns/op	       4 B/op	       1 allocs/op
 		PASS
-		ok  	filepath/aoc2022/six	4.803s
+		ok  	github.com/joshprzybyszewski/aoc2022/six	3.410s
 	*/
 
 	b.Run(`One`, func(b *testing.B) {

@@ -6,8 +6,6 @@ import (
 )
 
 const (
-	window       = 14
-	halfWindow   = window / 2
 	lastSeenSize = int(byte('z')) + 1
 )
 
@@ -15,6 +13,17 @@ const (
 func Two(
 	input string,
 ) (string, error) {
+	return getMarkerOfUniqueWindow(
+		input,
+		14,
+	)
+}
+
+func getMarkerOfUniqueWindow(
+	input string,
+	window int,
+) (string, error) {
+
 	// we know that the whole input is in the range A-Za-z, so this array acts as a map lookup
 	// of the last time a given byte (aka character) was seen.
 	lastSeen := [lastSeenSize]int{}
