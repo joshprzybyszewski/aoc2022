@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/joshprzybyszewski/aoc2022/fetch"
+	"github.com/joshprzybyszewski/aoc2022/util"
 )
 
 func BenchmarkAll(b *testing.B) {
@@ -71,13 +71,13 @@ func BenchmarkAll(b *testing.B) {
 
 	for _, bm := range benchmarks {
 		b.Run(fmt.Sprintf("Day %d", bm.day), func(b *testing.B) {
-			input, err := fetch.Input(bm.day)
+			input, err := util.Input(bm.day)
 			if err != nil {
 				b.Logf("Error fetching input: %q", err)
 				b.Fail()
 			}
 
-			part1, part2 := fetch.Solvers(bm.day)
+			part1, part2 := util.Solvers(bm.day)
 
 			b.Run(`Part One`, func(b *testing.B) {
 				var answer string

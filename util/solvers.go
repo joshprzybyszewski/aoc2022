@@ -1,4 +1,4 @@
-package fetch
+package util
 
 import (
 	"github.com/joshprzybyszewski/aoc2022/eight"

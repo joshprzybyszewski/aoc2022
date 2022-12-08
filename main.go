@@ -3,19 +3,19 @@ package main
 import (
 	"fmt"
 
-	"github.com/joshprzybyszewski/aoc2022/fetch"
+	"github.com/joshprzybyszewski/aoc2022/util"
 )
 
 func main() {
 	day := 9
-	input, err := fetch.Input(day)
+	input, err := util.Input(day)
 	if err != nil {
 		panic(err)
 	}
 
-	part1, part2 := fetch.Solvers(day)
-	part1, part2 = fetch.Instrument(part1, part2)
-	part1, part2 = fetch.Submit(day, part1, part2)
+	part1, part2 := util.Solvers(day)
+	part1, part2 = util.Instrument(part1, part2)
+	part1, part2 = util.Submit(day, part1, part2)
 
 	err = runParts(
 		day,
