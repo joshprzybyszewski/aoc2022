@@ -1,18 +1,23 @@
 package four
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 func Two(
 	input string,
 ) (string, error) {
-	ass, err := convertInputToAssignments(input)
+	lines := strings.Split(input, "\n")
+
+	pairs, err := convertInputToAssignments(lines)
 	if err != nil {
 		return ``, err
 	}
 
 	total := 0
-	for _, as := range ass {
-		if overlapping(as[0], as[1]) {
+	for _, p := range pairs {
+		if p.overlapping() {
 			total++
 		}
 	}

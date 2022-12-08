@@ -2,65 +2,22 @@ package four
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 )
-
-type assignment struct {
-	start int
-	end   int
-}
-
-func newAssignment(r string) (assignment, error) {
-	vals := strings.Split(r, `-`)
-	if len(vals) != 2 {
-		return assignment{}, fmt.Errorf("should provide two values: %q", r)
-	}
-
-	start, err := strconv.Atoi(vals[0])
-	if err != nil {
-		return assignment{}, err
-	}
-
-	end, err := strconv.Atoi(vals[1])
-	if err != nil {
-		return assignment{}, err
-	}
-
-	return assignment{
-		start: start,
-		end:   end,
-	}, nil
-}
-
-func (a assignment) isSubset(other assignment) bool {
-	return a.start >= other.start && a.end <= other.end
-}
-
-func (a assignment) overlaps(other assignment) bool {
-	return (a.start >= other.start && a.start <= other.end) ||
-		(a.end >= other.start && a.end <= other.end)
-}
-
-func fullyContained(a, b assignment) bool {
-	return a.isSubset(b) || b.isSubset(a)
-}
-
-func overlapping(a, b assignment) bool {
-	return a.overlaps(b) || b.overlaps(a)
-}
 
 func One(
 	input string,
 ) (string, error) {
-	ass, err := convertInputToAssignments(input)
+	lines := strings.Split(input, "\n")
+
+	pairs, err := convertInputToAssignments(lines)
 	if err != nil {
 		return ``, err
 	}
 
 	total := 0
-	for _, as := range ass {
-		if fullyContained(as[0], as[1]) {
+	for _, p := range pairs {
+		if p.fullyContained() {
 			total++
 		}
 	}
@@ -69,26 +26,20 @@ func One(
 }
 
 func convertInputToAssignments(
-	input string,
-) ([][2]assignment, error) {
-	lines := strings.Split(input, "\n")
+	lines []string,
+) ([]pair, error) {
 
-	output := make([][2]assignment, 0, len(lines))
+	output := make([]pair, 0, len(lines))
 
 	for _, line := range lines {
 		if line == `` {
 			continue
 		}
-		as := [2]assignment{}
-		ranges := strings.Split(line, `,`)
-		for i, r := range ranges {
-			a, err := newAssignment(r)
-			if err != nil {
-				return nil, err
-			}
-			as[i] = a
+		p, err := newPair(line)
+		if err != nil {
+			return nil, err
 		}
-		output = append(output, as)
+		output = append(output, p)
 	}
 
 	return output, nil
