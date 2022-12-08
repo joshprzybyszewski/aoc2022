@@ -1,7 +1,6 @@
 package four
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 )
@@ -11,7 +10,7 @@ func Two(
 ) (string, error) {
 	lines := strings.Split(input, "\n")
 
-	var s1, e1, s2, e2 int
+	var s1, e1, s2, e2, i1, i2 int
 	var err error
 	total := 0
 
@@ -19,10 +18,32 @@ func Two(
 		if line == `` {
 			continue
 		}
-		_, err = fmt.Sscanf(line, "%d-%d,%d-%d", &s1, &e1, &s2, &e2)
+
+		i1 = 0
+		i2 = strings.Index(line, `-`)
+		s1, err = strconv.Atoi(line[i1:i2])
 		if err != nil {
 			return ``, err
 		}
+		i1 = i2 + 1
+		i2 = strings.Index(line, `,`)
+		e1, err = strconv.Atoi(line[i1:i2])
+		if err != nil {
+			return ``, err
+		}
+		i1 = i2 + 1
+		i2 = strings.LastIndex(line, `-`)
+		s2, err = strconv.Atoi(line[i1:i2])
+		if err != nil {
+			return ``, err
+		}
+		i1 = i2 + 1
+		i2 = len(line)
+		e2, err = strconv.Atoi(line[i1:i2])
+		if err != nil {
+			return ``, err
+		}
+
 		if (s1 >= s2 && s1 <= e2) ||
 			(e1 >= s2 && e1 <= e2) ||
 			(s2 >= s1 && s2 <= e1) ||
