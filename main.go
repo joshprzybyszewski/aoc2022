@@ -7,8 +7,7 @@ import (
 )
 
 func main() {
-	day := 8
-
+	day := 9
 	input, err := fetch.Input(day)
 	if err != nil {
 		panic(err)
