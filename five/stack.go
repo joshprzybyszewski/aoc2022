@@ -37,8 +37,5 @@ func (s *stack) popN(n int) ([]byte, error) {
 }
 
 func (s *stack) push(ss ...byte) {
-	// for i := len(ss) - 1; i >= 0; i-- {
-	// s.values = append(s.values, ss[i])
-	// }
 	s.values = append(s.values, ss...)
 }

@@ -4,9 +4,7 @@ import (
 	"strings"
 )
 
-func newStacks(
-	lines []string,
-) ([]*stack, error) {
+func newStacks() ([]*stack, error) {
 	// :badpokerface: yes, I just manually created the stacks instead of reading them in.
 	// I figured it was faster to get an answer than to build a generic reader.
 	/*
@@ -24,17 +22,7 @@ func newStacks(
 	for i := range output {
 		output[i] = newStack()
 	}
-	// output[0].push([]byte(`DTWNL`)...)
-	// output[1].push([]byte(`HPC`)...)
-	// output[2].push([]byte(`JMGDNHPW`)...)
-	// output[3].push([]byte(`LQTNSWC`)...)
-	// output[4].push([]byte(`NCHP`)...)
-	// output[5].push([]byte(`BQWMDNHT`)...)
-	// output[6].push([]byte(`LSGJRBM`)...)
-	// output[7].push([]byte(`TRBVGWNZ`)...)
-	// output[8].push([]byte(`LPNDGW`)...)
-
-	output[0].push([]byte(`LNWTD`)...) // todo invert
+	output[0].push([]byte(`LNWTD`)...)
 	output[1].push([]byte(`CPH`)...)
 	output[2].push([]byte(`WPHNDGMJ`)...)
 	output[3].push([]byte(`CWSNTQL`)...)
@@ -50,7 +38,12 @@ func newStacks(
 func One(
 	input string,
 ) (string, error) {
-	stacks, ins, err := convertInputToStacksAndInstructions(input)
+	stacks, ins, err := convertInputToStacksAndInstructions(
+		strings.Split(
+			input[strings.Index(input, "\n\n")+2:],
+			"\n",
+		),
+	)
 	if err != nil {
 		return ``, err
 	}
@@ -75,13 +68,9 @@ func One(
 }
 
 func convertInputToStacksAndInstructions(
-	input string,
+	instructionLines []string,
 ) ([]*stack, []instruction, error) {
-	s := strings.Split(input, "\n\n")
-	stackLines := strings.Split(s[0], "\n")
-	instructionLines := strings.Split(s[1], "\n")
-
-	stacks, err := newStacks(stackLines)
+	stacks, err := newStacks()
 	if err != nil {
 		return nil, nil, err
 	}

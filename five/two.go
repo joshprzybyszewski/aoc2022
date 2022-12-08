@@ -5,7 +5,12 @@ import "strings"
 func Two(
 	input string,
 ) (string, error) {
-	stacks, ins, err := convertInputToStacksAndInstructions(input)
+	stacks, ins, err := convertInputToStacksAndInstructions(
+		strings.Split(
+			input[strings.Index(input, "\n\n")+2:],
+			"\n",
+		),
+	)
 	if err != nil {
 		return ``, err
 	}
