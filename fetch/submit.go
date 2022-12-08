@@ -68,8 +68,7 @@ func isCorrect(
 func hasCorrectAnswer(
 	day, level int,
 ) bool {
-	filename := fmt.Sprintf("answers/day%d-level%d.txt", day, level)
-	data, err := os.ReadFile(filename)
+	data, err := os.ReadFile(getAnswerFilname(day, level))
 	if err != nil {
 		return false
 	}
@@ -80,8 +79,7 @@ func recordCorrectAnswer(
 	day, level int,
 	answer string,
 ) {
-	filename := fmt.Sprintf("answers/day%d-level%d.txt", day, level)
-	f, err := os.Create(filename)
+	f, err := os.Create(getAnswerFilname(day, level))
 	if err != nil {
 		fmt.Printf("error while creating: %v\n", err)
 		return
@@ -92,4 +90,8 @@ func recordCorrectAnswer(
 	if err != nil {
 		fmt.Printf("error while writing: %v\n", err)
 	}
+}
+
+func getAnswerFilname(day, level int) string {
+	return fmt.Sprintf("answers/day%d-level%d.txt", day, level)
 }
