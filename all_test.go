@@ -19,22 +19,22 @@ func BenchmarkAll(b *testing.B) {
 		goarch: amd64
 		pkg: github.com/joshprzybyszewski/aoc2022
 		cpu: Intel(R) Core(TM) i5-3570 CPU @ 3.40GHz
-		BenchmarkAll/Day_1/Part_One-4         	   17542	     67235 ns/op	   40983 B/op	       3 allocs/op
-		BenchmarkAll/Day_1/Part_Two-4         	   13522	     83610 ns/op	   45095 B/op	      13 allocs/op
-		BenchmarkAll/Day_2/Part_One-4         	    3050	    399896 ns/op	  120965 B/op	    2502 allocs/op
-		BenchmarkAll/Day_2/Part_Two-4         	    3580	    392836 ns/op	  120965 B/op	    2502 allocs/op
-		BenchmarkAll/Day_3/Part_One-4         	   21208	     55440 ns/op	    4868 B/op	       2 allocs/op
-		BenchmarkAll/Day_3/Part_Two-4         	   21242	     59418 ns/op	   13780 B/op	      55 allocs/op
-		BenchmarkAll/Day_4/Part_One-4         	    3025	    450535 ns/op	  145190 B/op	    3004 allocs/op
-		BenchmarkAll/Day_4/Part_Two-4         	    2763	    423436 ns/op	  145190 B/op	    3004 allocs/op
-		BenchmarkAll/Day_5/Part_One-4         	    1252	    916973 ns/op	   66394 B/op	    2615 allocs/op
-		BenchmarkAll/Day_5/Part_Two-4         	    1310	    889754 ns/op	   66427 B/op	    2614 allocs/op
-		BenchmarkAll/Day_6/Part_One-4         	  353290	      3224 ns/op	       4 B/op	       1 allocs/op
-		BenchmarkAll/Day_6/Part_Two-4         	  421429	      2957 ns/op	       4 B/op	       1 allocs/op
-		BenchmarkAll/Day_7/Part_One-4         	    5552	    258292 ns/op	   91816 B/op	    1877 allocs/op
-		BenchmarkAll/Day_7/Part_Two-4         	    5040	    249470 ns/op	   92335 B/op	    1871 allocs/op
+		BenchmarkAll/Day_1/Part_One-4         	   18214	     68278 ns/op	   40983 B/op	       3 allocs/op
+		BenchmarkAll/Day_1/Part_Two-4         	   14677	     83095 ns/op	   45096 B/op	      13 allocs/op
+		BenchmarkAll/Day_2/Part_One-4         	    2995	    388317 ns/op	  120965 B/op	    2502 allocs/op
+		BenchmarkAll/Day_2/Part_Two-4         	    3392	    404177 ns/op	  120965 B/op	    2502 allocs/op
+		BenchmarkAll/Day_3/Part_One-4         	   21990	     54179 ns/op	    4868 B/op	       2 allocs/op
+		BenchmarkAll/Day_3/Part_Two-4         	   20829	     56839 ns/op	   13780 B/op	      55 allocs/op
+		BenchmarkAll/Day_4/Part_One-4         	    2812	    449865 ns/op	  145192 B/op	    3004 allocs/op
+		BenchmarkAll/Day_4/Part_Two-4         	    2730	    449404 ns/op	  145190 B/op	    3004 allocs/op
+		BenchmarkAll/Day_5/Part_One-4         	    1372	    894679 ns/op	   66394 B/op	    2615 allocs/op
+		BenchmarkAll/Day_5/Part_Two-4         	    1353	    894593 ns/op	   66426 B/op	    2614 allocs/op
+		BenchmarkAll/Day_6/Part_One-4         	  360046	      3374 ns/op	       4 B/op	       1 allocs/op
+		BenchmarkAll/Day_6/Part_Two-4         	  404757	      2932 ns/op	       4 B/op	       1 allocs/op
+		BenchmarkAll/Day_7/Part_One-4         	    4510	    235649 ns/op	   79863 B/op	    1811 allocs/op
+		BenchmarkAll/Day_7/Part_Two-4         	    5328	    208960 ns/op	   76824 B/op	    1705 allocs/op
 		PASS
-		ok  	github.com/joshprzybyszewski/aoc2022	21.510s
+		ok  	github.com/joshprzybyszewski/aoc2022	19.991s
 	*/
 
 	b.Run(`Day 1`, func(b *testing.B) {
