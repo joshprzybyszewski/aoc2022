@@ -1,6 +1,9 @@
 package five
 
-import "fmt"
+import (
+	"strconv"
+	"strings"
+)
 
 type instruction struct {
 	source   int
@@ -9,12 +12,36 @@ type instruction struct {
 }
 
 func newInstruction(line string) (instruction, error) {
+	// The `line` looks like:
 	// "move 6 from 6 to 5"
+	// Using Sscanf allocates a lot of bytes to the heap, so
+	// we avoid that with this indexing weirdness.
 	var q, s, d int
-	_, err := fmt.Sscanf(line, "move %d from %d to %d", &q, &s, &d)
+	var err error
+
+	i1 := 5
+	i2 := i1 + strings.Index(line[i1:], ` `)
+	q, err = strconv.Atoi(line[i1:i2])
 	if err != nil {
 		return instruction{}, err
 	}
+
+	i1 = i2 + 6 // skip past " from "
+	i2 = i1 + strings.Index(line[i1:], ` `)
+
+	s, err = strconv.Atoi(line[i1:i2])
+	if err != nil {
+		return instruction{}, err
+	}
+
+	i1 = i2 + 4 // skip past " to "
+	// i2 = strings.Index(line[i1:], ` `) // the last number goes to the end of the line
+
+	d, err = strconv.Atoi(line[i1:])
+	if err != nil {
+		return instruction{}, err
+	}
+
 	return instruction{
 		quantity: q,
 		source:   s,
