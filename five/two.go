@@ -1,5 +1,7 @@
 package five
 
+import "strings"
+
 func Two(
 	input string,
 ) (string, error) {
@@ -9,20 +11,16 @@ func Two(
 	}
 
 	for _, inst := range ins {
-		values := make([]string, 0, inst.quantity)
-		for i := 0; i < inst.quantity; i++ {
-			v, err := stacks[inst.source-1].pop()
-			if err != nil {
-				return ``, err
-			}
-			values = append(values, v)
+		values, err := stacks[inst.source-1].popN(inst.quantity)
+		if err != nil {
+			return ``, err
 		}
 		stacks[inst.dest-1].push(values...)
 	}
 
-	output := ``
+	var sb strings.Builder
 	for _, s := range stacks {
-		output += s.top()
+		sb.WriteByte(s.top())
 	}
-	return output, nil
+	return sb.String(), nil
 }

@@ -19,22 +19,22 @@ func BenchmarkAll(b *testing.B) {
 		goarch: amd64
 		pkg: github.com/joshprzybyszewski/aoc2022
 		cpu: Intel(R) Core(TM) i5-3570 CPU @ 3.40GHz
-		BenchmarkAll/Day_1/Part_One-4         	   18178	     68507 ns/op	   40983 B/op	       3 allocs/op
-		BenchmarkAll/Day_1/Part_Two-4         	   14098	     88473 ns/op	   45095 B/op	      13 allocs/op
-		BenchmarkAll/Day_2/Part_One-4         	    2815	    395938 ns/op	  120965 B/op	    2502 allocs/op
-		BenchmarkAll/Day_2/Part_Two-4         	    3286	    401267 ns/op	  120965 B/op	    2502 allocs/op
-		BenchmarkAll/Day_3/Part_One-4         	   20775	     55756 ns/op	    4868 B/op	       2 allocs/op
-		BenchmarkAll/Day_3/Part_Two-4         	   21428	     61241 ns/op	   13780 B/op	      55 allocs/op
-		BenchmarkAll/Day_4/Part_One-4         	    2990	    439963 ns/op	  145190 B/op	    3004 allocs/op
-		BenchmarkAll/Day_4/Part_Two-4         	    3346	    436951 ns/op	  145189 B/op	    3004 allocs/op
-		BenchmarkAll/Day_5/Part_One-4         	     717	   1662005 ns/op	  485595 B/op	    7139 allocs/op
-		BenchmarkAll/Day_5/Part_Two-4         	    1011	   1098080 ns/op	  189448 B/op	    3469 allocs/op
-		BenchmarkAll/Day_6/Part_One-4         	  360925	      3140 ns/op	       4 B/op	       1 allocs/op
-		BenchmarkAll/Day_6/Part_Two-4         	  379953	      2787 ns/op	       4 B/op	       1 allocs/op
-		BenchmarkAll/Day_7/Part_One-4         	    4609	    261503 ns/op	   91816 B/op	    1877 allocs/op
-		BenchmarkAll/Day_7/Part_Two-4         	    4074	    253351 ns/op	   92336 B/op	    1871 allocs/op
+		BenchmarkAll/Day_1/Part_One-4         	   17542	     67235 ns/op	   40983 B/op	       3 allocs/op
+		BenchmarkAll/Day_1/Part_Two-4         	   13522	     83610 ns/op	   45095 B/op	      13 allocs/op
+		BenchmarkAll/Day_2/Part_One-4         	    3050	    399896 ns/op	  120965 B/op	    2502 allocs/op
+		BenchmarkAll/Day_2/Part_Two-4         	    3580	    392836 ns/op	  120965 B/op	    2502 allocs/op
+		BenchmarkAll/Day_3/Part_One-4         	   21208	     55440 ns/op	    4868 B/op	       2 allocs/op
+		BenchmarkAll/Day_3/Part_Two-4         	   21242	     59418 ns/op	   13780 B/op	      55 allocs/op
+		BenchmarkAll/Day_4/Part_One-4         	    3025	    450535 ns/op	  145190 B/op	    3004 allocs/op
+		BenchmarkAll/Day_4/Part_Two-4         	    2763	    423436 ns/op	  145190 B/op	    3004 allocs/op
+		BenchmarkAll/Day_5/Part_One-4         	    1252	    916973 ns/op	   66394 B/op	    2615 allocs/op
+		BenchmarkAll/Day_5/Part_Two-4         	    1310	    889754 ns/op	   66427 B/op	    2614 allocs/op
+		BenchmarkAll/Day_6/Part_One-4         	  353290	      3224 ns/op	       4 B/op	       1 allocs/op
+		BenchmarkAll/Day_6/Part_Two-4         	  421429	      2957 ns/op	       4 B/op	       1 allocs/op
+		BenchmarkAll/Day_7/Part_One-4         	    5552	    258292 ns/op	   91816 B/op	    1877 allocs/op
+		BenchmarkAll/Day_7/Part_Two-4         	    5040	    249470 ns/op	   92335 B/op	    1871 allocs/op
 		PASS
-		ok  	github.com/joshprzybyszewski/aoc2022	21.084s
+		ok  	github.com/joshprzybyszewski/aoc2022	21.510s
 	*/
 
 	b.Run(`Day 1`, func(b *testing.B) {
@@ -189,6 +189,7 @@ func BenchmarkAll(b *testing.B) {
 			for n := 0; n < b.N; n++ {
 				answer, err = five.One(input)
 				if answer != `TWSGQHNHL` {
+					b.Logf("Got answer: %q", answer)
 					b.Fail()
 				}
 				if err != nil {
@@ -203,6 +204,7 @@ func BenchmarkAll(b *testing.B) {
 			for n := 0; n < b.N; n++ {
 				answer, err = five.Two(input)
 				if answer != `JNRSCDWPP` {
+					b.Logf("Got answer: %q", answer)
 					b.Fail()
 				}
 				if err != nil {

@@ -1,25 +1,16 @@
 package five
 
 import (
-	"fmt"
 	"strings"
 )
 
-type stack struct {
-	values []string
-}
-
-func newStack() *stack {
-	return &stack{
-		values: nil,
-	}
-}
-
-func newStacks(lines []string) ([]*stack, error) {
+func newStacks(
+	lines []string,
+) ([]*stack, error) {
 	// :badpokerface: yes, I just manually created the stacks instead of reading them in.
 	// I figured it was faster to get an answer than to build a generic reader.
 	/*
-			        [J]         [B]     [T]
+		        [J]         [B]     [T]
 		        [M] [L]     [Q] [L] [R]
 		        [G] [Q]     [W] [S] [B] [L]
 		[D]     [D] [T]     [M] [G] [V] [P]
@@ -33,53 +24,27 @@ func newStacks(lines []string) ([]*stack, error) {
 	for i := range output {
 		output[i] = newStack()
 	}
-	output[0].push(`D`, `T`, `W`, `N`, `L`)
-	output[1].push(`H`, `P`, `C`)
-	output[2].push(`J`, `M`, `G`, `D`, `N`, `H`, `P`, `W`)
-	output[3].push(`L`, `Q`, `T`, `N`, `S`, `W`, `C`)
-	output[4].push(`N`, `C`, `H`, `P`)
-	output[5].push(`B`, `Q`, `W`, `M`, `D`, `N`, `H`, `T`)
-	output[6].push(`L`, `S`, `G`, `J`, `R`, `B`, `M`)
-	output[7].push(`T`, `R`, `B`, `V`, `G`, `W`, `N`, `Z`)
-	output[8].push(`L`, `P`, `N`, `D`, `G`, `W`)
+	// output[0].push([]byte(`DTWNL`)...)
+	// output[1].push([]byte(`HPC`)...)
+	// output[2].push([]byte(`JMGDNHPW`)...)
+	// output[3].push([]byte(`LQTNSWC`)...)
+	// output[4].push([]byte(`NCHP`)...)
+	// output[5].push([]byte(`BQWMDNHT`)...)
+	// output[6].push([]byte(`LSGJRBM`)...)
+	// output[7].push([]byte(`TRBVGWNZ`)...)
+	// output[8].push([]byte(`LPNDGW`)...)
+
+	output[0].push([]byte(`LNWTD`)...) // todo invert
+	output[1].push([]byte(`CPH`)...)
+	output[2].push([]byte(`WPHNDGMJ`)...)
+	output[3].push([]byte(`CWSNTQL`)...)
+	output[4].push([]byte(`PHCN`)...)
+	output[5].push([]byte(`THNDMWQB`)...)
+	output[6].push([]byte(`MBRJGSL`)...)
+	output[7].push([]byte(`ZNWGVBRT`)...)
+	output[8].push([]byte(`WGDNPL`)...)
+
 	return output, nil
-}
-
-func (s *stack) top() string {
-	return s.values[0]
-}
-
-func (s *stack) pop() (string, error) {
-	if len(s.values) == 0 {
-		return ``, fmt.Errorf("too few elements to pop. %+v", s.values)
-	}
-	output := s.values[0]
-	s.values = s.values[1:]
-	return output, nil
-}
-
-func (s *stack) push(ss ...string) {
-	s.values = append(ss, s.values...)
-}
-
-type instruction struct {
-	source   int
-	dest     int
-	quantity int
-}
-
-func newInstruction(line string) (instruction, error) {
-	// "move 6 from 6 to 5"
-	var q, s, d int
-	_, err := fmt.Sscanf(line, "move %d from %d to %d", &q, &s, &d)
-	if err != nil {
-		return instruction{}, err
-	}
-	return instruction{
-		quantity: q,
-		source:   s,
-		dest:     d,
-	}, nil
 }
 
 func One(
@@ -90,9 +55,11 @@ func One(
 		return ``, err
 	}
 
+	var i int
+	var v byte
 	for _, inst := range ins {
-		for i := 0; i < inst.quantity; i++ {
-			v, err := stacks[inst.source-1].pop()
+		for i = 0; i < inst.quantity; i++ {
+			v, err = stacks[inst.source-1].pop()
 			if err != nil {
 				return ``, err
 			}
@@ -100,11 +67,11 @@ func One(
 		}
 	}
 
-	output := ``
+	var sb strings.Builder
 	for _, s := range stacks {
-		output += s.top()
+		sb.WriteByte(s.top())
 	}
-	return output, nil
+	return sb.String(), nil
 }
 
 func convertInputToStacksAndInstructions(
