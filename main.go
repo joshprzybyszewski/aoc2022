@@ -4,15 +4,7 @@ import (
 	"fmt"
 	"runtime"
 
-	"github.com/joshprzybyszewski/aoc2022/eight"
 	"github.com/joshprzybyszewski/aoc2022/fetch"
-	"github.com/joshprzybyszewski/aoc2022/five"
-	"github.com/joshprzybyszewski/aoc2022/four"
-	"github.com/joshprzybyszewski/aoc2022/one"
-	"github.com/joshprzybyszewski/aoc2022/seven"
-	"github.com/joshprzybyszewski/aoc2022/six"
-	"github.com/joshprzybyszewski/aoc2022/three"
-	"github.com/joshprzybyszewski/aoc2022/two"
 )
 
 func main() {
@@ -23,33 +15,7 @@ func main() {
 		panic(err)
 	}
 
-	var part1, part2 func(string) (string, error)
-	switch day {
-	case 1:
-		part1 = one.One
-		part2 = one.Two
-	case 2:
-		part1 = two.One
-		part2 = two.Two
-	case 3:
-		part1 = three.One
-		part2 = three.Two
-	case 4:
-		part1 = four.One
-		part2 = four.Two
-	case 5:
-		part1 = five.One
-		part2 = five.Two
-	case 6:
-		part1 = six.One
-		part2 = six.Two
-	case 7:
-		part1 = seven.One
-		part2 = seven.Two
-	case 8:
-		part1 = eight.One
-		part2 = eight.Two
-	}
+	part1, part2 := fetch.Solvers(day)
 
 	err = runParts(
 		day,
