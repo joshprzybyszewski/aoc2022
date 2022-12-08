@@ -3,7 +3,7 @@
 rm results.md
 cat scripts/default_results.md >> results.md
 
-echo "|Puzzle|ns/op|B/op|allocs/op|" >> results.md
+echo "|Puzzle|Duration (ns)|Bytes allocated to Heap|# of Heap allocations|" >> results.md
 echo "|-|-:|-:|-:|" >> results.md
 
 go test \
