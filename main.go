@@ -16,7 +16,7 @@ import (
 )
 
 func main() {
-	day := 6
+	day := 8
 
 	input, err := fetch.Input(day)
 	if err != nil {
