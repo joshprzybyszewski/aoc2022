@@ -11,12 +11,14 @@ func One(
 ) (string, error) {
 	lines := strings.Split(input, "\n")
 
+	var c byte
+	var err error
 	total := 0
 	for _, line := range lines {
 		if line == `` {
 			continue
 		}
-		c, err := common(line)
+		c, err = common(line)
 		if err != nil {
 			return ``, err
 		}
@@ -28,22 +30,20 @@ func One(
 
 func common(
 	line string,
-) (rune, error) {
+) (byte, error) {
 	half := len(line) / 2
-	one := line[:half]
-	two := line[half:]
 
-	for _, c := range []rune(one) {
-		if strings.Contains(two, string(c)) {
-			return c, nil
+	for i := 0; i < half; i++ {
+		if strings.ContainsRune(line[half:], rune(line[i])) {
+			return line[i], nil
 		}
 	}
 
-	return 0, fmt.Errorf("couldn't find common element: %q %q", one, two)
+	return 0, fmt.Errorf("couldn't find common element: %q %q", line[:half], line[half:])
 }
 
 func priority(
-	c rune,
+	c byte,
 ) int {
 	if c >= 'a' && c <= 'z' {
 		return int(c-'a') + 1
