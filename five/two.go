@@ -7,6 +7,14 @@ func Two(
 ) (string, error) {
 	stacks := newStacks()
 
+	move := func(si, di int, q int) {
+		for i := 0; i < q; i++ {
+			stacks[di].values[stacks[di].length+i] = stacks[si].values[stacks[si].length-q+i]
+		}
+		stacks[si].length -= q
+		stacks[di].length += q
+	}
+
 	var inst instruction
 	var err error
 
@@ -21,11 +29,7 @@ func Two(
 		if err != nil {
 			return ``, err
 		}
-		values, err := stacks[inst.source-1].popN(inst.quantity)
-		if err != nil {
-			return ``, err
-		}
-		stacks[inst.dest-1].push(values...)
+		move(inst.source-1, inst.dest-1, inst.quantity)
 	}
 
 	var sb strings.Builder
