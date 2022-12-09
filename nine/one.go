@@ -14,11 +14,8 @@ func One(
 	var q, i int
 	var err error
 
-	pos := make(map[coord]struct{}, 8192)
-	record := func() {
-		pos[tail] = struct{}{}
-	}
-	record()
+	pos := make(map[coord]struct{}, int(1<<14))
+	pos[tail] = struct{}{}
 
 	for _, line := range lines {
 		if line == `` {
@@ -42,7 +39,7 @@ func One(
 			}
 
 			tail = moveCoord(tail, head)
-			record()
+			pos[tail] = struct{}{}
 		}
 	}
 

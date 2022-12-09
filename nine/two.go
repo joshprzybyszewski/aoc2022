@@ -15,11 +15,8 @@ func Two(
 	var q, i, j int
 	var err error
 
-	pos := make(map[coord]struct{}, 4096)
-	record := func() {
-		pos[knots[len(knots)-1]] = struct{}{}
-	}
-	record()
+	pos := make(map[coord]struct{}, int(1<<13))
+	pos[knots[len(knots)-1]] = struct{}{}
 
 	for _, line := range lines {
 		if line == `` {
@@ -45,7 +42,7 @@ func Two(
 			for j = 1; j < len(knots); j++ {
 				knots[j] = moveCoord(knots[j], knots[j-1])
 			}
-			record()
+			pos[knots[len(knots)-1]] = struct{}{}
 		}
 	}
 
