@@ -47,7 +47,7 @@ func One(
 }
 
 type coord struct {
-	x, y int
+	x, y int16
 }
 
 type direction byte
