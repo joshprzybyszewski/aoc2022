@@ -5,17 +5,22 @@ import "strings"
 func Two(
 	input string,
 ) (string, error) {
-	stacks, ins, err := convertInputToStacksAndInstructions(
-		strings.Split(
-			input[strings.Index(input, "\n\n")+2:],
-			"\n",
-		),
-	)
-	if err != nil {
-		return ``, err
-	}
+	stacks := newStacks()
 
-	for _, inst := range ins {
+	var inst instruction
+	var err error
+
+	for _, line := range strings.Split(
+		input[strings.Index(input, "\n\n")+2:],
+		"\n",
+	) {
+		if line == `` {
+			continue
+		}
+		inst, err = newInstruction(line)
+		if err != nil {
+			return ``, err
+		}
 		values, err := stacks[inst.source-1].popN(inst.quantity)
 		if err != nil {
 			return ``, err
