@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	day := 1
+	day := 9
 	input, err := util.Input(day)
 	if err != nil {
 		panic(err)

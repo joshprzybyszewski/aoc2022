@@ -44,6 +44,10 @@ func BenchmarkAll(b *testing.B) {
 		day:     8,
 		answer1: `1809`,
 		answer2: `479400`,
+	}, {
+		day:     9,
+		answer1: `6037`,
+		answer2: `2485`,
 	}}
 
 	for _, bm := range benchmarks {
