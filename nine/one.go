@@ -14,7 +14,7 @@ func One(
 	var q, i int
 	var err error
 
-	pos := make(map[coord]struct{}, 4096)
+	pos := make(map[coord]struct{}, 8192)
 	record := func() {
 		pos[tail] = struct{}{}
 	}
