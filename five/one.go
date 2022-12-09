@@ -71,8 +71,8 @@ func One(
 	}
 
 	var sb strings.Builder
-	for _, s := range stacks {
-		sb.WriteByte(s.top())
+	for i := range stacks {
+		sb.WriteByte(stacks[i].values[stacks[i].length-1])
 	}
 	return sb.String(), nil
 }
