@@ -70,9 +70,9 @@ func One(
 		move(inst.source-1, inst.dest-1, inst.quantity)
 	}
 
-	var sb strings.Builder
+	output := make([]byte, 0, len(stacks))
 	for i := range stacks {
-		sb.WriteByte(stacks[i].values[stacks[i].length-1])
+		output = append(output, stacks[i].values[stacks[i].length-1])
 	}
-	return sb.String(), nil
+	return string(output), nil
 }
