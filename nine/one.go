@@ -10,12 +10,15 @@ func One(
 ) (string, error) {
 	lines := strings.Split(input, "\n")
 
-	r := rope{}
+	var head, tail coord
 	var q, i int
 	var err error
 
-	pos := make(map[coord]struct{}, len(lines))
-	pos[r.tail] = struct{}{}
+	pos := make(map[coord]struct{}, 4096)
+	record := func() {
+		pos[tail] = struct{}{}
+	}
+	record()
 
 	for _, line := range lines {
 		if line == `` {
@@ -27,8 +30,19 @@ func One(
 		}
 
 		for i = 0; i < q; i++ {
-			r = move(r, direction(line[0]))
-			pos[r.tail] = struct{}{}
+			switch direction(line[0]) {
+			case right:
+				head.x++
+			case left:
+				head.x--
+			case up:
+				head.y++
+			case down:
+				head.y--
+			}
+
+			tail = moveCoord(tail, head)
+			record()
 		}
 	}
 
@@ -37,11 +51,6 @@ func One(
 
 type coord struct {
 	x, y int
-}
-
-type rope struct {
-	head coord
-	tail coord
 }
 
 type direction byte
@@ -53,22 +62,59 @@ const (
 	down  direction = 'D'
 )
 
-func move(
-	r rope,
-	dir direction,
-) rope {
-	switch dir {
-	case right:
-		r.head.x++
-	case left:
-		r.head.x--
-	case up:
-		r.head.y++
-	case down:
-		r.head.y--
+func moveCoord(
+	c coord,
+	goal coord,
+) coord {
+	if goal.x == c.x { // same column
+		// move up or down, or not at all
+		if goal.y > c.y+1 {
+			c.y++
+		} else if goal.y < c.y-1 {
+			c.y--
+		}
+		return c
+	}
+	if goal.y == c.y { // same row
+		// move left or right, or not at all
+		if goal.x > c.x+1 {
+			c.x++
+		} else if goal.x < c.x-1 {
+			c.x--
+		}
+		return c
 	}
 
-	r.tail = moveCoord(r.tail, r.head)
+	// different row and different column: move diagonally, if at all
+	if goal.y > c.y+1 {
+		c.y++
+		if goal.x > c.x {
+			c.x++
+		} else {
+			c.x--
+		}
+	} else if goal.y < c.y-1 {
+		c.y--
+		if goal.x > c.x {
+			c.x++
+		} else {
+			c.x--
+		}
+	} else if goal.x > c.x+1 {
+		c.x++
+		if goal.y > c.y {
+			c.y++
+		} else {
+			c.y--
+		}
+	} else if goal.x < c.x-1 {
+		c.x--
+		if goal.y > c.y {
+			c.y++
+		} else {
+			c.y--
+		}
+	}
 
-	return r
+	return c
 }
