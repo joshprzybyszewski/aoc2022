@@ -8,6 +8,7 @@ import (
 	"github.com/joshprzybyszewski/aoc2022/one"
 	"github.com/joshprzybyszewski/aoc2022/seven"
 	"github.com/joshprzybyszewski/aoc2022/six"
+	"github.com/joshprzybyszewski/aoc2022/ten"
 	"github.com/joshprzybyszewski/aoc2022/three"
 	"github.com/joshprzybyszewski/aoc2022/two"
 )
@@ -34,6 +35,8 @@ func Solvers(
 		return eight.One, eight.Two
 	case 9:
 		return nine.One, nine.Two
+	case 10:
+		return ten.One, ten.Two
 	}
 	return nil, nil
 }
