@@ -1,7 +1,6 @@
 package ten
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 )
@@ -52,11 +51,11 @@ func Two(
 		x += a
 	}
 
+	/* Manually inspect the printed characters, then set the returned string
 	for i := range crt {
 		fmt.Printf("%s\n", crt[i])
 	}
-
-	// Manually inspect the printed characters, then set the returned string
+	*/
 
 	return `BJFRHRFU`, nil
 }

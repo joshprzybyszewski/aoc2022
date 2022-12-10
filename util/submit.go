@@ -92,6 +92,16 @@ func recordCorrectAnswer(
 	}
 }
 
+func getCorrectAnswer(
+	day, level int,
+) (string, error) {
+	data, err := os.ReadFile(getAnswerFilname(day, level))
+	if err != nil {
+		return ``, err
+	}
+	return string(data), nil
+}
+
 func getAnswerFilname(day, level int) string {
 	return fmt.Sprintf("answers/day%d-level%d.txt", day, level)
 }
