@@ -64,6 +64,19 @@ func (d *dir) getChild(name string) *dir {
 	return nil
 }
 
+func (d *dir) getNthChild(name string) *dir {
+	for _, c := range d.children {
+		if c.name == name {
+			return c
+		}
+		nc := c.getNthChild(name)
+		if nc != nil {
+			return nc
+		}
+	}
+	return nil
+}
+
 func (d *dir) addFile(f *file) {
 	d.files = append(d.files, f)
 }
