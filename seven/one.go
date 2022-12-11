@@ -106,7 +106,9 @@ func getDirectorySizes(
 		if !isLS {
 			continue
 		}
-		if isDir(line) {
+
+		if len(line) >= 4 && line[:4] == `dir ` {
+			// this assumes that there cannot be a file named "dir".
 			data = append(data, fileDir{
 				name:       line[4:], // line starts with "dir "
 				parent:     curDirIndex,
