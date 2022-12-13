@@ -1,6 +1,7 @@
 package eleven
 
 import (
+	"fmt"
 	"strconv"
 )
 
@@ -30,6 +31,9 @@ type monkey int
 func One(
 	input string,
 ) (string, error) {
+	// 	return runNRounds(numRounds1)
+	// }
+
 	monkeys := [numMonkeys][]int{}
 	for i := range monkeys {
 		monkeys[i] = make([]int, 0, numItems)
@@ -60,6 +64,7 @@ func One(
 
 	var m1, m2 int
 	for _, ni := range inspections {
+		fmt.Printf("m%d -> %d\n", i, ni)
 		if ni > m1 {
 			m2 = m1
 			m1 = ni
@@ -67,6 +72,8 @@ func One(
 			m2 = ni
 		}
 	}
+	fmt.Printf("1st : %d\n", m1)
+	fmt.Printf("2nd : %d\n", m2)
 
 	return strconv.Itoa(m1 * m2), nil
 }

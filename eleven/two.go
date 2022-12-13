@@ -2,42 +2,60 @@ package eleven
 
 import (
 	"fmt"
-	"runtime"
-	"strconv"
-	"time"
 
 	big "github.com/ncw/gmp"
+	// big "github.com/ncw/gmp"
 	// "math/big"
+)
+
+const (
+	dividersProduct uint64 = 3 * 5 * 2 * 13 * 11 * 17 * 19 * 7
+)
+
+var (
+	bigRemDiv = big.NewInt(int64(dividersProduct))
 )
 
 type item struct {
 	value *big.Int
 
 	cur         monkey
-	inspections [numMonkeys]int
+	inspections [numMonkeys]*big.Int
 	numRounds   int
 }
 
-func newItem(e int) *item {
-	return &item{
+func newItem(
+	startingMonkey monkey,
+	e int,
+) *item {
+	item := item{
+		cur:   startingMonkey,
 		value: big.NewInt(int64(e)),
 	}
-}
-
-func (i *item) inspect() bool {
-	i.inspections[i.cur]++
-	i.updateValue()
-	d := i.getDest()
-	if d < i.cur {
-		i.numRounds++
+	for i := range item.inspections {
+		item.inspections[i] = big.NewInt(0)
 	}
-	i.cur = d
 
-	return i.numRounds < numRounds2
+	return &item
 }
 
-func (i *item) getDest() monkey {
-	switch i.cur {
+// func (i *item) inspect() bool {
+// 	i.inspections[i.cur].Add(i.inspections[i.cur], big.NewInt(1))
+// 	i.updateValue()
+// 	d := i.getDest()
+// 	if d < i.cur {
+// 		i.numRounds++
+// 	}
+// 	i.cur = d
+// 	i.value.Rem(i.value, bigRemDiv)
+// 	// i.value %= dividersProduct
+
+// 	return i.numRounds <= numRounds2
+// }
+
+func (i *item) getDest(m monkey) monkey {
+	switch m {
+	// switch i.cur {
 	case 0:
 		if i.divisibleBy(3) {
 			return 4
@@ -94,10 +112,12 @@ func (i *item) divisibleBy(
 	d int64,
 ) bool {
 	return big.NewInt(0).Rem(i.value, big.NewInt(d)).Int64() == 0
+	// return i.value%d == 0
 }
 
-func (i *item) updateValue() {
-	switch i.cur {
+func (i *item) updateValue(m monkey) {
+	switch m {
+	// switch i.cur {
 	case 0:
 		// old * 17
 		i.mul(17)
@@ -129,66 +149,114 @@ func (i *item) updateValue() {
 
 func (i *item) add(v int64) {
 	i.value.Add(i.value, big.NewInt(v))
+	// i.value += v
 }
 
 func (i *item) mul(v int64) {
 	i.value.Mul(i.value, big.NewInt(v))
+	// i.value *= v
 }
 
 func (i *item) square() {
 	i.value.Mul(i.value, i.value)
+	// i.value *= i.value
 }
 
 func Two(
 	input string,
 ) (string, error) {
-	items := make([]*item, 0, numItems)
+	return runNRounds(numRounds2)
+}
+
+func runNRounds(
+	numRounds int,
+) (string, error) {
+	fmt.Printf("runNRounds : %d\n", numRounds)
+	// items := make([]*item, 0, numItems)
+	// for i := range initialValues {
+	// 	for j := range initialValues[i] {
+	// 		items = append(items, newItem(monkey(i), initialValues[i][j]))
+	// 	}
+	// }
+	monkeys := [numMonkeys][]*item{}
 	for i := range initialValues {
+		monkeys[i] = make([]*item, 0, numItems)
 		for j := range initialValues[i] {
-			items = append(items, newItem(initialValues[i][j]))
+			monkeys[i] = append(monkeys[i], newItem(monkey(i), initialValues[i][j]))
+		}
+	}
+	fmt.Printf("monkeys : %+v\n", monkeys)
+
+	inspections := [numMonkeys]*big.Int{}
+	for i := range inspections {
+		inspections[i] = big.NewInt(0)
+	}
+	fmt.Printf("inspections : %+v\n", inspections)
+
+	/*
+		var wg sync.WaitGroup
+
+		work := make(chan int, runtime.NumCPU())
+		for i := 0; i < runtime.NumCPU(); i++ {
+			go func() {
+				for ii := range work {
+					for items[ii].numRounds <= numRounds {
+						items[ii].inspect()
+					}
+					wg.Done()
+				}
+			}()
+		}
+
+		for ii := range items {
+			wg.Add(1)
+			work <- ii
+		}
+		wg.Wait()
+		close(work)
+
+		for _, item := range items {
+			if item.numRounds != numRounds+1 {
+				return ``, fmt.Errorf("item should have been inspected until it hit the target num rounds")
+			}
+			for i := range inspections {
+				inspections[i].Add(inspections[i], item.inspections[i])
+			}
+		}
+	*/
+	var m, i, d int
+	for r := 1; r <= numRounds; r++ {
+		for m = 0; m < numMonkeys; m++ {
+			for i = 0; i < len(monkeys[m]); i++ {
+				inspections[m].Add(inspections[m], big.NewInt(1))
+				// the monkey inspects the item, and I am NOT relieved
+				monkeys[m][i].updateValue(monkey(m))
+				monkeys[m][i].value.Rem(monkeys[m][i].value, bigRemDiv)
+				d = int(monkeys[m][i].getDest(monkey(m)))
+				if d == m {
+					panic(`wtf`)
+				}
+				monkeys[d] = append(monkeys[d], monkeys[m][i])
+			}
+			monkeys[m] = monkeys[m][:0]
+		}
+		if r%10 == 0 {
+			fmt.Printf("finished %d\n", r)
 		}
 	}
 
-	inspections := [numMonkeys]int{}
-
-	work := make(chan *item, runtime.NumCPU())
-	for i := 0; i < runtime.NumCPU(); i++ {
-		go func() {
-			for item := range work {
-				t0 := time.Now()
-				var dur time.Duration
-				ni := 0
-				for item.inspect() {
-					ni++
-					if ni%100 == 0 {
-						dur = time.Since(t0)
-						fmt.Printf("%13s: completed %d inspections to get to round %d\n", dur, ni, item.numRounds)
-						if dur.Seconds() > 30 {
-							break
-						}
-					}
-				}
-				for i := range inspections {
-					inspections[i] += item.inspections[i]
-				}
-			}
-		}()
-	}
-
-	for _, item := range items {
-		item := item
-		work <- item
-	}
-
-	var m1, m2 int
-	for _, ni := range inspections {
-		if ni > m1 {
+	var m1, m2 *big.Int
+	for i, ni := range inspections {
+		fmt.Printf("m%d -> %s\n", i, ni)
+		if m1 == nil || ni.Cmp(m1) > 0 {
 			m2 = m1
 			m1 = ni
-		} else if ni > m2 {
+		} else if m2 == nil || ni.Cmp(m2) > 0 {
 			m2 = ni
 		}
 	}
+	fmt.Printf("1st : %s\n", m1)
+	fmt.Printf("2nd : %s\n", m2)
 
-	return strconv.Itoa(m1 * m2), nil
+	return big.NewInt(0).Mul(m1, m2).String(), nil
 }
