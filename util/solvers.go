@@ -2,6 +2,7 @@ package util
 
 import (
 	"github.com/joshprzybyszewski/aoc2022/eight"
+	"github.com/joshprzybyszewski/aoc2022/eleven"
 	"github.com/joshprzybyszewski/aoc2022/five"
 	"github.com/joshprzybyszewski/aoc2022/four"
 	"github.com/joshprzybyszewski/aoc2022/nine"
@@ -37,6 +38,8 @@ func Solvers(
 		return nine.One, nine.Two
 	case 10:
 		return ten.One, ten.Two
+	case 11:
+		return eleven.One, eleven.Two
 	}
 	return nil, nil
 }

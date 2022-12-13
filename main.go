@@ -1,13 +1,24 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 
 	"github.com/joshprzybyszewski/aoc2022/util"
 )
 
+var (
+	shouldProfile = flag.Bool("profile", false, "if set, will produce a profile output")
+)
+
 func main() {
-	day := 7
+	flag.Parse()
+
+	if *shouldProfile {
+		defer util.Profile()()
+	}
+
+	day := 11
 	input, err := util.Input(day)
 	if err != nil {
 		panic(err)
