@@ -5,12 +5,15 @@ import (
 	"github.com/joshprzybyszewski/aoc2022/eleven"
 	"github.com/joshprzybyszewski/aoc2022/five"
 	"github.com/joshprzybyszewski/aoc2022/four"
+	"github.com/joshprzybyszewski/aoc2022/fourteen"
 	"github.com/joshprzybyszewski/aoc2022/nine"
 	"github.com/joshprzybyszewski/aoc2022/one"
 	"github.com/joshprzybyszewski/aoc2022/seven"
 	"github.com/joshprzybyszewski/aoc2022/six"
 	"github.com/joshprzybyszewski/aoc2022/ten"
+	"github.com/joshprzybyszewski/aoc2022/thirteen"
 	"github.com/joshprzybyszewski/aoc2022/three"
+	"github.com/joshprzybyszewski/aoc2022/twelve"
 	"github.com/joshprzybyszewski/aoc2022/two"
 )
 
@@ -40,6 +43,12 @@ func Solvers(
 		return ten.One, ten.Two
 	case 11:
 		return eleven.One, eleven.Two
+	case 12:
+		return twelve.One, twelve.Two
+	case 13:
+		return thirteen.One, thirteen.Two
+	case 14:
+		return fourteen.One, fourteen.Two
 	}
 	return nil, nil
 }
