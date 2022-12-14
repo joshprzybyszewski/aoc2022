@@ -8,6 +8,38 @@ import (
 // [row][col]
 type grid [][]int
 
+func newGrid(input string) (grid, coord, coord) {
+	lines := strings.Split(input, "\n")
+	var s, e coord
+	g := make(grid, len(lines)-1)
+	seen := make([][]bool, len(lines)-1)
+	for i, line := range lines {
+		if line == `` {
+			continue
+		}
+		g[i] = make([]int, len(line))
+		seen[i] = make([]bool, len(line))
+		for j, b := range line {
+			if b == 'E' {
+				e = coord{
+					row: i,
+					col: j,
+				}
+				g[i][j] = 25
+			} else if b == 'S' {
+				s = coord{
+					row: i,
+					col: j,
+				}
+				g[i][j] = 0
+			} else {
+				g[i][j] = int(b - 'a')
+			}
+		}
+	}
+	return g, s, e
+}
+
 func (g grid) possibleMoves(
 	c coord,
 ) []coord {
@@ -52,33 +84,19 @@ type step struct {
 func One(
 	input string,
 ) (string, error) {
-	lines := strings.Split(input, "\n")
-	var s, e coord
-	g := make(grid, len(lines)-1)
-	seen := make([][]bool, len(lines)-1)
-	for i, line := range lines {
-		if line == `` {
-			continue
-		}
-		g[i] = make([]int, len(line))
-		seen[i] = make([]bool, len(line))
-		for j, b := range line {
-			if b == 'E' {
-				e = coord{
-					row: i,
-					col: j,
-				}
-				g[i][j] = 25
-			} else if b == 'S' {
-				s = coord{
-					row: i,
-					col: j,
-				}
-				g[i][j] = 0
-			} else {
-				g[i][j] = int(b - 'a')
-			}
-		}
+	g, s, e := newGrid(input)
+	n := getStepsBetween(g, s, e)
+	return strconv.Itoa(n), nil
+}
+
+func getStepsBetween(
+	g grid,
+	s coord,
+	e coord,
+) int {
+	seen := make([][]bool, len(g))
+	for i := range g {
+		seen[i] = make([]bool, len(g[i]))
 	}
 
 	pending := make([]*step, 0, len(g)*len(g[0]))
@@ -110,10 +128,11 @@ func One(
 		pending = pending[1:]
 	}
 
-	n := -1 // it's the steps between, and the first step is the starting point
+	n := 0
 	for s := final; s != nil; n++ {
 		s = s.prev
 	}
 
-	return strconv.Itoa(n), nil
+	// it's the steps between, and the first step is the starting point
+	return n - 1
 }
