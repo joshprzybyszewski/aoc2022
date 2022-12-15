@@ -5,7 +5,7 @@ func Two(
 ) (int, error) {
 	g, _, e := newGrid(input)
 	steps := paint(
-		g,
+		&g,
 		e,
 		coord{
 			row: -1,
