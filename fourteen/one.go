@@ -181,7 +181,7 @@ func getGrid(lines []string) (*grid, error) {
 		for i := 0; i < len(coords)-1; i++ {
 			c := coords[i]
 			next := coords[i+1]
-			for c := c; c != next; {
+			for {
 				g.addRock(c.x, c.y)
 
 				if c.x < next.x {
