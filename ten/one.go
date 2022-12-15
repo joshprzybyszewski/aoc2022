@@ -7,7 +7,7 @@ import (
 
 func One(
 	input string,
-) (string, error) {
+) (int, error) {
 	lines := strings.Split(input, "\n")
 
 	ci := -19 // the clock index (init to -19 = 20-1 to make modulo easier)
@@ -38,7 +38,7 @@ func One(
 		// the instruction is "addx A"
 		a, err = strconv.Atoi(line[5:])
 		if err != nil {
-			return ``, err
+			return 0, err
 		}
 
 		cycle()
@@ -46,5 +46,5 @@ func One(
 		x += a
 	}
 
-	return strconv.Itoa(sum), nil
+	return sum, nil
 }

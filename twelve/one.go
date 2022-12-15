@@ -1,7 +1,6 @@
 package twelve
 
 import (
-	"strconv"
 	"strings"
 )
 
@@ -83,10 +82,10 @@ type step struct {
 
 func One(
 	input string,
-) (string, error) {
+) (int, error) {
 	g, s, e := newGrid(input)
 	n := getStepsBetween(g, s, e)
-	return strconv.Itoa(n), nil
+	return n, nil
 }
 
 func getStepsBetween(

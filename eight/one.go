@@ -1,18 +1,17 @@
 package eight
 
 import (
-	"strconv"
 	"strings"
 )
 
 func One(
 	input string,
-) (string, error) {
+) (int, error) {
 	lines := strings.Split(input, "\n")
 	g := toGrid(lines)
 	nv := numVisible(&g)
 
-	return strconv.Itoa(nv), nil
+	return nv, nil
 }
 
 func toGrid(

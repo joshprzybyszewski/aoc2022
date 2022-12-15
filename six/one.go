@@ -2,7 +2,7 @@ package six
 
 func One(
 	input string,
-) (string, error) {
+) (int, error) {
 	return getMarkerOfUniqueWindow(
 		input,
 		4,

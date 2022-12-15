@@ -2,13 +2,12 @@ package two
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 )
 
 func One(
 	input string,
-) (string, error) {
+) (int, error) {
 	lines := strings.Split(input, "\n")
 
 	var s int
@@ -18,12 +17,12 @@ func One(
 	for _, line := range lines {
 		s, err = score(line)
 		if err != nil {
-			return ``, err
+			return 0, err
 		}
 		total += s
 	}
 
-	return strconv.Itoa(total), nil
+	return total, nil
 }
 
 func score(

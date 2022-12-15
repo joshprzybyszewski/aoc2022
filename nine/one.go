@@ -7,7 +7,7 @@ import (
 
 func One(
 	input string,
-) (string, error) {
+) (int, error) {
 	lines := strings.Split(input, "\n")
 
 	var head, tail coord
@@ -23,7 +23,7 @@ func One(
 		}
 		q, err = strconv.Atoi(line[2:])
 		if err != nil {
-			return ``, err
+			return 0, err
 		}
 
 		for i = 0; i < q; i++ {
@@ -43,7 +43,7 @@ func One(
 		}
 	}
 
-	return strconv.Itoa(len(pos)), nil
+	return len(pos), nil
 }
 
 type coord struct {

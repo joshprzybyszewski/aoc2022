@@ -7,7 +7,7 @@ import (
 
 func One(
 	input string,
-) (string, error) {
+) (int, error) {
 	lines := strings.Split(input, "\n")
 
 	var s1, e1, s2, e2, i1, i2 int
@@ -26,25 +26,25 @@ func One(
 		i2 = strings.Index(line, `-`)
 		s1, err = strconv.Atoi(line[i1:i2])
 		if err != nil {
-			return ``, err
+			return 0, err
 		}
 		i1 = i2 + 1
 		i2 = strings.Index(line, `,`)
 		e1, err = strconv.Atoi(line[i1:i2])
 		if err != nil {
-			return ``, err
+			return 0, err
 		}
 		i1 = i2 + 1
 		i2 = strings.LastIndex(line, `-`)
 		s2, err = strconv.Atoi(line[i1:i2])
 		if err != nil {
-			return ``, err
+			return 0, err
 		}
 		i1 = i2 + 1
 		i2 = len(line)
 		e2, err = strconv.Atoi(line[i1:i2])
 		if err != nil {
-			return ``, err
+			return 0, err
 		}
 
 		if (s1 >= s2 && e1 <= e2) ||
@@ -54,5 +54,5 @@ func One(
 		}
 	}
 
-	return strconv.Itoa(total), nil
+	return total, nil
 }

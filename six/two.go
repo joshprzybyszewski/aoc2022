@@ -2,7 +2,6 @@ package six
 
 import (
 	"fmt"
-	"strconv"
 )
 
 const (
@@ -12,7 +11,7 @@ const (
 // This has been finessed and optimized a lot.
 func Two(
 	input string,
-) (string, error) {
+) (int, error) {
 	return getMarkerOfUniqueWindow(
 		input,
 		14,
@@ -22,7 +21,7 @@ func Two(
 func getMarkerOfUniqueWindow(
 	input string,
 	window int,
-) (string, error) {
+) (int, error) {
 
 	// we know that the whole input is in the range A-Za-z, so this array acts as a map lookup
 	// of the last time a given byte (aka character) was seen.
@@ -41,9 +40,9 @@ func getMarkerOfUniqueWindow(
 			}
 		}
 		if j < min { // the inner loop iterated the whole window
-			return strconv.Itoa(i), nil
+			return i, nil
 		}
 	}
 
-	return ``, fmt.Errorf("didn't find a window of %d unique characters\n", window)
+	return 0, fmt.Errorf("didn't find a window of %d unique characters\n", window)
 }

@@ -7,7 +7,7 @@ import (
 
 func One(
 	input string,
-) (string, error) {
+) (int, error) {
 	lines := strings.Split(input, "\n")
 
 	sum := 0
@@ -36,7 +36,7 @@ func One(
 		// fmt.Printf("===========\n")
 	}
 
-	return strconv.Itoa(sum), nil
+	return sum, nil
 }
 
 type answer uint8

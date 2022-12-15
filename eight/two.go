@@ -1,18 +1,17 @@
 package eight
 
 import (
-	"strconv"
 	"strings"
 )
 
 func Two(
 	input string,
-) (string, error) {
+) (int, error) {
 	lines := strings.Split(input, "\n")
 	g := toGrid(lines)
 	max := getMaxSceneryScore(&g)
 
-	return strconv.Itoa(max), nil
+	return max, nil
 }
 
 func getMaxSceneryScore(

@@ -1,14 +1,13 @@
 package thirteen
 
 import (
-	"strconv"
 	"strings"
 )
 
 func Two(
 	input string,
-) (string, error) {
+) (int, error) {
 	lines := strings.Split(input, "\n")
 
-	return strconv.Itoa(len(lines)), nil
+	return len(lines), nil
 }

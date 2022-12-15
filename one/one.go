@@ -7,7 +7,7 @@ import (
 
 func One(
 	input string,
-) (string, error) {
+) (int, error) {
 	lines := strings.Split(input, "\n")
 
 	var val int
@@ -26,10 +26,10 @@ func One(
 
 		val, err = strconv.Atoi(line)
 		if err != nil {
-			return ``, err
+			return 0, err
 		}
 		cur += val
 	}
 
-	return strconv.Itoa(max), nil
+	return max, nil
 }

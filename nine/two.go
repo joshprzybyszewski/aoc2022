@@ -7,7 +7,7 @@ import (
 
 func Two(
 	input string,
-) (string, error) {
+) (int, error) {
 
 	lines := strings.Split(input, "\n")
 
@@ -24,7 +24,7 @@ func Two(
 		}
 		q, err = strconv.Atoi(line[2:])
 		if err != nil {
-			return ``, err
+			return 0, err
 		}
 
 		for i = 0; i < q; i++ {
@@ -46,5 +46,5 @@ func Two(
 		}
 	}
 
-	return strconv.Itoa(len(pos)), nil
+	return len(pos), nil
 }

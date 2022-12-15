@@ -2,18 +2,17 @@ package seven
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 )
 
 func Two(
 	input string,
-) (string, error) {
+) (int, error) {
 	lines := strings.Split(input, "\n")
 
 	curUsedSpace, ds, err := getDirectorySizes(lines)
 	if err != nil {
-		return ``, err
+		return 0, err
 	}
 
 	totalSpace := 70000000
@@ -28,8 +27,8 @@ func Two(
 	}
 
 	if smallestDirSize > totalSpace {
-		return ``, fmt.Errorf("answer not found")
+		return 0, fmt.Errorf("answer not found")
 	}
 
-	return strconv.Itoa(smallestDirSize), nil
+	return smallestDirSize, nil
 }

@@ -1,7 +1,6 @@
 package eleven
 
 import (
-	"fmt"
 	"runtime"
 	"sync"
 )
@@ -144,13 +143,13 @@ func (i *item) square() {
 
 func Two(
 	input string,
-) (string, error) {
+) (int64, error) {
 	return runNRounds(numRounds2)
 }
 
 func runNRounds(
 	numRounds int,
-) (string, error) {
+) (int64, error) {
 	items := make([]*item, 0, numItems)
 	for i := range initialValues {
 		for j := range initialValues[i] {
@@ -197,5 +196,5 @@ func runNRounds(
 		}
 	}
 
-	return fmt.Sprintf("%d", m1*m2), nil
+	return int64(m1 * m2), nil
 }

@@ -1,12 +1,8 @@
 package twelve
 
-import (
-	"strconv"
-)
-
 func Two(
 	input string,
-) (string, error) {
+) (int, error) {
 	g, _, e := newGrid(input)
 	min := len(g)*len(g[0]) + 1
 	for r := 0; r < len(g); r++ {
@@ -27,5 +23,5 @@ func Two(
 			}
 		}
 	}
-	return strconv.Itoa(min), nil
+	return min, nil
 }

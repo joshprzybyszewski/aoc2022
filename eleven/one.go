@@ -1,9 +1,5 @@
 package eleven
 
-import (
-	"strconv"
-)
-
 const (
 	numMonkeys = 8
 	numItems   = 34
@@ -29,10 +25,7 @@ type monkey int
 
 func One(
 	input string,
-) (string, error) {
-	// 	return runNRounds(numRounds1)
-	// }
-
+) (int, error) {
 	monkeys := [numMonkeys][]int{}
 	for i := range monkeys {
 		monkeys[i] = make([]int, 0, numItems)
@@ -71,7 +64,7 @@ func One(
 		}
 	}
 
-	return strconv.Itoa(m1 * m2), nil
+	return m1 * m2, nil
 }
 
 func newWorryLevel(

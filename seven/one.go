@@ -23,12 +23,12 @@ type fileDir struct {
 
 func One(
 	input string,
-) (string, error) {
+) (int, error) {
 	lines := strings.Split(input, "\n")
 
 	_, ds, err := getDirectorySizes(lines)
 	if err != nil {
-		return ``, err
+		return 0, err
 	}
 
 	total := 0
@@ -38,7 +38,7 @@ func One(
 		}
 	}
 
-	return strconv.Itoa(total), nil
+	return total, nil
 }
 
 func getDirectorySizes(

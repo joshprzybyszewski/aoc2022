@@ -2,13 +2,12 @@ package three
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 )
 
 func One(
 	input string,
-) (string, error) {
+) (int, error) {
 	lines := strings.Split(input, "\n")
 
 	var c byte
@@ -20,12 +19,12 @@ func One(
 		}
 		c, err = common(line)
 		if err != nil {
-			return ``, err
+			return 0, err
 		}
 		total += priority(c)
 	}
 
-	return strconv.Itoa(total), nil
+	return total, nil
 }
 
 func common(
