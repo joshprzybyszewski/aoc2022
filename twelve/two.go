@@ -8,8 +8,8 @@ func Two(
 		&g,
 		e,
 		coord{
-			row: -1,
-			col: -1,
+			row: numRows + 1,
+			col: numCols + 1,
 		},
 	)
 

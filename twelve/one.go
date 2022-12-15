@@ -1,19 +1,24 @@
 package twelve
 
+const (
+	numRows = uint8(41)
+	numCols = uint8(161)
+)
+
 type coord struct {
-	row, col int
+	row, col uint8
 }
 
 // [row][col]
-type grid [41][161]uint8
+type grid [numRows][numCols]uint8
 
 func newGrid(input string) (grid, coord, coord) {
 	var s, e coord
 	var g grid
 	var i int
 	var b byte
-	for r := range g {
-		for c := range g[r] {
+	for r := uint8(0); r < numRows; r++ {
+		for c := uint8(0); c < numCols; c++ {
 			b = input[i]
 			if b == 'E' {
 				e = coord{
@@ -65,7 +70,7 @@ func paint(
 
 	var dest, s coord
 	var dv int
-	var msv uint8
+	var msv, t uint8
 	for len(pending) > 0 {
 		dest = pending[0]
 		if dest == target {
@@ -75,49 +80,51 @@ func paint(
 		dv = output[dest.row][dest.col] + 1
 
 		msv = g[dest.row][dest.col] - 1
-		if dest.row > 0 &&
-			g[dest.row-1][dest.col] >= msv &&
-			output[dest.row-1][dest.col] > dv {
-
+		if dest.row > 0 {
 			s = coord{
 				row: dest.row - 1,
 				col: dest.col,
 			}
-			output[s.row][s.col] = dv
-			pending = append(pending, s)
+			if g[s.row][dest.col] >= msv &&
+				output[s.row][dest.col] > dv {
+
+				output[s.row][s.col] = dv
+				pending = append(pending, s)
+			}
 		}
 
-		if dest.row < len(g)-1 &&
-			g[dest.row+1][dest.col] >= msv &&
-			output[dest.row+1][dest.col] > dv {
+		if t = dest.row + 1; t < numRows &&
+			g[t][dest.col] >= msv &&
+			output[t][dest.col] > dv {
 
 			s = coord{
-				row: dest.row + 1,
+				row: t,
 				col: dest.col,
 			}
 			output[s.row][s.col] = dv
 			pending = append(pending, s)
 		}
 
-		if dest.col > 0 &&
-			g[dest.row][dest.col-1] >= msv &&
-			output[dest.row][dest.col-1] > dv {
-
+		if dest.col > 0 {
 			s = coord{
 				row: dest.row,
 				col: dest.col - 1,
 			}
-			output[s.row][s.col] = dv
-			pending = append(pending, s)
+			if g[s.row][s.col] >= msv &&
+				output[s.row][s.col] > dv {
+
+				output[s.row][s.col] = dv
+				pending = append(pending, s)
+			}
 		}
 
-		if dest.col < len(g[dest.row])-1 &&
-			g[dest.row][dest.col+1] >= msv &&
-			output[dest.row][dest.col+1] > dv {
+		if t = dest.col + 1; t < numCols &&
+			g[dest.row][t] >= msv &&
+			output[dest.row][t] > dv {
 
 			s = coord{
 				row: dest.row,
-				col: dest.col + 1,
+				col: t,
 			}
 			output[s.row][s.col] = dv
 			pending = append(pending, s)
