@@ -70,6 +70,38 @@ func (g grid) possibleMoves(
 	return output
 }
 
+func (g grid) possibleSources(
+	dest coord,
+) []coord {
+	output := make([]coord, 0, 4)
+	minSrcVal := g[dest.row][dest.col] - 1
+	if dest.row > 0 && g[dest.row-1][dest.col] >= minSrcVal {
+		output = append(output, coord{
+			row: dest.row - 1,
+			col: dest.col,
+		})
+	}
+	if dest.row < len(g)-1 && g[dest.row+1][dest.col] >= minSrcVal {
+		output = append(output, coord{
+			row: dest.row + 1,
+			col: dest.col,
+		})
+	}
+	if dest.col > 0 && g[dest.row][dest.col-1] >= minSrcVal {
+		output = append(output, coord{
+			row: dest.row,
+			col: dest.col - 1,
+		})
+	}
+	if dest.col < len(g[dest.row])-1 && g[dest.row][dest.col+1] >= minSrcVal {
+		output = append(output, coord{
+			row: dest.row,
+			col: dest.col + 1,
+		})
+	}
+	return output
+}
+
 type coord struct {
 	row, col int
 }
@@ -84,8 +116,47 @@ func One(
 	input string,
 ) (int, error) {
 	g, s, e := newGrid(input)
-	n := getStepsBetween(g, s, e)
-	return n, nil
+	steps := paint(g, e, s)
+	return steps[s.row][s.col], nil
+}
+
+func paint(
+	g grid,
+	zero coord,
+	target coord,
+) [][]int {
+	output := make([][]int, len(g))
+	for i := range output {
+		output[i] = make([]int, len(g[i]))
+		for j := range output[i] {
+			output[i][j] = -1
+		}
+	}
+	output[zero.row][zero.col] = 0
+
+	pending := make([]coord, 0, len(g)*len(g[0]))
+	pending = append(pending, zero)
+
+	for len(pending) > 0 {
+		val := output[pending[0].row][pending[0].col] + 1
+		for _, s := range g.possibleSources(pending[0]) {
+			if output[s.row][s.col] != -1 {
+				if output[s.row][s.col] > val {
+					panic(`should not have found a shorter path`)
+				}
+				// we already know about a path that takes fewer steps to get to the zero coord
+				continue
+			}
+			output[s.row][s.col] = val
+			pending = append(pending, s)
+		}
+		if pending[0] == target {
+			break
+		}
+		pending = pending[1:]
+	}
+
+	return output
 }
 
 func getStepsBetween(

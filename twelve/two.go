@@ -4,20 +4,23 @@ func Two(
 	input string,
 ) (int, error) {
 	g, _, e := newGrid(input)
+	steps := paint(
+		g,
+		e,
+		coord{
+			row: -1,
+			col: -1,
+		},
+	)
+
 	min := len(g)*len(g[0]) + 1
+	var n int
 	for r := 0; r < len(g); r++ {
 		for c := 0; c < len(g[r]); c++ {
 			if g[r][c] != 0 {
 				continue
 			}
-			n := getStepsBetween(
-				g,
-				coord{
-					row: r,
-					col: c,
-				},
-				e,
-			)
+			n = steps[r][c]
 			if n > 0 && n < min {
 				min = n
 			}
