@@ -32,12 +32,13 @@ func Two(
 		m1++
 	}
 
+	var l interface{}
 	for _, line := range lines {
 		if line == `` {
 			continue
 		}
 
-		l, _ := parse(line, 0)
+		l, _ = parse(line, 0)
 
 		if checkM1First {
 			switch compare(l, marker1) {
@@ -61,6 +62,5 @@ func Two(
 		}
 	}
 
-	// 12544, 12882 too low
 	return m1 * m2, nil
 }
