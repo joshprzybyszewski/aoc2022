@@ -35,7 +35,7 @@ func Solvers(
 	case 11:
 		return wrapIntSolver(eleven.One), wrapInt64Solver(eleven.Two)
 	case 14:
-		return fourteen.One, fourteen.Two
+		return wrapIntSolver(fourteen.One), fourteen.Two
 	}
 	return nil, nil
 }
@@ -72,8 +72,8 @@ func IntSolvers(
 		return twelve.One, twelve.Two
 	case 13:
 		return thirteen.One, thirteen.Two
-		// case 14:
-		// 	return fourteen.One, fourteen.Two
+	case 14:
+		return fourteen.One, nil //fourteen.Two
 	}
 	return nil, nil
 }
