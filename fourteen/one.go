@@ -22,12 +22,14 @@ type grid struct {
 	// [row][col]
 	mats    [][]material
 	maxRock int
+	floor   int
 }
 
 func newGrid() *grid {
 	return &grid{
 		mats:    make([][]material, 0, 256),
 		maxRock: 0,
+		floor:   -1,
 	}
 }
 
@@ -69,6 +71,7 @@ func (g *grid) window() (coord, coord) {
 		x: -1,
 		y: -1,
 	}
+	br.y = g.floor
 	for r := range g.mats {
 		for c := range g.mats[r] {
 			switch g.check(c, r) {
@@ -93,7 +96,9 @@ func (g *grid) window() (coord, coord) {
 }
 
 func (g *grid) addRock(x, y int) {
-	// fmt.Printf("addRock(%d, %d)\n%s\n", x, y, g)
+	if g.floor >= 0 {
+		panic(`should not have set floor before finishing adding rock`)
+	}
 	if y > g.maxRock {
 		g.maxRock = y
 	}
@@ -103,8 +108,12 @@ func (g *grid) addRock(x, y int) {
 	g.mats[y][x] = rock
 }
 
+func (g *grid) addFloor() {
+	g.floor = g.maxRock + 2
+}
+
 func (g *grid) addSand(x, y int) bool {
-	if y > g.maxRock {
+	if g.floor < 0 && y > g.maxRock {
 		return false
 	}
 	switch g.check(x, y+1) {
@@ -137,6 +146,9 @@ func (g *grid) addSand(x, y int) bool {
 }
 
 func (g *grid) check(x, y int) material {
+	if g.floor >= 0 && y == g.floor {
+		return rock
+	}
 	if y >= len(g.mats) {
 		g.mats = append(g.mats, make([][]material, y-len(g.mats)+1)...)
 	}
