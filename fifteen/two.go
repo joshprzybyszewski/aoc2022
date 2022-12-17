@@ -7,6 +7,10 @@ import (
 func Two(
 	input string,
 ) (int, error) {
+	const (
+		max = 4000000
+	)
+
 	rs, err := getReports(input)
 	if err != nil {
 		return 0, err
@@ -17,12 +21,11 @@ func Two(
 
 	var x1, x2 int
 	var ok bool
+	var t tuple
+	var r report
 
-	const (
-		max = 4000000
-	)
 	for y := 0; y <= max; y++ {
-		for _, r := range rs {
+		for _, r = range rs {
 			x1, x2, ok = r.seenInRow(y)
 			if ok {
 				ts.add(x1, x2)
@@ -30,7 +33,7 @@ func Two(
 		}
 		output = ts.generate()
 		// this assumes there's always output for the row
-		for _, t := range output {
+		for _, t = range output {
 			if t.t2 < 0 {
 				continue
 			}
