@@ -17,32 +17,64 @@ func newTuple(x1, x2 int) tuple {
 	}
 }
 
+type sortedInts struct {
+	vals []int
+}
+
+func newSortedInts(
+	size int,
+) *sortedInts {
+	return &sortedInts{
+		vals: make([]int, 0, size),
+	}
+}
+
+func (s *sortedInts) clear() {
+	s.vals = s.vals[:0]
+}
+
+func (s *sortedInts) add(v int) {
+	// find the index to insert v
+	i := sort.SearchInts(s.vals, v)
+	if i == len(s.vals) {
+		// if it's at the end, just append
+		s.vals = append(s.vals, v)
+		return
+	}
+
+	// add an empty value at the end, to make space for the copy
+	s.vals = append(s.vals, 0)
+
+	// move the last elements one to the right
+	copy(s.vals[i+1:], s.vals[i:])
+
+	// insert the new value at the correct location
+	s.vals[i] = v
+}
+
 type tuples struct {
-	starts []int
-	ends   []int
+	starts *sortedInts
+	ends   *sortedInts
 }
 
 func newTuples(size int) *tuples {
 	return &tuples{
-		starts: make([]int, 0, size),
-		ends:   make([]int, 0, size),
+		starts: newSortedInts(size),
+		ends:   newSortedInts(size),
 	}
 }
 
 func (t *tuples) add(x1, x2 int) {
-	t.starts = append(t.starts, x1)
-	t.ends = append(t.ends, x2)
+	t.starts.add(x1)
+	t.ends.add(x2)
 }
 
-func (t *tuples) generate() []tuple {
-	if len(t.starts) == 0 {
+func (t *tuples) populate(
+	rngs []tuple,
+) []tuple {
+	if len(t.starts.vals) == 0 {
 		return nil
 	}
-
-	sort.Ints(t.starts)
-	sort.Ints(t.ends)
-
-	output := make([]tuple, 0, 2)
 
 	var si, ei int
 	var curStart int
@@ -50,31 +82,31 @@ func (t *tuples) generate() []tuple {
 	active := 0
 
 	for {
-		if t.starts[si] <= t.ends[ei] {
+		if t.starts.vals[si] <= t.ends.vals[ei] {
 			si++
 			active++
 			if active == 1 {
-				curStart = t.starts[0]
+				curStart = t.starts.vals[0]
 			}
-			if si == len(t.starts) {
+			if si == len(t.starts.vals) {
 				break
 			}
 		} else {
 			active--
 			if active == 0 {
-				output = append(output, newTuple(curStart, t.ends[ei]))
-				curStart = t.starts[0]
+				rngs = append(rngs, newTuple(curStart, t.ends.vals[ei]))
+				curStart = t.starts.vals[0]
 			}
 			ei++
 		}
 
 	}
-	output = append(output, newTuple(curStart, t.ends[len(t.ends)-1]))
+	rngs = append(rngs, newTuple(curStart, t.ends.vals[len(t.ends.vals)-1]))
 
-	t.starts = t.starts[:0]
-	t.ends = t.ends[:0]
+	t.starts.clear()
+	t.ends.clear()
 
-	return output
+	return rngs
 }
 
 func One(
@@ -91,7 +123,7 @@ func One(
 	var ok bool
 
 	for _, r := range rs {
-		x1, x2, ok = r.seenInRow(2000000)
+		x1, x2, ok = r.getSeenInRow(2000000)
 		if ok {
 			ts.add(x1, x2)
 		}
@@ -105,7 +137,8 @@ func One(
 		}
 	}
 
-	output := ts.generate()
+	output := make([]tuple, 0, len(rs))
+	output = ts.populate(output)
 
 	// total starts at len(output) instead of zero because every element will add
 	// (t2 - t1 + 1) to the total
@@ -128,36 +161,44 @@ func One(
 type report struct {
 	sx, sy int
 	bx, by int
+
+	// calculated beacon distance
+	dist int
 }
 
-// TODO cache this as a field
-func (r report) beaconDistance() int {
-	dx := r.sx - r.bx
+func newReport(
+	sx, sy int,
+	bx, by int,
+) report {
+	dx := sx - bx
 	if dx < 0 {
 		dx = -dx
 	}
-	dy := r.sy - r.by
+	dy := sy - by
 	if dy < 0 {
 		dy = -dy
 	}
-	return dx + dy
+
+	return report{
+		sx:   sx,
+		sy:   sy,
+		bx:   bx,
+		by:   by,
+		dist: dx + dy,
+	}
 }
 
-func (r report) seenInRow(y int) (int, int, bool) {
+func (r report) getSeenInRow(y int) (int, int, bool) {
 	ry := y - r.sy
 	if ry < 0 {
 		ry = -ry
 	}
 
-	dist := r.beaconDistance()
-
-	if ry > dist {
+	if ry > r.dist {
 		return 0, 0, false
 	}
 
-	rx := dist - ry
-
-	return r.sx - rx, r.sx + rx, true
+	return r.sx - r.dist + ry, r.sx + r.dist - ry, true
 }
 
 func getReports(
@@ -204,12 +245,10 @@ func getReports(
 			return nil, err
 		}
 
-		output = append(output, report{
-			sx: sx,
-			sy: sy,
-			bx: bx,
-			by: by,
-		})
+		output = append(output, newReport(
+			sx, sy,
+			bx, by,
+		))
 	}
 
 	return output, nil
