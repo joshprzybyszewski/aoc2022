@@ -25,8 +25,6 @@ func Two(
 
 	output := make([]tuple, 0, len(rs))
 
-	// TODO iterate the rows based on how far they are from a sensor, not
-	// in 0 to max order.
 	for y := 0; y <= max; y++ {
 		for _, r = range rs {
 			x1, x2, ok = r.getSeenInRow(y)
