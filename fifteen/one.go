@@ -22,10 +22,10 @@ type tuples struct {
 	ends   []int
 }
 
-func newTuples() *tuples {
+func newTuples(size int) *tuples {
 	return &tuples{
-		starts: nil,
-		ends:   nil,
+		starts: make([]int, 0, size),
+		ends:   make([]int, 0, size),
 	}
 }
 
@@ -42,7 +42,7 @@ func (t *tuples) generate() []tuple {
 	sort.Ints(t.starts)
 	sort.Ints(t.ends)
 
-	output := make([]tuple, 0, len(t.starts))
+	output := make([]tuple, 0, 2)
 
 	var si, ei int
 	var curStart int
@@ -85,10 +85,13 @@ func One(
 		return 0, err
 	}
 
-	ts := newTuples()
+	ts := newTuples(len(rs))
+
+	var x1, x2 int
+	var ok bool
 
 	for _, r := range rs {
-		x1, x2, ok := r.seenInRow(2000000)
+		x1, x2, ok = r.seenInRow(2000000)
 		if ok {
 			ts.add(x1, x2)
 		}
@@ -127,6 +130,7 @@ type report struct {
 	bx, by int
 }
 
+// TODO cache this as a field
 func (r report) beaconDistance() int {
 	dx := r.sx - r.bx
 	if dx < 0 {

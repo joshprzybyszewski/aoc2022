@@ -16,7 +16,7 @@ func Two(
 		return 0, err
 	}
 
-	ts := newTuples()
+	ts := newTuples(len(rs))
 	var output []tuple
 
 	var x1, x2 int
@@ -31,6 +31,7 @@ func Two(
 				ts.add(x1, x2)
 			}
 		}
+		// TODO reduce allocs by having generate do a modify-in-place of the "output"
 		output = ts.generate()
 		// this assumes there's always output for the row
 		for _, t = range output {
