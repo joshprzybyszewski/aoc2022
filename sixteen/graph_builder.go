@@ -1,9 +1,11 @@
 package sixteen
 
 func buildGraph(
+	startingNode string,
 	valves []*valve,
 ) graph {
 	nameToIndex := make(map[string]int, numNodes)
+	var names [numNodes]string
 	vs := make(map[string]*valve, len(valves))
 
 	nodes := [numNodes]value{}
@@ -13,6 +15,7 @@ func buildGraph(
 		if v.flow > 0 {
 			nodes[ni] = value(v.flow)
 			nameToIndex[v.name] = ni
+			names[ni] = v.name
 			ni++
 		}
 	}
@@ -28,10 +31,22 @@ func buildGraph(
 	}
 
 	startingPositions := getEdges(
-		valves[0].name,
+		startingNode,
 		vs,
 		nameToIndex,
 	)
+
+	// for n := 0; n < numNodes; n++ {
+	// 	fmt.Printf("Node %q has flow rate: %2d\n", names[n], nodes[n])
+	// 	for d := 0; d < numNodes; d++ {
+	// 		fmt.Printf("\tCan reach %q in %2d minutes\n", names[d], edges[n][d])
+	// 	}
+	// }
+
+	// fmt.Printf("STARTING POSITIONS\n")
+	// for n := 0; n < numNodes; n++ {
+	// 	fmt.Printf("\tNode %q at time %2d\n", names[n], startingPositions[n])
+	// }
 
 	return graph{
 		nodes:             nodes,

@@ -2,6 +2,11 @@ package sixteen
 
 import "fmt"
 
+const (
+	// This is assumed in the puzzle.
+	part1StartingNode = `AA`
+)
+
 // TODO can be replaced with int8
 type time int
 
@@ -16,9 +21,9 @@ func One(
 	if err != nil {
 		return 0, err
 	}
-	g := buildGraph(valves)
+	g := buildGraph(part1StartingNode, valves)
 
-	// 1986 too high
+	// 1963, 1986 is too high
 	return getBestPath(
 		valves,
 		g,
@@ -59,11 +64,11 @@ func getBestPath(
 		}
 	}
 
-	var info string
-	for ps := &best; ps != nil; ps = ps.prev {
-		info = "=============\n" + ps.String(names) + "\n" + info
-	}
-	fmt.Println(info)
+	// var info string
+	// for ps := &best; ps != nil; ps = ps.prev {
+	// 	info = "=============\n" + ps.String(names) + "\n" + info
+	// }
+	// fmt.Println(info)
 
 	return int(best.released)
 }
