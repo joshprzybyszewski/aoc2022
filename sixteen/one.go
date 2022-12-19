@@ -1,6 +1,10 @@
 package sixteen
 
-import "fmt"
+// TODO can be replaced with int8
+type time int
+
+// TODO can be a uint8, or maybe 16 or 32
+type pressure int
 
 func One(
 	input string,
@@ -10,151 +14,150 @@ func One(
 	if err != nil {
 		return 0, err
 	}
-	vs, ns := simplify(valves)
+	g := buildGraph(valves)
 
 	// 1986 too high
 	return getBestPath(
-		valves[0].name,
-		vs,
-		ns,
+		g,
 		30,
 	), nil
 }
 
 func getBestPath(
-	start string,
-	vs map[string]*valve,
-	ns map[string]*node,
-	timeRemaining int,
+	g graph,
+	remaining time,
 ) int {
-	fmt.Printf("getBestPath(\n\t%q\n\t%+v\n\t%+v\n\t%d\n)\n",
-		start,
-		vs,
-		ns,
-		timeRemaining,
-	)
 
-	// the simplified graph only has nodes that have non-zero valves.
-	// Therefore, we need to navigate to one of those nodes to start
-	es := getEdges(
-		start,
-		vs,
-		ns,
-	)
 	max := 0
+	var em pathState
 
-	all := make(map[string]struct{}, len(ns)-1)
-	for name := range ns {
-		all[name] = struct{}{}
-	}
-
-	for _, e := range es {
-		fmt.Printf("Starting at %q\n\twith %d time remaining\n",
-			e.dest.name,
-			timeRemaining-e.weight,
+	for n, d := range g.startingPositions {
+		// fmt.Printf("Starting from %d (spent %d time)\n", n, d)
+		em = maximize(
+			g,
+			pathState{
+				cur:       node(n),
+				remaining: remaining - time(d),
+			},
 		)
+		// fmt.Printf("best path from %d is: %+v\n\n", n, em)
 
-		s := state{
-			cur:           e.dest.name,
-			ns:            ns,
-			closed:        all,
-			timeRemaining: timeRemaining - e.weight,
-		}
-		em := maximize(
-			s,
-		)
-
-		if em > max {
-			max = em
+		if int(em.released) > max {
+			max = int(em.released)
 		}
 	}
 
 	return max
 }
 
-type state struct {
-	cur string
+// valveState is an array of bools. When true, the valve has been opened
+// TODO could replace with a bitmap
+type valveState [numNodes]bool
 
-	ns     map[string]*node
-	closed map[string]struct{}
-
-	timeRemaining    int
-	pressureReleased int
+func (vs valveState) isOpen(n node) bool {
+	return ([numNodes]bool)(vs)[n]
 }
 
-func (s state) travel(
-	e *edge,
-) (state, bool) {
-	if s.timeRemaining <= 0 {
+func (vs valveState) open(n node) valveState {
+	cpy := ([numNodes]bool)(vs)
+	cpy[n] = true
+	return cpy
+}
+
+type pathState struct {
+	cur node
+
+	valves valveState
+
+	remaining time
+	released  pressure
+}
+
+func (s pathState) isOpen(n node) bool {
+	return s.valves.isOpen(n)
+}
+
+func travel(
+	g graph,
+	s pathState,
+	dest node,
+) (pathState, bool) {
+	if s.remaining <= 0 {
+		// fmt.Printf("\tCannot travel. No time remaining\n")
 		// no time
 		return s, false
 	}
 
-	if _, ok := s.closed[e.dest.name]; !ok {
-		// the destination isn't closed. Not worth going to.
+	if s.isOpen(dest) {
+		// fmt.Printf("\tCannot travel. already open\n")
+		// the destination is already open. Not worth going to.
 		return s, false
 	}
 
-	return state{
-		cur:           e.dest.name,
-		ns:            s.ns,
-		closed:        s.closed,
-		timeRemaining: s.timeRemaining - e.weight,
-	}, true
+	// fmt.Printf("\tTraveling from %2d to %2d (distance %d)\n",
+	// 	s.cur,
+	// 	dest,
+	// 	g.getDistance(s.cur, dest),
+	// )
+
+	s.remaining -= time(g.getDistance(s.cur, dest))
+	s.cur = dest
+
+	return s, true
 }
 
-func (s state) open() (state, bool) {
-	if s.timeRemaining <= 0 {
+func open(
+	g graph,
+	s pathState,
+) (pathState, bool) {
+	if s.remaining <= 0 {
+		// fmt.Printf("\tCannot open. No time remaining\n")
 		// no time
 		return s, false
 	}
-
-	s2 := state{
-		cur:              s.cur,
-		ns:               s.ns,
-		closed:           openValve(s.cur, s.closed),
-		timeRemaining:    s.timeRemaining - 1,
-		pressureReleased: s.pressureReleased,
+	if s.isOpen(s.cur) {
+		// fmt.Printf("\tCannot open. already open\n")
+		// the current node is already open. Cannot open
+		return s, false
 	}
+	// fmt.Printf("\tOpening %2d at %2d (with value %d)\n",
+	// 	s.cur,
+	// 	s.remaining,
+	// 	g.getValue(s.cur),
+	// )
 
-	s2.pressureReleased += (s2.timeRemaining * s2.ns[s2.cur].value)
+	s.valves = s.valves.open(s.cur)
+	s.remaining -= 1
+	s.released += (pressure(s.remaining) * pressure(g.getValue(s.cur)))
 
-	return s2, true
+	return s, true
 }
 
 func maximize(
-	s state,
-) int {
-	os, ok := s.open()
+	g graph,
+	s pathState,
+) pathState {
+	s, ok := open(g, s)
 	if !ok {
-		return 0
+		return s
 	}
 
-	max := os.pressureReleased
-	for _, e := range s.ns[s.cur].edges {
-		ts, ok := os.travel(e)
+	best := s
+	var ts pathState
+	for i := 0; i < numNodes; i++ {
+		ts, ok = travel(
+			g,
+			s,
+			node(i),
+		)
 		if !ok {
 			continue
 		}
-		tmax := maximize(ts)
-		if tmax > max {
-			max = tmax
+		tmax := maximize(g, ts)
+		if tmax.released > best.released {
+			best = tmax
 		}
 	}
 
-	return max
-}
-
-func openValve(
-	d string,
-	closed map[string]struct{},
-) map[string]struct{} {
-	c2 := make(map[string]struct{}, len(closed)-1)
-	for c := range closed {
-		if c == d {
-			continue
-		}
-		c2[c] = struct{}{}
-	}
-	return c2
+	return best
 }
