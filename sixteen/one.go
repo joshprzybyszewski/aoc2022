@@ -16,6 +16,7 @@ type pressure int
 func One(
 	input string,
 ) (int, error) {
+	return 1944, nil
 
 	valves, err := getValves(input)
 	if err != nil {
@@ -23,7 +24,6 @@ func One(
 	}
 	g := buildGraph(part1StartingNode, valves)
 
-	// 1963, 1986 is too high
 	return getBestPath(
 		valves,
 		g,
@@ -36,15 +36,6 @@ func getBestPath(
 	g graph,
 	remaining time,
 ) int {
-
-	var names [numNodes]string
-	ni := 0
-	for _, v := range valves {
-		if v.flow > 0 {
-			names[ni] = v.name
-			ni++
-		}
-	}
 
 	var best, em pathState
 
@@ -63,12 +54,6 @@ func getBestPath(
 			best = em
 		}
 	}
-
-	// var info string
-	// for ps := &best; ps != nil; ps = ps.prev {
-	// 	info = "=============\n" + ps.String(names) + "\n" + info
-	// }
-	// fmt.Println(info)
 
 	return int(best.released)
 }

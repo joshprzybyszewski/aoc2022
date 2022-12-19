@@ -1,18 +1,15 @@
 package sixteen
 
 const (
-	numNodes = 15 // real input has 15
-	// numNodes = 6 // test input has 6
+	// numNodes = 15 // real input has 15
+	numNodes = 6 // test input has 6
 )
 
-// TODO can be uint8
-type node int
+type node uint8
 
-// TODO PROBABLY can be uint8
-type value int
+type value uint8
 
-// TODO can be uint8
-type distance int
+type distance uint8
 
 type graph struct {
 	nodes [numNodes]value
