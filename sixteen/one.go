@@ -1,5 +1,7 @@
 package sixteen
 
+import "fmt"
+
 // TODO can be replaced with int8
 type time int
 
@@ -18,18 +20,28 @@ func One(
 
 	// 1986 too high
 	return getBestPath(
+		valves,
 		g,
 		30,
 	), nil
 }
 
 func getBestPath(
+	valves []*valve,
 	g graph,
 	remaining time,
 ) int {
 
-	max := 0
-	var em pathState
+	var names [numNodes]string
+	ni := 0
+	for _, v := range valves {
+		if v.flow > 0 {
+			names[ni] = v.name
+			ni++
+		}
+	}
+
+	var best, em pathState
 
 	for n, d := range g.startingPositions {
 		// fmt.Printf("Starting from %d (spent %d time)\n", n, d)
@@ -42,12 +54,18 @@ func getBestPath(
 		)
 		// fmt.Printf("best path from %d is: %+v\n\n", n, em)
 
-		if int(em.released) > max {
-			max = int(em.released)
+		if em.released > best.released {
+			best = em
 		}
 	}
 
-	return max
+	var info string
+	for ps := &best; ps != nil; ps = ps.prev {
+		info = "=============\n" + ps.String(names) + "\n" + info
+	}
+	fmt.Println(info)
+
+	return int(best.released)
 }
 
 // valveState is an array of bools. When true, the valve has been opened
@@ -71,10 +89,40 @@ type pathState struct {
 
 	remaining time
 	released  pressure
+
+	prev *pathState
 }
 
 func (s pathState) isOpen(n node) bool {
 	return s.valves.isOpen(n)
+}
+
+func (s pathState) String(
+	names [numNodes]string,
+) string {
+	openValves := `Open Valves: `
+	no := 0
+	for i := 0; i < numNodes; i++ {
+		if !s.valves.isOpen(node(i)) {
+			continue
+		}
+		if no > 0 {
+			openValves += `, `
+		}
+		openValves += names[i]
+		no++
+	}
+	if no == 0 {
+		openValves += `(none)`
+	}
+	return fmt.Sprintf(
+		"Current Node: %s\n\t%s\n\tMinute: %d\n\tTime Remaining: %d\n\tPressure released: %d\n",
+		names[s.cur],
+		openValves,
+		30-s.remaining,
+		s.remaining,
+		s.released,
+	)
 }
 
 func travel(
@@ -100,10 +148,12 @@ func travel(
 	// 	g.getDistance(s.cur, dest),
 	// )
 
-	s.remaining -= time(g.getDistance(s.cur, dest))
-	s.cur = dest
+	s2 := s
+	s2.prev = &s
+	s2.remaining -= time(g.getDistance(s2.cur, dest))
+	s2.cur = dest
 
-	return s, true
+	return s2, true
 }
 
 func open(
@@ -126,11 +176,13 @@ func open(
 	// 	g.getValue(s.cur),
 	// )
 
-	s.valves = s.valves.open(s.cur)
-	s.remaining -= 1
-	s.released += (pressure(s.remaining) * pressure(g.getValue(s.cur)))
+	s2 := s
+	s2.prev = &s
+	s2.valves = s2.valves.open(s2.cur)
+	s2.remaining -= 1
+	s2.released += (pressure(s2.remaining) * pressure(g.getValue(s2.cur)))
 
-	return s, true
+	return s2, true
 }
 
 func maximize(
