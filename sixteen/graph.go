@@ -17,13 +17,13 @@ type graph struct {
 	startingPositions [numNodes]distance
 }
 
-func (g graph) getDistance(
+func (g *graph) getDistance(
 	s, d node,
 ) distance {
 	return g.edges[s][d]
 }
 
-func (g graph) getValue(
+func (g *graph) getValue(
 	n node,
 ) value {
 	return g.nodes[n]
