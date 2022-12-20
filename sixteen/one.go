@@ -60,16 +60,14 @@ func getBestPath(
 
 // valveState is an array of bools. When true, the valve has been opened
 // TODO could replace with a bitmap
-type valveState [numNodes]bool
+type valveState uint16
 
 func (vs valveState) isOpen(n node) bool {
-	return ([numNodes]bool)(vs)[n]
+	return vs&(1<<n) != 0
 }
 
 func (vs valveState) open(n node) valveState {
-	cpy := ([numNodes]bool)(vs)
-	cpy[n] = true
-	return cpy
+	return vs | (1 << n)
 }
 
 type pathState struct {

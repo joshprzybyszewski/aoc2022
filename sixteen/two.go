@@ -18,6 +18,7 @@ func Two(
 	g := buildGraph(part1StartingNode, valves)
 
 	// 1652, 2118, 2534 is too low
+	// 2706 is not the right answer
 	return getBestPathForTwoTravellers(
 		valves,
 		g,
@@ -67,7 +68,7 @@ func getBestPathForTwoTravellers(
 
 				d1, d2 = g.startingPositions[w.i], g.startingPositions[w.j]
 				em = maximize2(
-					g,
+					&g,
 					pairPaths{
 						one: traveller{
 							cur:       node(w.i),
@@ -170,7 +171,7 @@ func (s pairPaths) String(
 }
 
 func open2(
-	g graph,
+	g *graph,
 	s pairPaths,
 ) (pairPaths, bool) {
 	if s.one.remaining <= 1 && s.two.remaining <= 1 {
@@ -179,9 +180,9 @@ func open2(
 	}
 
 	if s.one.remaining > s.two.remaining {
-		if s.isOpen(s.one.cur) {
-			panic(`wtf`)
-		}
+		// if s.isOpen(s.one.cur) {
+		// 	panic(`wtf`)
+		// }
 
 		s2 := s
 		// s2.prev = &s
@@ -191,9 +192,9 @@ func open2(
 		return s2, true
 	}
 
-	if s.isOpen(s.two.cur) {
-		panic(`wtf`)
-	}
+	// if s.isOpen(s.two.cur) {
+	// 	panic(`wtf`)
+	// }
 
 	s2 := s
 	// s2.prev = &s
@@ -205,15 +206,15 @@ func open2(
 }
 
 func openBoth(
-	g graph,
+	g *graph,
 	input pairPaths,
 ) pairPaths {
-	if input.isOpen(input.one.cur) {
-		panic(`wtf`)
-	}
-	if input.isOpen(input.two.cur) {
-		panic(`wtf`)
-	}
+	// if input.isOpen(input.one.cur) {
+	// 	panic(`wtf`)
+	// }
+	// if input.isOpen(input.two.cur) {
+	// 	panic(`wtf`)
+	// }
 
 	s := input
 	// s.prev = &input
@@ -228,7 +229,7 @@ func openBoth(
 }
 
 func maximize2(
-	g graph,
+	g *graph,
 	s pairPaths,
 ) pairPaths {
 	if s.one.remaining <= 0 && s.two.remaining <= 0 {
@@ -261,6 +262,7 @@ func maximize2(
 		// travel and maximize
 		best := s
 		var ts, tmax pairPaths
+		var di distance
 		for i := 0; i < numNodes; i++ {
 			if s.isOpen(node(i)) || s.one.cur == node(i) || s.two.cur == node(i) {
 				continue
@@ -269,10 +271,20 @@ func maximize2(
 			ts = s
 			// ts.prev = &s
 			if useOne {
-				ts.one.remaining -= time(g.getDistance(ts.one.cur, node(i)))
+				di = g.getDistance(s.one.cur, node(i))
+				if di >= distance(s.one.remaining) {
+					// it'll take longer to get there than it's worth
+					continue
+				}
+				ts.one.remaining -= time(di)
 				ts.one.cur = node(i)
 			} else {
-				ts.two.remaining -= time(g.getDistance(ts.two.cur, node(i)))
+				di = g.getDistance(s.two.cur, node(i))
+				if di >= distance(s.two.remaining) {
+					// it'll take longer to get there than it's worth
+					continue
+				}
+				ts.two.remaining -= time(di)
 				ts.two.cur = node(i)
 			}
 
@@ -317,9 +329,15 @@ func maximize2(
 
 	best := s
 	var ts, tmax pairPaths
+	var di1, dj2 distance
 	for i, j := 0, 0; i < numNodes; i++ {
 		if s.isOpen(node(i)) || s.one.cur == node(i) || s.two.cur == node(i) {
 			// don't go to the opposite node or to an open one
+			continue
+		}
+		di1 = g.getDistance(s.one.cur, node(i))
+		if di1 >= distance(s.one.remaining) {
+			// it'll take longer to get there than it's worth
 			continue
 		}
 
@@ -332,12 +350,17 @@ func maximize2(
 				// don't go to the opposite node or to an open one
 				continue
 			}
+			dj2 = g.getDistance(s.two.cur, node(j))
+			if dj2 >= distance(s.two.remaining) {
+				// it'll take longer to get there than it's worth
+				continue
+			}
 
 			ts = s
 			// ts.prev = &s
-			ts.one.remaining -= time(g.getDistance(ts.one.cur, node(i)))
+			ts.one.remaining -= time(di1)
 			ts.one.cur = node(i)
-			ts.two.remaining -= time(g.getDistance(ts.two.cur, node(j)))
+			ts.two.remaining -= time(dj2)
 			ts.two.cur = node(j)
 
 			tmax = maximize2(g, ts)
