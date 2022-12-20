@@ -8,26 +8,25 @@ import (
 func Two(
 	input string,
 ) (int, error) {
-	lines := strings.Split(input, "\n")
 
 	var val int
 	var err error
 	elves := make([]int, 0, 236)
 	cur := 0
-	for _, line := range lines {
-		if line == `` {
+	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
+		if nli == 0 {
 			elves = append(elves, cur)
 			cur = 0
-			continue
+		} else {
+			val, err = strconv.Atoi(input[0:nli])
+			if err != nil {
+				return 0, err
+			}
+			cur += val
 		}
-
-		val, err = strconv.Atoi(line)
-		if err != nil {
-			return 0, err
-		}
-		cur += val
+		input = input[nli+1:]
 	}
-	top3 := [3]int{-1. - 1, -1}
+	top3 := [3]int{-1, -1, -1}
 
 	for _, e := range elves {
 		if e > top3[0] {
