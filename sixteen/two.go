@@ -2,7 +2,9 @@ package sixteen
 
 import (
 	"fmt"
+	"runtime"
 	"strings"
+	"sync"
 	stdtime "time"
 )
 
@@ -47,34 +49,60 @@ func getBestPathForTwoTravellers(
 	}
 	removeMe = names
 
-	var best, em pairPaths
+	var wg sync.WaitGroup
+	var best pairPaths
+	var bestLock sync.Mutex
+	checkBest := func(o pairPaths) {
+		bestLock.Lock()
+		defer bestLock.Unlock()
+		if o.released > best.released {
+			best = o
+		}
+	}
 
-	fmt.Printf("startingPositions: %+v\n", g.startingPositions)
-	// TODO parallelize this for loop
-	for n1, d1 := range g.startingPositions {
+	work := make(chan struct{ i, j int }, numNodes*numNodes)
+	for i := 0; i < runtime.NumCPU(); i++ {
+		go func() {
+			var em pairPaths
+			var d1, d2 distance
+			for w := range work {
+				d1, d2 = g.startingPositions[w.i], g.startingPositions[w.j]
+				fmt.Printf("Starting from <%s,%s> (spent <%d, %d> time)\n", names[w.i], names[w.j], d1, d2)
+				em = maximize2(
+					g,
+					pairPaths{
+						one: traveller{
+							cur:       node(w.i),
+							remaining: remaining - time(d1),
+						},
+						two: traveller{
+							cur:       node(w.j),
+							remaining: remaining - time(d2),
+						},
+					},
+				)
+				checkBest(em)
+				wg.Done()
+			}
+		}()
+	}
+
+	for n1 := range g.startingPositions {
 		for n2 := n1 + 1; n2 < len(g.startingPositions); n2++ {
-			d2 := g.startingPositions[n2]
-			fmt.Printf("Starting from <%s,%s> (spent <%d, %d> time)\n", names[n1], names[n2], d1, d2)
-			em = maximize2(
-				g,
-				pairPaths{
-					one: traveller{
-						cur:       node(n1),
-						remaining: remaining - time(d1),
-					},
-					two: traveller{
-						cur:       node(n2),
-						remaining: remaining - time(d2),
-					},
-				},
-			)
-			fmt.Printf("best path from <%s,%s> is: %+v\n\n", names[n1], names[n2], em.released)
-
-			if em.released > best.released {
-				best = em
+			wg.Add(1)
+			work <- struct {
+				i int
+				j int
+			}{
+				i: n1,
+				j: n2,
 			}
 		}
 	}
+
+	wg.Wait()
+	close(work)
+
 	// fmt.Printf("info\n")
 
 	// fmt.Println(fullPath(&dj, names))
