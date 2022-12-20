@@ -1,8 +1,7 @@
 package sixteen
 
 const (
-	numNodes node = 15 // real input has 15
-	// numNodes = 6 // test input has 6
+	numNodes node = 15
 )
 
 type node uint8
