@@ -3,7 +3,8 @@ package sixteen
 type duetPath struct {
 	one, two traveller
 
-	valves valveState
+	valves  valveState
+	numOpen node
 
 	released pressure
 }
@@ -12,86 +13,49 @@ func (s *duetPath) isOpen(n node) bool {
 	return s.valves.isOpen(n)
 }
 
-func (s *duetPath) numOpen() node {
-	no := node(0)
-	for n := node(0); n < numNodes; n++ {
-		if s.valves.isOpen(n) {
-			no++
-		}
-	}
-	return no
+func (s *duetPath) open(n node) {
+	s.valves = s.valves.open(n)
+	s.numOpen++
 }
 
-func openOne(
-	g *graph,
-	s duetPath,
-) (duetPath, bool) {
-	if s.one.remaining <= 1 && s.two.remaining <= 1 {
-		// no time
-		return s, false
-	}
-
-	if s.one.remaining > s.two.remaining {
-		s2 := s
-		s2.valves = s2.valves.open(s2.one.cur)
-		s2.one.remaining -= 1
-		s2.released += (pressure(s2.one.remaining) * pressure(g.getValue(s2.one.cur)))
-		return s2, true
-	}
-
-	s2 := s
-	s2.valves = s2.valves.open(s2.two.cur)
-	s2.two.remaining -= 1
-	s2.released += (pressure(s2.two.remaining) * pressure(g.getValue(s2.two.cur)))
-
-	return s2, true
-}
-
-func openBoth(
-	g *graph,
-	input duetPath,
-) duetPath {
-
-	s := input
-	s.valves = s.valves.open(s.one.cur).open(s.two.cur)
-	s.one.remaining -= 1
-	s.two.remaining -= 1
-	// s.one.remaining and s.two.remaining are the same
-	// s.released += (pressure(s.one.remaining) * pressure(g.getValue(s.one.cur))) +
-	// (pressure(s.two.remaining) * pressure(g.getValue(s.two.cur)))
-	s.released += (pressure(s.one.remaining) * pressure(g.getValue(s.one.cur)+g.getValue(s.two.cur)))
-	return s
+func (s *duetPath) openTwo(n1, n2 node) {
+	s.valves = s.valves.openTwo(n1, n2)
+	s.numOpen += 2
 }
 
 func maximizeDuet(
 	g *graph,
 	s duetPath,
 ) duetPath {
-	if s.one.remaining <= 0 && s.two.remaining <= 0 {
+	if s.one.remaining == 0 && s.two.remaining == 0 {
 		// no time
 		return s
 	}
 
 	if s.one.remaining != s.two.remaining {
 		useOne := s.one.remaining > s.two.remaining
-		s, ok := openOne(g, s)
-		if !ok {
-			return s
+
+		if useOne {
+			s.open(s.one.cur)
+			s.one.remaining -= 1
+			s.released += (pressure(s.one.remaining) * pressure(g.getValue(s.one.cur)))
+		} else {
+			s.open(s.two.cur)
+			s.two.remaining -= 1
+			s.released += (pressure(s.two.remaining) * pressure(g.getValue(s.two.cur)))
 		}
 
-		if no := s.numOpen(); no == numNodes {
+		if s.numOpen == numNodes {
 			return s
-		} else if no == numNodes-1 {
+		} else if s.numOpen == numNodes-1 {
 			// This guy opened the second-to-last valve. Open the other one
 			// by setting this one's remaining time to zero.
-			s2 := s
-			// s2.prev = &s
 			if useOne {
-				s2.one.remaining = 0
+				s.one.remaining = 0
 			} else {
-				s2.two.remaining = 0
+				s.two.remaining = 0
 			}
-			return maximizeDuet(g, s2)
+			return maximizeDuet(g, s)
 		}
 
 		// travel and maximize
@@ -132,11 +96,15 @@ func maximizeDuet(
 	}
 
 	// open both valves
-	s = openBoth(g, s)
+	s.openTwo(s.one.cur, s.two.cur)
+	s.one.remaining -= 1
+	s.two.remaining -= 1
+	// s.one.remaining and s.two.remaining are the same
+	s.released += (pressure(s.one.remaining) * pressure(g.getValue(s.one.cur)+g.getValue(s.two.cur)))
 
-	if no := s.numOpen(); no == numNodes {
+	if s.numOpen == numNodes {
 		return s
-	} else if no == numNodes-1 {
+	} else if s.numOpen == numNodes-1 {
 		// We just opened two valves at once. Only one remains. Have the closer
 		// operator move to the last valve.
 		vi := node(0)

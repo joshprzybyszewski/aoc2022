@@ -10,3 +10,7 @@ func (vs valveState) isOpen(n node) bool {
 func (vs valveState) open(n node) valveState {
 	return vs | (1 << n)
 }
+
+func (vs valveState) openTwo(n1, n2 node) valveState {
+	return vs | (1 << n1) | (1 << n2)
+}
