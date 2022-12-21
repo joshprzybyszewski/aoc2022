@@ -56,18 +56,21 @@ func One(
 	var inst instruction
 	var err error
 
-	for _, line := range strings.Split(
-		input[strings.Index(input, "\n\n")+2:],
-		"\n",
-	) {
-		if line == `` {
+	// jump past the stacks information
+	input = input[strings.Index(input, "\n\n")+2:]
+
+	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
+		if nli == 0 {
+			// skip empty lines
+			input = input[1:]
 			continue
 		}
-		inst, err = newInstruction(line)
+		inst, err = newInstruction(input[:nli])
 		if err != nil {
 			return ``, err
 		}
 		move(inst.source-1, inst.dest-1, inst.quantity)
+		input = input[nli+1:]
 	}
 
 	output := make([]byte, 0, len(stacks))
