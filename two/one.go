@@ -8,18 +8,21 @@ import (
 func One(
 	input string,
 ) (int, error) {
-	lines := strings.Split(input, "\n")
-
 	var s int
 	var err error
 
 	total := 0
-	for _, line := range lines {
-		s, err = score(line)
+	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
+		if nli == 0 {
+			input = input[1:]
+			continue
+		}
+		s, err = score(input[0:nli])
 		if err != nil {
 			return 0, err
 		}
 		total += s
+		input = input[nli+1:]
 	}
 
 	return total, nil
@@ -28,10 +31,6 @@ func One(
 func score(
 	line string,
 ) (int, error) {
-	if line == `` {
-		return 0, nil
-	}
-
 	ss, err := shapeScore(line[2])
 	if err != nil {
 		return 0, err
