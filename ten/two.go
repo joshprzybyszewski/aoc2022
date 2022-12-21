@@ -8,8 +8,6 @@ import (
 func Two(
 	input string,
 ) (string, error) {
-	lines := strings.Split(input, "\n")
-
 	var crt [6][40]byte
 
 	r := 0
@@ -31,17 +29,19 @@ func Two(
 		}
 	}
 
-	for _, line := range lines {
-		if line == `` {
+	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
+		if nli == 0 {
+			input = input[1:]
 			continue
 		}
-		if line == `noop` {
+		if input[:nli] == `noop` {
 			cycle()
+			input = input[nli+1:]
 			continue
 		}
 
 		// the instruction is "addx A"
-		a, err = strconv.Atoi(line[5:])
+		a, err = strconv.Atoi(input[5:nli])
 		if err != nil {
 			return ``, err
 		}
@@ -49,6 +49,7 @@ func Two(
 		cycle()
 		cycle()
 		x += a
+		input = input[nli+1:]
 	}
 
 	/* Manually inspect the printed characters, then set the returned string
