@@ -2,15 +2,12 @@ package seven
 
 import (
 	"fmt"
-	"strings"
 )
 
 func Two(
 	input string,
 ) (int, error) {
-	lines := strings.Split(input, "\n")
-
-	curUsedSpace, ds, err := getDirectorySizes(lines)
+	curUsedSpace, ds, err := getDirectorySizes(input)
 	if err != nil {
 		return 0, err
 	}

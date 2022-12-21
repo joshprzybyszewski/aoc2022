@@ -24,9 +24,7 @@ type fileDir struct {
 func One(
 	input string,
 ) (int, error) {
-	lines := strings.Split(input, "\n")
-
-	_, ds, err := getDirectorySizes(lines)
+	_, ds, err := getDirectorySizes(input)
 	if err != nil {
 		return 0, err
 	}
@@ -42,7 +40,7 @@ func One(
 }
 
 func getDirectorySizes(
-	lines []string,
+	input string,
 ) (int, []int, error) {
 	data := make([]fileDir, 1, 457)
 	const rootDirIndex = 0
@@ -80,47 +78,51 @@ func getDirectorySizes(
 	isLS := false
 	var size int
 	var err error
-	for _, line := range lines {
-		if line == `` {
+	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
+		if nli == 0 {
+			input = input[1:]
 			continue
 		}
-		if line[0] == '$' {
+		if input[0] == '$' {
 			if isLS {
 				data[curDirIndex].lsEndIndex = len(data)
 			}
 			isLS = false
-			if line[2] == 'c' { // line starts with: "$ cd "
-				curDirIndex = getNewIndexFromCD(line)
+			if input[2] == 'c' { // line starts with: "$ cd "
+				curDirIndex = getNewIndexFromCD(input[:nli])
 				if curDirIndex == -1 {
-					return 0, nil, fmt.Errorf("invalid cd command: %q", line)
+					return 0, nil, fmt.Errorf("invalid cd command: %q", input[:nli])
 				}
-			} else if line[2] == 'l' { // line starts with: "$ ls"
+			} else if input[2] == 'l' { // line starts with: "$ ls"
 				if data[curDirIndex].lsIndex >= 0 {
 					return 0, nil, fmt.Errorf("attempting to ls another time: %q", data[curDirIndex].name)
 				}
 				isLS = true
 				data[curDirIndex].lsIndex = len(data)
 			}
+			input = input[nli+1:]
 			continue
 		}
 		if !isLS {
+			input = input[nli+1:]
 			continue
 		}
 
-		if len(line) >= 4 && line[:4] == `dir ` {
+		if nli >= 4 && input[:4] == `dir ` {
 			// this assumes that there cannot be a file named "dir".
 			data = append(data, fileDir{
-				name:       line[4:], // line starts with "dir "
+				name:       input[4:nli], // line starts with "dir "
 				parent:     curDirIndex,
 				size:       -1, // unset
 				lsIndex:    -1, // unset
 				lsEndIndex: -1, // unset
 			})
+			input = input[nli+1:]
 			continue
 		}
 
 		size, err = strconv.Atoi(
-			line[:strings.Index(line, ` `)],
+			input[:strings.Index(input, ` `)],
 		)
 		if err != nil {
 			return 0, nil, err
@@ -131,6 +133,7 @@ func getDirectorySizes(
 			// name:   parts[1], // filename is unnecessary
 			parent: -1, // files don't need to know the parent
 		})
+		input = input[nli+1:]
 	}
 
 	if isLS {
