@@ -9,8 +9,6 @@ func Two(
 	input string,
 ) (int, error) {
 
-	lines := strings.Split(input, "\n")
-
 	var knots [10]coord
 	var q, i, j int
 	var err error
@@ -18,17 +16,18 @@ func Two(
 	pos := make(map[coord]struct{}, int(1<<13))
 	pos[knots[len(knots)-1]] = struct{}{}
 
-	for _, line := range lines {
-		if line == `` {
+	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
+		if nli == 0 {
+			input = input[1:]
 			continue
 		}
-		q, err = strconv.Atoi(line[2:])
+		q, err = strconv.Atoi(input[2:nli])
 		if err != nil {
 			return 0, err
 		}
 
 		for i = 0; i < q; i++ {
-			switch direction(line[0]) {
+			switch direction(input[0]) {
 			case right:
 				knots[0].x++
 			case left:
@@ -40,10 +39,11 @@ func Two(
 			}
 
 			for j = 1; j < len(knots); j++ {
-				knots[j] = moveCoord(knots[j], knots[j-1])
+				knots[j].moveToward(knots[j-1])
 			}
 			pos[knots[len(knots)-1]] = struct{}{}
 		}
+		input = input[nli+1:]
 	}
 
 	return len(pos), nil
