@@ -23,6 +23,8 @@ echo "$benchmarks" \
 | grep ":" \
 | sed \
     -e 's/BenchmarkAll.*\//|/' \
+| sed \
+    '0~1 a\\' \
 >> results.md
 
 echo "" >> results.md

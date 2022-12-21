@@ -159,7 +159,7 @@ func runNRounds(
 
 	var wg sync.WaitGroup
 
-	work := make(chan int, runtime.NumCPU())
+	work := make(chan int, numItems)
 	for i := 0; i < runtime.NumCPU(); i++ {
 		go func() {
 			for ii := range work {

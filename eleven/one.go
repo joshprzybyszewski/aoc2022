@@ -2,7 +2,7 @@ package eleven
 
 const (
 	numMonkeys = 8
-	numItems   = 34
+	numItems   = 36
 
 	numRounds1 = 20
 	numRounds2 = 10000
