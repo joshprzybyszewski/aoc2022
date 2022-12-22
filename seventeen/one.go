@@ -307,12 +307,12 @@ func One(
 	input string,
 ) (int, error) {
 	c := newChamber()
-	i := 0
+	jetIndex := 0
 
 	for nr := 0; nr < numRocksPart1; nr++ {
 		// fmt.Printf("Starting %dth rock\n%s\n\n", nr, c.String())
 		for {
-			switch input[i] {
+			switch input[jetIndex] {
 			case '<':
 				c.pushLeft()
 				// fmt.Printf("Pushed Left\n%s\n\n", c.String())
@@ -320,12 +320,12 @@ func One(
 				c.pushRight()
 				// fmt.Printf("Pushed Right\n%s\n\n", c.String())
 			default:
-				panic(input[i])
+				panic(input[jetIndex])
 			}
 
-			i++
-			if i == len(input)-1 {
-				i = 0
+			jetIndex++
+			if jetIndex == len(input)-1 {
+				jetIndex = 0
 			}
 
 			if !c.fall() {

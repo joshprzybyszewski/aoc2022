@@ -49,20 +49,20 @@ func Two(
 	input string,
 ) (int, error) {
 	c := newChamber()
-	i := 0
+	jetIndex := 0
 
 	numRowsReduced := 0
-	var r int
+	var numReduced int
 
 	reductions := make([]*reduction, 0, 1024)
 	var same *reduction
 
 	for nr := 0; nr < numRocksPart2; nr++ {
-		r = c.reduce()
-		if r > 0 {
-			numRowsReduced += r
+		numReduced = c.reduce()
+		if numReduced > 0 {
+			numRowsReduced += numReduced
 			red := &reduction{
-				jetIndex:   i,
+				jetIndex:   jetIndex,
 				numReduced: numRowsReduced,
 				rockIndex:  nr,
 				chamber:    c,
@@ -88,18 +88,18 @@ func Two(
 		}
 
 		for {
-			switch input[i] {
+			switch input[jetIndex] {
 			case '<':
 				c.pushLeft()
 			case '>':
 				c.pushRight()
 			default:
-				panic(input[i])
+				panic(input[jetIndex])
 			}
 
-			i++
-			if i == len(input)-1 {
-				i = 0
+			jetIndex++
+			if jetIndex == len(input)-1 {
+				jetIndex = 0
 			}
 
 			if !c.fall() {
