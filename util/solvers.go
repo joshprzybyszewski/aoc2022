@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/joshprzybyszewski/aoc2022/eight"
+	"github.com/joshprzybyszewski/aoc2022/eighteen"
 	"github.com/joshprzybyszewski/aoc2022/eleven"
 	"github.com/joshprzybyszewski/aoc2022/fifteen"
 	"github.com/joshprzybyszewski/aoc2022/five"
@@ -81,6 +82,8 @@ func IntSolvers(
 		return sixteen.One, sixteen.Two
 	case 17:
 		return seventeen.One, seventeen.Two
+	case 18:
+		return eighteen.One, eighteen.Two
 	}
 	return nil, nil
 }
