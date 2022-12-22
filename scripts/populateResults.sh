@@ -30,16 +30,22 @@ echo "$benchmarks" \
 echo "" >> results.md
 echo "## Puzzles" >> results.md
 echo "" >> results.md
-echo "|Puzzle|Duration (ns)|Bytes allocated to Heap|# of Heap allocations|" >> results.md
+echo "|Puzzle|Duration|Bytes allocated to Heap|# of Heap allocations|" >> results.md
 echo "|-|-:|-:|-:|" >> results.md
 
 echo "$benchmarks" \
 | grep BenchmarkAll \
 | sed \
+    -r \
+    -e 's/([[:digit:]]+)([[:digit:]]{2})([[:digit:]]{7})[[:space:]]ns/\1.\2_s/' \
+    -e 's/([[:digit:]]+)([[:digit:]]{2})([[:digit:]]{4})[[:space:]]ns/\1.\2_ms/' \
+    -e 's/([[:digit:]]+)([[:digit:]]{2})([[:digit:]]{1})[[:space:]]ns/\1.\2_µs/' \
+    -e 's/([[:digit:]])[[:space:]]ns/\1_ns/' \
+| sed \
     -e 's/-[0-9]\+\s\+[0-9]\+//g' \
-    -e 's/ns\/op//' \
     -e 's/B\/op//' \
     -e 's/allocs\/op//' \
+    -e 's/\/op//' \
     -e 's/\s\+/|/g' \
     -e 's/BenchmarkAll\//|/' \
     -e 's/[_\/]/ /g' \
