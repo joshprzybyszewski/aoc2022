@@ -21,14 +21,12 @@ func One(
 	g := buildGraph(startingNode, valves)
 
 	return getBestPath(
-		valves,
 		&g,
 		30,
 	), nil
 }
 
 func getBestPath(
-	valves []*valve,
 	g *graph,
 	remaining distance,
 ) int {

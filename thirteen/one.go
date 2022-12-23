@@ -19,22 +19,12 @@ func One(
 		l, _ = parse(lines[i], 0)
 		r, _ = parse(lines[i+1], 0)
 
-		// fmt.Printf("===========\n")
-		// fmt.Printf("Comparing\n")
-		// fmt.Printf("\tleft: %+v\n", l)
-		// fmt.Printf("\trght: %+v\n", r)
-
-		// fmt.Printf("-----------\n")
 		switch compare(l, r) {
 		case valid:
-			// fmt.Printf("VALID\n")
 			sum += (i / 3) + 1
-			// case unknown:
-			// 	fmt.Printf("UNKNOWN\n")
-			// case invalid:
-			// 	fmt.Printf("INVALID\n")
+		case unknown:
+			panic(`unexpected`)
 		}
-		// fmt.Printf("===========\n")
 	}
 
 	return sum, nil
@@ -54,7 +44,7 @@ func compare(
 	lv, okl := l.(int)
 	rv, okr := r.(int)
 	if okl && okr {
-		// fmt.Printf("comparing ints\n\tl: %+v\n\tr: %+v\n", lv, rv)
+		// compare ints
 		if lv < rv {
 			return valid
 		} else if lv > rv {
@@ -64,7 +54,7 @@ func compare(
 	} else if !okl && !okr {
 		ls := l.([]interface{})
 		rs := r.([]interface{})
-		// fmt.Printf("comparing slices\n\tl: %+v\n\tr: %+v\n", ls, rs)
+		// compare lists
 		var a answer
 		for i := range ls {
 			if i >= len(rs) {

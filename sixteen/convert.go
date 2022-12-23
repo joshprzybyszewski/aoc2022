@@ -7,8 +7,8 @@ import (
 
 type valve struct {
 	name  string
-	flow  int
 	dests []string
+	flow  int
 }
 
 func newValve(

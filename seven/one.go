@@ -12,10 +12,10 @@ const (
 )
 
 type fileDir struct {
+	name string
 	size int
 	// if a directory, this is the index of the first file
 	lsIndex, lsEndIndex int
-	name                string
 	// if a file, this is -1
 	// if a directory, this is the index of its parent directory
 	parent int
@@ -138,7 +138,6 @@ func getDirectorySizes(
 
 	if isLS {
 		data[curDirIndex].lsEndIndex = len(data)
-		isLS = false
 	}
 
 	var getSize func(fdi int) (int, bool)

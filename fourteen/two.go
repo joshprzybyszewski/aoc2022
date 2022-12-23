@@ -13,11 +13,7 @@ func Two(
 		return 0, err
 	}
 
-	// fmt.Printf("got grid\n%s\n", g)
-
 	g.addFloor()
-
-	// fmt.Printf("got grid\n%s\n", g)
 
 	units := 0
 	for g.addSand(500, 0) {
@@ -26,8 +22,6 @@ func Two(
 			break
 		}
 	}
-
-	// fmt.Printf("%s\n", g)
 
 	return units, nil
 }

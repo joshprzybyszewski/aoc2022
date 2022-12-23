@@ -78,7 +78,7 @@ func One(
 		}
 
 		i1 = i2 + 1
-		i2 = nli // i1 + strings.Index(input[i1:], `,`)
+		i2 = nli
 		z, err = strconv.Atoi(input[i1:i2])
 		if err != nil {
 			return 0, err
@@ -98,20 +98,4 @@ func One(
 	}
 
 	return total, nil
-}
-
-type cube struct {
-	x, y, z int
-
-	numNeighbors uint8
-}
-
-func newCube(
-	x, y, z int,
-) cube {
-	return cube{
-		x: x,
-		y: y,
-		z: z,
-	}
 }

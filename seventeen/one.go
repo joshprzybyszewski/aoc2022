@@ -310,15 +310,12 @@ func One(
 	jetIndex := 0
 
 	for nr := 0; nr < numRocksPart1; nr++ {
-		// fmt.Printf("Starting %dth rock\n%s\n\n", nr, c.String())
 		for {
 			switch input[jetIndex] {
 			case '<':
 				c.pushLeft()
-				// fmt.Printf("Pushed Left\n%s\n\n", c.String())
 			case '>':
 				c.pushRight()
-				// fmt.Printf("Pushed Right\n%s\n\n", c.String())
 			default:
 				panic(input[jetIndex])
 			}
@@ -329,10 +326,8 @@ func One(
 			}
 
 			if !c.fall() {
-				// fmt.Printf("Came to rest\n%s\n\n", c.String())
 				break
 			}
-			// fmt.Printf("Fell\n%s\n\n", c.String())
 		}
 	}
 

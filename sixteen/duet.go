@@ -70,7 +70,7 @@ func maximizeDuet(
 			ts = s
 			if useOne {
 				di = g.getDistance(s.one.cur, n)
-				if di >= distance(s.one.remaining) {
+				if di >= s.one.remaining {
 					// it'll take longer to get there than it's worth
 					continue
 				}
@@ -78,7 +78,7 @@ func maximizeDuet(
 				ts.one.cur = n
 			} else {
 				di = g.getDistance(s.two.cur, n)
-				if di >= distance(s.two.remaining) {
+				if di >= s.two.remaining {
 					// it'll take longer to get there than it's worth
 					continue
 				}

@@ -203,52 +203,54 @@ func (r report) getSeenInRow(y int) (int, int, bool) {
 
 func getReports(
 	input string,
-) ([]report, error) {
+) ([33]report, error) {
 	// Sensor at x=2, y=18: closest beacon is at x=-2, y=15
-	lines := strings.Split(input, "\n")
 
-	output := make([]report, 0, len(lines)-1)
+	var output [33]report //:= make([]report, 0, 33)
 
 	var i1, i2,
 		sx, sy,
 		bx, by int
 	var err error
-	for _, line := range lines {
-		if line == `` {
+	oi := 0
+	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
+		if nli == 0 {
+			input = input[nli+1:]
 			continue
 		}
-		i1 = strings.Index(line, `x=`) + 2
-		i2 = i1 + strings.Index(line[i1:], `,`)
-		sx, err = strconv.Atoi(line[i1:i2])
+		i1 = strings.Index(input, `x=`) + 2
+		i2 = i1 + strings.Index(input[i1:], `,`)
+		sx, err = strconv.Atoi(input[i1:i2])
 		if err != nil {
-			return nil, err
+			return [33]report{}, err
 		}
 
-		i1 = strings.Index(line, `y=`) + 2
-		i2 = i1 + strings.Index(line[i1:], `:`)
-		sy, err = strconv.Atoi(line[i1:i2])
+		i1 = strings.Index(input, `y=`) + 2
+		i2 = i1 + strings.Index(input[i1:], `:`)
+		sy, err = strconv.Atoi(input[i1:i2])
 		if err != nil {
-			return nil, err
+			return [33]report{}, err
 		}
 
-		i1 = strings.LastIndex(line, `x=`) + 2
-		i2 = i1 + strings.Index(line[i1:], `,`)
-		bx, err = strconv.Atoi(line[i1:i2])
+		i1 = i2 + strings.Index(input[i2:], `x=`) + 2
+		i2 = i1 + strings.Index(input[i1:], `,`)
+		bx, err = strconv.Atoi(input[i1:i2])
 		if err != nil {
-			return nil, err
+			return [33]report{}, err
 		}
 
-		i1 = strings.LastIndex(line, `y=`) + 2
-		// i2 = i1 + strings.Index(line[i1:], `,`)
-		by, err = strconv.Atoi(line[i1:])
+		i1 = i2 + strings.Index(input[i2:], `y=`) + 2
+		by, err = strconv.Atoi(input[i1:nli])
 		if err != nil {
-			return nil, err
+			return [33]report{}, err
 		}
 
-		output = append(output, newReport(
+		output[oi] = newReport(
 			sx, sy,
 			bx, by,
-		))
+		)
+		oi++
+		input = input[nli+1:]
 	}
 
 	return output, nil

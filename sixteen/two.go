@@ -16,14 +16,12 @@ func Two(
 	g := buildGraph(startingNode, valves)
 
 	return getBestPathForDuet(
-		valves,
 		&g,
 		26,
 	), nil
 }
 
 func getBestPathForDuet(
-	valves []*valve,
 	g *graph,
 	remaining distance,
 ) int {
