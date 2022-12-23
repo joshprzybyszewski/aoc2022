@@ -13,8 +13,18 @@ func Two(
 	var q, i, j int
 	var err error
 
-	pos := make(map[coord]struct{}, int(1<<13))
-	pos[knots[len(knots)-1]] = struct{}{}
+	/*
+		When we start at (0,0):
+		   max: {x:45 y:163}
+		   min: {x:-110 y:-108}
+	*/
+	for i := range knots {
+		knots[i].x = 110
+		knots[i].y = 108
+	}
+	// 166 = 45-(-110) + 1
+	// 274 = 163-(-108)+1
+	var seen [166][272]bool
 
 	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
 		if nli == 0 {
@@ -41,10 +51,19 @@ func Two(
 			for j = 1; j < len(knots); j++ {
 				knots[j].moveToward(knots[j-1])
 			}
-			pos[knots[len(knots)-1]] = struct{}{}
+			seen[knots[9].x][knots[9].y] = true
 		}
 		input = input[nli+1:]
 	}
 
-	return len(pos), nil
+	total := 0
+	for i := range seen {
+		for j := range seen[i] {
+			if seen[i][j] {
+				total++
+			}
+		}
+	}
+
+	return total, nil
 }

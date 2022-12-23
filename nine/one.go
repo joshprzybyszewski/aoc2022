@@ -12,8 +12,19 @@ func One(
 	var q, i int
 	var err error
 
-	pos := make(map[coord]struct{}, int(1<<14))
-	pos[tail] = struct{}{}
+	/*
+		When we start at (0,0):
+			max: {x:52 y:166}
+			min: {x:-115 y:-115}
+	*/
+	head.x = 115
+	tail.x = 115
+	head.y = 115
+	tail.y = 115
+
+	// 168 = 52-(-115) + 1
+	// 282 = 166-(-115)+1
+	var seen [168][282]bool
 
 	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
 		if nli == 0 {
@@ -38,12 +49,21 @@ func One(
 			}
 
 			tail.moveToward(head)
-			pos[tail] = struct{}{}
+			seen[tail.x][tail.y] = true
 		}
 		input = input[nli+1:]
 	}
 
-	return len(pos), nil
+	total := 0
+	for i := range seen {
+		for j := range seen[i] {
+			if seen[i][j] {
+				total++
+			}
+		}
+	}
+
+	return total, nil
 }
 
 type coord struct {
