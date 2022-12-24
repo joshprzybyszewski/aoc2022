@@ -22,6 +22,7 @@ import (
 	"github.com/joshprzybyszewski/aoc2022/thirteen"
 	"github.com/joshprzybyszewski/aoc2022/three"
 	"github.com/joshprzybyszewski/aoc2022/twelve"
+	"github.com/joshprzybyszewski/aoc2022/twenty"
 	"github.com/joshprzybyszewski/aoc2022/two"
 )
 
@@ -87,6 +88,8 @@ func IntSolvers(
 		return eighteen.One, eighteen.Two
 	case 19:
 		return nineteen.One, nineteen.Two
+	case 20:
+		return twenty.One, twenty.Two
 	}
 	return nil, nil
 }
