@@ -28,27 +28,12 @@ func One(
 		input = input[nli+1:]
 	}
 
-	// numbers = []int{
-	// 	1,
-	// 	2,
-	// 	-3,
-	// 	3,
-	// 	-2,
-	// 	0,
-	// 	4,
-	// }
-
-	// fmt.Printf("numbers: %+v\n", numbers)
 	linkedList := convertToDoublyLinkedList(numbers)
-	// fmt.Printf("linkedList: %+v\n", linkedList)
-	// for i := range linkedList {
-	// 	fmt.Printf("\tlinkedList[%d]: %+v\n", i, linkedList[i])
-	// }
 
 	mixed := mix(linkedList)
 	start := -1
 	for i := range mixed {
-		if mixed[i] == 0 {
+		if mixed[i].val == 0 {
 			start = i
 			break
 		}
@@ -56,41 +41,29 @@ func One(
 	if start == -1 {
 		return 0, fmt.Errorf("did not have zero in the data set")
 	}
-	// fmt.Printf("mixed: %+v\n", mixed)
-	oneThou := mixed[(start+1000)%len(mixed)]
-	// fmt.Printf("oneThou: %+v\n", oneThou)
-	twoThou := mixed[(start+2000)%len(mixed)]
-	// fmt.Printf("twoThou: %+v\n", twoThou)
-	threeThou := mixed[(start+3000)%len(mixed)]
-	// fmt.Printf("threeThou: %+v\n", threeThou)
+	oneThou := mixed[(start+1000)%len(mixed)].val
+	twoThou := mixed[(start+2000)%len(mixed)].val
+	threeThou := mixed[(start+3000)%len(mixed)].val
 
-	// 1596 is too low
 	return oneThou + twoThou + threeThou, nil
 }
 
-func mix(nodes []*node) []int {
+func mix(nodes []*node) []*node {
 
 	var j int
-	head := nodes[0]
 	for _, n := range nodes {
 		if n.val > 0 {
 			for j = 0; j < n.val; j++ {
-				head = n.forward(head)
+				n.forward()
 			}
 		} else if n.val < 0 {
 			for j = 0; j > n.val; j-- {
-				head = n.backward(head)
+				n.backward()
 			}
 		}
 	}
 
-	output := make([]int, 0, len(nodes))
-	output = append(output, head.val)
-	for n := head.next; n != head; n = n.next {
-		output = append(output, n.val)
-	}
-
-	return output
+	return nodes
 }
 
 func convertToDoublyLinkedList(numbers []int) []*node {
@@ -127,7 +100,7 @@ func newNode(val int) *node {
 	}
 }
 
-func (n *node) forward(head *node) *node {
+func (n *node) forward() {
 	// A <-> n <-> B <-> C
 	// A <-> B <-> n <-> C
 	a := n.prev
@@ -142,15 +115,9 @@ func (n *node) forward(head *node) *node {
 
 	n.next = c
 	c.prev = n
-
-	if n == head {
-		return b
-	}
-
-	return head
 }
 
-func (n *node) backward(head *node) *node {
+func (n *node) backward() {
 	// A <-> B <-> n <-> C
 	// A <-> n <-> B <-> C
 	a := n.prev.prev
@@ -165,10 +132,4 @@ func (n *node) backward(head *node) *node {
 
 	b.next = c
 	c.prev = b
-
-	if n == head {
-		return b
-	}
-
-	return head
 }
