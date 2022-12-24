@@ -1,6 +1,7 @@
 package twenty
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 )
@@ -45,10 +46,23 @@ func One(
 	// }
 
 	mixed := mix(linkedList)
+	start := -1
+	for i := range mixed {
+		if mixed[i] == 0 {
+			start = i
+			break
+		}
+	}
+	if start == -1 {
+		return 0, fmt.Errorf("did not have zero in the data set")
+	}
 	// fmt.Printf("mixed: %+v\n", mixed)
-	oneThou := mixed[1000%len(mixed)]
-	twoThou := mixed[2000%len(mixed)]
-	threeThou := mixed[3000%len(mixed)]
+	oneThou := mixed[(start+1000)%len(mixed)]
+	// fmt.Printf("oneThou: %+v\n", oneThou)
+	twoThou := mixed[(start+2000)%len(mixed)]
+	// fmt.Printf("twoThou: %+v\n", twoThou)
+	threeThou := mixed[(start+3000)%len(mixed)]
+	// fmt.Printf("threeThou: %+v\n", threeThou)
 
 	// 1596 is too low
 	return oneThou + twoThou + threeThou, nil
