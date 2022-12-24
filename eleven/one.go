@@ -21,7 +21,7 @@ var (
 	}
 )
 
-type monkey int
+type monkey uint8
 
 func One(
 	input string,

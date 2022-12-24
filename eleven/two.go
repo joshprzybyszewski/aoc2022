@@ -20,8 +20,8 @@ type item struct {
 func newItem(
 	startingMonkey monkey,
 	e int,
-) *item {
-	return &item{
+) item {
+	return item{
 		cur:   startingMonkey,
 		value: uint64(e),
 	}
@@ -29,143 +29,111 @@ func newItem(
 
 func (i *item) inspect() {
 	i.inspections[i.cur]++
-	i.updateValue()
-	next := i.getDest()
-	if next < i.cur {
+
+	// the monkeys that are most common to least: 5,4,6,2,1,3,0,7
+	switch i.cur {
+	case 5:
+		i.value += 8
+		if i.value%17 == 0 {
+			i.cur = 0
+		} else {
+			i.cur = 2
+		}
+		i.numRounds++
+	case 4:
+		i.value += 7
+		if i.value%11 == 0 {
+			i.cur = 7
+		} else {
+			i.cur = 6
+		}
+	case 6:
+		i.value += 5
+		if i.value%19 == 0 {
+			i.cur = 7
+		} else {
+			i.cur = 1
+			i.numRounds++
+		}
+	case 2:
+		i.value += 4
+		if i.value%2 == 0 {
+			i.cur = 6
+		} else {
+			i.cur = 4
+		}
+	case 1:
+		i.value *= 11
+		if i.value%5 == 0 {
+			i.cur = 3
+		} else {
+			i.cur = 5
+		}
+	case 3:
+		i.value *= i.value
+		if i.value%13 == 0 {
+			i.cur = 0
+			i.numRounds++
+		} else {
+			i.cur = 5
+		}
+	case 0:
+		i.value *= 17
+		if i.value%3 == 0 {
+			i.cur = 4
+		} else {
+			i.cur = 2
+		}
+	case 7:
+		i.value += 3
+		if i.value%7 == 0 {
+			i.cur = 1
+		} else {
+			i.cur = 3
+		}
 		i.numRounds++
 	}
-	i.cur = next
+
 	i.value %= dividersProduct
-}
-
-func (i *item) getDest() monkey {
-	switch i.cur {
-	case 0:
-		if i.divisibleBy(3) {
-			return 4
-		} else {
-			return 2
-		}
-	case 1:
-		if i.divisibleBy(5) {
-			return 3
-		} else {
-			return 5
-		}
-	case 2:
-		if i.divisibleBy(2) {
-			return 6
-		} else {
-			return 4
-		}
-	case 3:
-		if i.divisibleBy(13) {
-			return 0
-		} else {
-			return 5
-		}
-	case 4:
-		if i.divisibleBy(11) {
-			return 7
-		} else {
-			return 6
-		}
-	case 5:
-		if i.divisibleBy(17) {
-			return 0
-		} else {
-			return 2
-		}
-	case 6:
-		if i.divisibleBy(19) {
-			return 7
-		} else {
-			return 1
-		}
-	case 7:
-		if i.divisibleBy(7) {
-			return 1
-		} else {
-			return 3
-		}
-	}
-	panic(`unknown monkey`)
-}
-
-func (i *item) divisibleBy(
-	d uint64,
-) bool {
-	return i.value%d == 0
-}
-
-func (i *item) updateValue() {
-	switch i.cur {
-	case 0:
-		// old * 17
-		i.mul(17)
-	case 1:
-		// old * 11
-		i.mul(11)
-	case 2:
-		// old + 4
-		i.add(4)
-	case 3:
-		// old * old
-		i.square()
-	case 4:
-		// old + 7
-		i.add(7)
-	case 5:
-		// old + 8
-		i.add(8)
-	case 6:
-		// old + 5
-		i.add(5)
-	case 7:
-		// old + 3
-		i.add(3)
-	default:
-		panic(`unknown monkey`)
-	}
-}
-
-func (i *item) add(v uint64) {
-	i.value += v
-}
-
-func (i *item) mul(v uint64) {
-	i.value *= v
-}
-
-func (i *item) square() {
-	i.value *= i.value
 }
 
 func Two(
 	input string,
 ) (int64, error) {
-	return runNRounds(numRounds2)
+	return runNRounds(numRounds2), nil
 }
 
 func runNRounds(
 	numRounds int,
-) (int64, error) {
-	items := make([]*item, 0, numItems)
+) int64 {
+	var items [numItems]item
+	ii := 0
 	for i := range initialValues {
 		for j := range initialValues[i] {
-			items = append(items, newItem(monkey(i), initialValues[i][j]))
+			items[ii] = newItem(monkey(i), initialValues[i][j])
+			ii++
 		}
 	}
 
 	var wg sync.WaitGroup
+	inspections := [numMonkeys]uint64{}
+	var inspectionsLock sync.Mutex
+	transfer := func(item *item) {
+		inspectionsLock.Lock()
+		defer inspectionsLock.Unlock()
+		for i := range inspections {
+			inspections[i] += item.inspections[i]
+		}
+	}
 
-	work := make(chan int, numItems)
+	work := make(chan *item, numItems)
 	for i := 0; i < runtime.NumCPU(); i++ {
 		go func() {
-			for ii := range work {
-				for items[ii].numRounds < numRounds {
-					items[ii].inspect()
+			for item := range work {
+				for item.numRounds < numRounds {
+					item.inspect()
 				}
+				transfer(item)
 				wg.Done()
 			}
 		}()
@@ -173,18 +141,10 @@ func runNRounds(
 
 	for ii := range items {
 		wg.Add(1)
-		work <- ii
+		work <- &items[ii]
 	}
 	wg.Wait()
 	close(work)
-
-	inspections := [numMonkeys]uint64{}
-
-	for _, item := range items {
-		for i := range inspections {
-			inspections[i] += item.inspections[i]
-		}
-	}
 
 	var m1, m2 uint64
 	for _, ni := range inspections {
@@ -196,5 +156,5 @@ func runNRounds(
 		}
 	}
 
-	return int64(m1 * m2), nil
+	return int64(m1 * m2)
 }
