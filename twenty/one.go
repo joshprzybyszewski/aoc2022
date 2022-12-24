@@ -27,61 +27,134 @@ func One(
 		input = input[nli+1:]
 	}
 
-	mixed := mix(numbers)
+	// numbers = []int{
+	// 	1,
+	// 	2,
+	// 	-3,
+	// 	3,
+	// 	-2,
+	// 	0,
+	// 	4,
+	// }
+
+	// fmt.Printf("numbers: %+v\n", numbers)
+	linkedList := convertToDoublyLinkedList(numbers)
+	// fmt.Printf("linkedList: %+v\n", linkedList)
+	// for i := range linkedList {
+	// 	fmt.Printf("\tlinkedList[%d]: %+v\n", i, linkedList[i])
+	// }
+
+	mixed := mix(linkedList)
+	// fmt.Printf("mixed: %+v\n", mixed)
 	oneThou := mixed[1000%len(mixed)]
 	twoThou := mixed[2000%len(mixed)]
 	threeThou := mixed[3000%len(mixed)]
 
+	// 1596 is too low
 	return oneThou + twoThou + threeThou, nil
 }
 
-func mix(numbers []int) []int {
-	indexes := make([]int, len(numbers))
+func mix(nodes []*node) []int {
 
-	for i := range indexes {
-		indexes[i] = i
-	}
-
-	var newIndex, j int
-	for i, n := range numbers {
-		newIndex = indexes[i] + n
-		if n > 0 {
-			for j = i + 1; j <= newIndex; j++ {
-				indexes[j%len(numbers)]--
-				if indexes[j%len(numbers)] < 0 {
-					indexes[j%len(numbers)] = len(numbers) - 1
-				}
+	var j int
+	head := nodes[0]
+	for _, n := range nodes {
+		if n.val > 0 {
+			for j = 0; j < n.val; j++ {
+				head = n.forward(head)
 			}
-			indexes[i] = newIndex
-			if indexes[i] > len(numbers)-1 {
-				indexes[i] %= len(numbers)
-			}
-		} else {
-			for j = i - 1; j >= newIndex; j-- {
-				if j < 0 {
-					// TODO figure out how to remove this if and get the same behavior
-					indexes[len(numbers)-(j%len(numbers))]++
-					if indexes[len(numbers)-(j%len(numbers))] > len(numbers)-1 {
-						indexes[len(numbers)-(j%len(numbers))] = 0
-					}
-				} else {
-					indexes[j]++
-					if indexes[j] > len(numbers)-1 {
-						indexes[j] = 0
-					}
-				}
-			}
-			indexes[i] = newIndex
-			for indexes[i] < 0 {
-				indexes[i] += len(numbers)
+		} else if n.val < 0 {
+			for j = 0; j > n.val; j-- {
+				head = n.backward(head)
 			}
 		}
 	}
 
-	output := make([]int, len(numbers))
-	for i := range output {
-		output[indexes[i]] = numbers[i]
+	output := make([]int, 0, len(nodes))
+	output = append(output, head.val)
+	for n := head.next; n != head; n = n.next {
+		output = append(output, n.val)
 	}
 
 	return output
+}
+
+func convertToDoublyLinkedList(numbers []int) []*node {
+	output := make([]*node, len(numbers))
+
+	for i := range numbers {
+		output[i] = newNode(numbers[i])
+	}
+
+	for i := 1; i < len(output)-1; i++ {
+		output[i].prev = output[i-1]
+		output[i].next = output[i+1]
+	}
+
+	output[0].prev = output[len(output)-1]
+	output[0].next = output[1]
+	output[len(output)-1].prev = output[len(output)-2]
+	output[len(output)-1].next = output[0]
+
+	return output
+
+}
+
+type node struct {
+	val int
+
+	prev *node
+	next *node
+}
+
+func newNode(val int) *node {
+	return &node{
+		val: val,
+	}
+}
+
+func (n *node) forward(head *node) *node {
+	// A <-> n <-> B <-> C
+	// A <-> B <-> n <-> C
+	a := n.prev
+	b := n.next
+	c := n.next.next
+
+	a.next = b
+	b.prev = a
+
+	b.next = n
+	n.prev = b
+
+	n.next = c
+	c.prev = n
+
+	if n == head {
+		return b
+	}
+
+	return head
+}
+
+func (n *node) backward(head *node) *node {
+	// A <-> B <-> n <-> C
+	// A <-> n <-> B <-> C
+	a := n.prev.prev
+	b := n.prev
+	c := n.next
+
+	a.next = n
+	n.prev = a
+
+	n.next = b
+	b.prev = n
+
+	b.next = c
+	c.prev = b
+
+	if n == head {
+		return b
+	}
+
+	return head
 }
