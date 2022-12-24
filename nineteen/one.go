@@ -6,6 +6,10 @@ import (
 	"strings"
 )
 
+const (
+	maxTime = 24
+)
+
 type blueprint struct {
 	oreRobot      int
 	clayRobot     int
@@ -13,6 +17,48 @@ type blueprint struct {
 	obsRobotClay  int
 	geodeRobotOre int
 	geodeRobotObs int
+}
+
+func (r resources) canBuildGeodeRobot(b blueprint) bool {
+	return r.ore >= b.geodeRobotOre && r.obs >= b.geodeRobotObs
+}
+
+func (r resources) buildGeodeRobot(b blueprint) resources {
+	r.ore -= b.geodeRobotOre
+	r.obs -= b.geodeRobotObs
+	r.geodeRobots++
+	return r
+}
+
+func (r resources) canBuildObsidianRobot(b blueprint) bool {
+	return r.ore >= b.obsRobotOre && r.clay >= b.obsRobotClay
+}
+
+func (r resources) buildObsidianRobot(b blueprint) resources {
+	r.ore -= b.obsRobotOre
+	r.clay -= b.obsRobotClay
+	r.obsRobots++
+	return r
+}
+
+func (r resources) canBuildClayRobot(b blueprint) bool {
+	return r.ore >= b.clayRobot
+}
+
+func (r resources) buildClayRobot(b blueprint) resources {
+	r.ore -= b.clayRobot
+	r.clayRobots++
+	return r
+}
+
+func (r resources) canBuildOreRobot(b blueprint) bool {
+	return r.ore >= b.oreRobot
+}
+
+func (r resources) buildOreRobot(b blueprint) resources {
+	r.ore -= b.oreRobot
+	r.oreRobots++
+	return r
 }
 
 type resources struct {
@@ -27,11 +73,14 @@ type resources struct {
 
 	geode       int
 	geodeRobots int
+
+	time int
 }
 
 func incrementTime(
 	r resources,
 ) resources {
+	r.time++
 	r.ore += r.oreRobots
 	r.clay += r.clayRobots
 	r.obs += r.obsRobots
@@ -67,75 +116,53 @@ func getMostGeodesIn24Minutes(
 	best := optimizeForGeodes(
 		b,
 		r,
-		24,
 	)
 	return best.geode
-}
-
-func checkFeasibility(
-	b blueprint,
-) bool {
-	if 
 }
 
 func optimizeForGeodes(
 	b blueprint,
 	r resources,
-	timeRemaining int,
 ) resources {
 	r = incrementTime(r)
-	fmt.Printf("\nTime: %d\n%+v\n%+v\n\n", timeRemaining, b, r)
-	if timeRemaining == 0 {
+	fmt.Printf("\nTime: %d\n%+v\n%+v\n\n", r.time, b, r)
+	if r.time == maxTime {
 		// no time left. the input is the best answer.
 		return r
 	}
 
 	// don't use any resources this generation.
-	best := optimizeForGeodes(b, r, timeRemaining-1)
+	best := optimizeForGeodes(b, r)
 
-	if r.ore >= b.geodeRobotOre && r.obs >= b.geodeRobotObs {
+	if r.canBuildGeodeRobot(b) {
 		// there's enough ore and obsidian to build a geode robot. Build it and then optimize with it.
-		r := r
-		r.ore -= b.geodeRobotOre
-		r.obs -= b.geodeRobotObs
-		r.geodeRobots++
-		r = optimizeForGeodes(b, r, timeRemaining-1)
-		if r.geode >= best.geode {
-			best = r
+		other := optimizeForGeodes(b, r.buildGeodeRobot(b))
+		if other.geode >= best.geode {
+			best = other
 		}
 	}
 
-	if r.ore >= b.obsRobotOre && r.clay >= b.obsRobotClay {
+	if r.canBuildObsidianRobot(b) {
 		// there's enough ore and clay to build an obsidian robot. Build it and then optimize with it.
-		r := r
-		r.ore -= b.obsRobotOre
-		r.clay -= b.obsRobotClay
-		r.obsRobots++
-		r = optimizeForGeodes(b, r, timeRemaining-1)
-		if r.geode >= best.geode {
-			best = r
+		other := optimizeForGeodes(b, r.buildObsidianRobot(b))
+		if other.geode >= best.geode {
+			best = other
 		}
 	}
 
-	if r.ore >= b.clayRobot {
+	if r.canBuildClayRobot(b) {
 		// there's enough ore to build a clay robot. Build it and then optimize with it.
-		r := r
-		r.ore -= b.clayRobot
-		r.clayRobots++
-		r = optimizeForGeodes(b, r, timeRemaining-1)
-		if r.geode >= best.geode {
-			best = r
+		other := optimizeForGeodes(b, r.buildClayRobot(b))
+		if other.geode >= best.geode {
+			best = other
 		}
 	}
 
-	if r.ore >= b.oreRobot {
+	if r.canBuildOreRobot(b) {
 		// there's enough ore to build an ore robot. Build it and then optimize with it.
-		r := r
-		r.ore -= b.oreRobot
-		r.oreRobots++
-		r = optimizeForGeodes(b, r, timeRemaining-1)
-		if r.geode >= best.geode {
-			best = r
+		other := optimizeForGeodes(b, r.buildOreRobot(b))
+		if other.geode >= best.geode {
+			best = other
 		}
 	}
 
