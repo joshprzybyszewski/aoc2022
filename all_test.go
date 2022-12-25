@@ -15,7 +15,7 @@ func BenchmarkAll(b *testing.B) {
 	if now.Year() > 2022 || today > 25 {
 		today = 25
 	} else {
-		today = 18
+		today = 20
 	}
 
 	for day := 1; day <= today; day++ {
@@ -23,13 +23,13 @@ func BenchmarkAll(b *testing.B) {
 			input, err := util.Input(day)
 			if err != nil {
 				b.Logf("Error fetching input: %q", err)
-				b.Fail()
+				b.Skip()
 			}
 
 			answer1, answer2, err := util.Answers(day)
 			if err != nil {
 				b.Logf("Error getting answers: %q", err)
-				b.Fail()
+				b.Skip()
 			}
 
 			part1, part2 := util.IntSolvers(day)

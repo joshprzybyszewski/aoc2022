@@ -6,6 +6,18 @@ import (
 	"strings"
 )
 
+var (
+	exampleNumbers = []int{
+		1,
+		2,
+		-3,
+		3,
+		-2,
+		0,
+		4,
+	}
+)
+
 func One(
 	input string,
 ) (int, error) {
@@ -28,49 +40,32 @@ func One(
 		input = input[nli+1:]
 	}
 
-	linkedList := convertToDoublyLinkedList(numbers)
-
-	mixed := mix(linkedList)
-	start := -1
-	for i := range mixed {
-		if mixed[i].val == 0 {
-			start = i
-			break
-		}
-	}
-	if start == -1 {
+	linkedList, zero := convertToDoublyLinkedList(numbers)
+	if zero == nil {
 		return 0, fmt.Errorf("did not have zero in the data set")
 	}
-	oneThou := mixed[(start+1000)%len(mixed)].val
-	twoThou := mixed[(start+2000)%len(mixed)].val
-	threeThou := mixed[(start+3000)%len(mixed)].val
+
+	mixSteps(linkedList, zero)
+
+	oneThou := zero.getNthValue(1000 % len(numbers))
+	twoThou := zero.getNthValue(2000 % len(numbers))
+	threeThou := zero.getNthValue(3000 % len(numbers))
 
 	return oneThou + twoThou + threeThou, nil
 }
 
-func mix(nodes []*node) []*node {
-
-	var j int
-	for _, n := range nodes {
-		if n.val > 0 {
-			for j = 0; j < n.val; j++ {
-				n.forward()
-			}
-		} else if n.val < 0 {
-			for j = 0; j > n.val; j-- {
-				n.backward()
-			}
-		}
-	}
-
-	return nodes
-}
-
-func convertToDoublyLinkedList(numbers []int) []*node {
+func convertToDoublyLinkedList(numbers []int) ([]*node, *node) {
 	output := make([]*node, len(numbers))
+	var zero *node
 
 	for i := range numbers {
 		output[i] = newNode(numbers[i])
+		if output[i].val == 0 {
+			if zero != nil {
+				panic(`has more than one zero in the data-set`)
+			}
+			zero = output[i]
+		}
 	}
 
 	for i := 1; i < len(output)-1; i++ {
@@ -83,8 +78,20 @@ func convertToDoublyLinkedList(numbers []int) []*node {
 	output[len(output)-1].prev = output[len(output)-2]
 	output[len(output)-1].next = output[0]
 
-	return output
+	return output, zero
+}
 
+func mixSteps(
+	nodes []*node,
+	zero *node,
+) {
+	for _, n := range nodes {
+		if n.val > 0 {
+			n.forwardSteps(n.val % (len(nodes) - 1))
+		} else if n.val < 0 {
+			n.backwardSteps((-n.val) % (len(nodes) - 1))
+		}
+	}
 }
 
 type node struct {
@@ -100,29 +107,60 @@ func newNode(val int) *node {
 	}
 }
 
-func (n *node) forward() {
-	// A <-> n <-> B <-> C
-	// A <-> B <-> n <-> C
+func (n *node) forwardSteps(steps int) {
+	if steps == 0 {
+		// nothing to do
+		return
+	}
+	// A <-> n <-> B ... C <-> D
+	// A <-> B       ... C <-> n <-> D
+	// keep in mind that C could equal A or B
 	a := n.prev
 	b := n.next
-	c := n.next.next
+
+	c := n
+	for s := 0; s < steps; s++ {
+		c = c.next
+	}
+	d := c.next
+
+	if c == a {
+		// n moves after a, where it already is.
+		return
+	}
 
 	a.next = b
 	b.prev = a
 
-	b.next = n
-	n.prev = b
+	c.next = n
+	n.prev = c
 
-	n.next = c
-	c.prev = n
+	n.next = d
+	d.prev = n
 }
 
-func (n *node) backward() {
-	// A <-> B <-> n <-> C
-	// A <-> n <-> B <-> C
-	a := n.prev.prev
-	b := n.prev
-	c := n.next
+func (n *node) backwardSteps(steps int) {
+	if steps == 0 {
+		// nothing to do
+		return
+	}
+	// A <-> B       ... C <-> n <-> D
+	// A <-> n <-> B ... C <-> D
+	// keep in mind that C could equal A or B
+
+	c := n.prev
+	d := n.next
+
+	b := n
+	for s := 0; s < steps; s++ {
+		b = b.prev
+	}
+	a := b.prev
+
+	if b == d {
+		// n moves before d, where it already is.
+		return
+	}
 
 	a.next = n
 	n.prev = a
@@ -130,6 +168,19 @@ func (n *node) backward() {
 	n.next = b
 	b.prev = n
 
-	b.next = c
-	c.prev = b
+	c.next = d
+	d.prev = c
+}
+
+func (n *node) getNthValue(steps int) int {
+	if steps == 0 {
+		// nothing to do
+		return n.val
+	}
+
+	iter := n
+	for s := 0; s < steps; s++ {
+		iter = iter.next
+	}
+	return iter.val
 }

@@ -1,7 +1,6 @@
 package twenty
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 )
@@ -34,49 +33,19 @@ func Two(
 		input = input[nli+1:]
 	}
 
-	numbers = []int{
-		1,
-		2,
-		-3,
-		3,
-		-2,
-		0,
-		4,
-	}
-
 	for i := range numbers {
 		numbers[i] *= decryptionKey
 	}
 
-	// fmt.Printf("numbers: %+v\n", numbers)
-	linkedList := convertToDoublyLinkedList(numbers)
-	// fmt.Printf("linkedList: %+v\n", linkedList)
-	// for i := range linkedList {
-	// 	fmt.Printf("\tlinkedList[%d]: %+v\n", i, linkedList[i])
-	// }
+	linkedList, zero := convertToDoublyLinkedList(numbers)
 
 	for i := 0; i < numRoundsOfMixing; i++ {
-		linkedList = mix(linkedList)
+		mixSteps(linkedList, zero)
 	}
 
-	start := -1
-	for i := range linkedList {
-		if linkedList[i].val == 0 {
-			start = i
-			break
-		}
-	}
-	if start == -1 {
-		return 0, fmt.Errorf("did not have zero in the data set")
-	}
-	// fmt.Printf("linkedList: %+v\n", linkedList)
-	oneThou := linkedList[(start+1000)%len(linkedList)].val
-	// fmt.Printf("oneThou: %+v\n", oneThou)
-	twoThou := linkedList[(start+2000)%len(linkedList)].val
-	// fmt.Printf("twoThou: %+v\n", twoThou)
-	threeThou := linkedList[(start+3000)%len(linkedList)].val
-	// fmt.Printf("threeThou: %+v\n", threeThou)
+	oneThou := zero.getNthValue(1000 % len(numbers))
+	twoThou := zero.getNthValue(2000 % len(numbers))
+	threeThou := zero.getNthValue(3000 % len(numbers))
 
-	// 1596 is too low
 	return oneThou + twoThou + threeThou, nil
 }
