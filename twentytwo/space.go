@@ -60,6 +60,45 @@ func move(
 	return s
 }
 
+func moveInCube(
+	s *space,
+	d direction,
+) *space {
+	var next *space
+	h := d.heading
+	for i := uint(0); i < d.dist; i++ {
+		switch h {
+		case right:
+			next = s.right
+		case left:
+			next = s.left
+		case up:
+			next = s.up
+		case down:
+			next = s.down
+		}
+		if next.isWall {
+			return s
+		}
+		if s.row != next.row {
+			switch h {
+			case right:
+				next = s.right
+			case left:
+				next = s.left
+			case up:
+				next = s.up
+			case down:
+				next = s.down
+			}
+			panic(`todo`)
+		}
+		s = next
+	}
+
+	return s
+}
+
 type space struct {
 	row uint
 	col uint
