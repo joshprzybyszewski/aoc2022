@@ -6,8 +6,12 @@ func Two(
 	start, dirs := convertInputToCube(input)
 	s := start
 	h := right
-	for _, d := range dirs {
+	for i, d := range dirs {
 		s, h = moveInCube(s, d.dist, h)
+		if i == len(dirs)-1 {
+			// don't mutate h the last time.
+			break
+		}
 		if d.clockwise {
 			if h == 3 {
 				h = 0
@@ -23,7 +27,7 @@ func Two(
 		}
 	}
 
-	// 111144 is too low
+	// 111144, 111145 is too low
 	return (1000 * int(s.row)) +
 		(4 * int(s.col)) +
 		int(h), nil
