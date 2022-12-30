@@ -235,7 +235,7 @@ func convertInputToCube(
 
 			// stitch the left side of 5 to left side of 1
 			a = getSpace(101+i, 1)
-			b = getSpace(1+i, 51)
+			b = getSpace(50-i, 51)
 			if a.left != nil || b.left != nil {
 				panic(`ahh`)
 			}
