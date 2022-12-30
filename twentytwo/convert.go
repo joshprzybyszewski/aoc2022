@@ -150,7 +150,7 @@ func getDirections(
 
 func convertInputToCube(
 	input string,
-) (*space, []direction) {
+) (*space, []distanceAndRotation) {
 
 	var r, c uint
 	var r0, recent *space
@@ -163,8 +163,6 @@ func convertInputToCube(
 		r0s = append(r0s, r0)
 	}
 	closeRow := func() {
-		// r0.left = recent
-		// recent.right = r0
 		r0 = nil
 		recent = nil
 
@@ -193,20 +191,84 @@ func convertInputToCube(
 	}
 
 	stitch := func() {
-		panic(`todo`)
-		// var e, top *space
-		// for i := len(r0s) - 1; i > 0; i-- {
-		// 	// if this row has a higher max col that the previous,
-		// 	// then we need to fill something in
+		getSpace := func(
+			r, c uint,
+		) *space {
+			return getColumn(r0s[r-1], c)
+		}
 
-		// 	for e = r0s[i].left; e.down == nil; e = e.left {
-		// 		for top = e; top.up != nil; top = top.up {
+		// My puzzle looks like:
+		// X12
+		// X3X
+		// 54X
+		// 6XX
 
-		// 		}
-		// 		e.down = top
-		// 		top.up = e
-		// 	}
-		// }
+		var a, b *space
+
+		for i := uint(0); i < 50; i++ {
+			// stitch the bottom side of 2 to the right side of 3
+			a = getSpace(50, 101+i)
+			b = getSpace(51+i, 100)
+			if a.down != nil || b.right != nil {
+				panic(`ahh`)
+			}
+			a.down = b
+			b.right = a
+
+			// stitch the right side of 4 to the right side of 2
+			a = getSpace(101+i, 100)
+			b = getSpace(50-i, 150)
+			if a.right != nil || b.right != nil {
+				panic(`ahh`)
+			}
+			a.right = b
+			b.right = a
+
+			// stitch the left side of 3 to the top side of 5
+			a = getSpace(51+i, 51)
+			b = getSpace(101, 1+i)
+			if a.left != nil || b.up != nil {
+				panic(`ahh`)
+			}
+			a.left = b
+			b.up = a
+
+			// stitch the left side of 5 to left side of 1
+			a = getSpace(101+i, 1)
+			b = getSpace(1+i, 51)
+			if a.left != nil || b.left != nil {
+				panic(`ahh`)
+			}
+			a.left = b
+			b.left = a
+
+			// stitch the bottom side of 6 to top side of 2
+			a = getSpace(200, 1+i)
+			b = getSpace(1, 101+i)
+			if a.down != nil || b.up != nil {
+				panic(`ahh`)
+			}
+			a.down = b
+			b.up = a
+
+			// stitch the left side of 6 to top side of 1
+			a = getSpace(151+i, 1)
+			b = getSpace(1, 51+i)
+			if a.left != nil || b.up != nil {
+				panic(`ahh`)
+			}
+			a.left = b
+			b.up = a
+
+			// stitch the right side of 6 to bottom side of 4
+			a = getSpace(151+i, 50)
+			b = getSpace(150, 51+i)
+			if a.right != nil || b.down != nil {
+				panic(`ahh`)
+			}
+			a.right = b
+			b.down = a
+		}
 	}
 
 	var tmp *space
@@ -238,12 +300,49 @@ func convertInputToCube(
 			if r0 == nil {
 				// we've already seen a newline, therefore we're entering the directions phase.
 				stitch()
-				directions := getDirections(input, i+1)
-				return r0s[0], directions
+				drs := getDistanceAndRotation(input, i+1)
+				return r0s[0], drs
 			}
 			closeRow()
 		}
 	}
 
 	panic(`should have found directions`)
+}
+
+func getDistanceAndRotation(
+	input string,
+	start int,
+) []distanceAndRotation {
+
+	output := make([]distanceAndRotation, 0, 128)
+
+	d0 := start
+	var d int
+	var err error
+	for i := start; i < len(input); i++ {
+		if input[i] >= '0' && input[i] <= '9' {
+			continue
+		}
+
+		d, err = strconv.Atoi(input[d0:i])
+		if err != nil {
+			panic(err)
+		}
+		d0 = i + 1
+		output = append(output, distanceAndRotation{
+			dist:      uint(d),
+			clockwise: input[i] == 'R',
+		})
+
+		switch input[i] {
+		case 'L', 'R':
+		case '\n':
+			return output
+		default:
+			panic(`ahh`)
+		}
+	}
+
+	return output
 }

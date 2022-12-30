@@ -13,3 +13,8 @@ type direction struct {
 	dist    uint
 	heading heading
 }
+
+type distanceAndRotation struct {
+	dist      uint
+	clockwise bool
+}

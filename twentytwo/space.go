@@ -62,11 +62,11 @@ func move(
 
 func moveInCube(
 	s *space,
-	d direction,
-) *space {
+	dist uint,
+	h heading,
+) (*space, heading) {
 	var next *space
-	h := d.heading
-	for i := uint(0); i < d.dist; i++ {
+	for i := uint(0); i < dist; i++ {
 		switch h {
 		case right:
 			next = s.right
@@ -78,25 +78,28 @@ func moveInCube(
 			next = s.down
 		}
 		if next.isWall {
-			return s
+			return s, h
 		}
-		if s.row != next.row {
-			switch h {
-			case right:
-				next = s.right
-			case left:
-				next = s.left
-			case up:
-				next = s.up
-			case down:
-				next = s.down
-			}
-			panic(`todo`)
+
+		if s.row == next.row {
+			s = next
+			continue
+		}
+
+		switch s {
+		case next.right:
+			h = left
+		case next.down:
+			h = up
+		case next.left:
+			h = right
+		case next.up:
+			h = down
 		}
 		s = next
 	}
 
-	return s
+	return s, h
 }
 
 type space struct {
