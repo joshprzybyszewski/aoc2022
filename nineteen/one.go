@@ -19,6 +19,29 @@ type blueprint struct {
 	geodeRobotObs int
 }
 
+type resources struct {
+	ore       int
+	oreRobots int
+
+	clay       int
+	clayRobots int
+
+	obs       int
+	obsRobots int
+
+	geode       int
+	geodeRobots int
+
+	remainingTime int
+}
+
+func newResources(remainingTime int) resources {
+	return resources{
+		oreRobots:     1,
+		remainingTime: remainingTime,
+	}
+}
+
 func (r resources) canBuildGeodeRobot(b blueprint) bool {
 	return r.ore >= b.geodeRobotOre && r.obs >= b.geodeRobotObs
 }
@@ -61,26 +84,10 @@ func (r resources) buildOreRobot(b blueprint) resources {
 	return r
 }
 
-type resources struct {
-	ore       int
-	oreRobots int
-
-	clay       int
-	clayRobots int
-
-	obs       int
-	obsRobots int
-
-	geode       int
-	geodeRobots int
-
-	time int
-}
-
 func incrementTime(
 	r resources,
 ) resources {
-	r.time++
+	r.remainingTime--
 	r.ore += r.oreRobots
 	r.clay += r.clayRobots
 	r.obs += r.obsRobots
@@ -110,9 +117,7 @@ func One(
 func getMostGeodesIn24Minutes(
 	b blueprint,
 ) int {
-	r := resources{
-		oreRobots: 1,
-	}
+	r := newResources(maxTime)
 	best := optimizeForGeodes(
 		b,
 		r,
@@ -125,8 +130,8 @@ func optimizeForGeodes(
 	r resources,
 ) resources {
 	r = incrementTime(r)
-	fmt.Printf("\nTime: %d\n%+v\n%+v\n\n", r.time, b, r)
-	if r.time == maxTime {
+	fmt.Printf("\nRemaining Time: %d\n%+v\n%+v\n\n", r.remainingTime, b, r)
+	if r.remainingTime == 0 {
 		// no time left. the input is the best answer.
 		return r
 	}
