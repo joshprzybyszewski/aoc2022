@@ -13,27 +13,6 @@ type blueprint struct {
 	obsRobotClay  int
 	geodeRobotOre int
 	geodeRobotObs int
-
-	_maxOreReq int
-}
-
-func (b *blueprint) maxOreReq() int {
-	if b._maxOreReq > 0 {
-		return b._maxOreReq
-	}
-	// TODO memoize
-	max := b.oreRobot
-	if b.clayRobot > max {
-		max = b.clayRobot
-	}
-	if b.obsRobotOre > max {
-		max = b.obsRobotOre
-	}
-	if b.geodeRobotOre > max {
-		max = b.geodeRobotOre
-	}
-	b._maxOreReq = max
-	return max
 }
 
 type resources struct {
@@ -74,34 +53,34 @@ func (r resources) canBuildObsidianRobot(b *blueprint) bool {
 	return r.ore >= b.obsRobotOre && r.clay >= b.obsRobotClay
 }
 
-func (r resources) shouldBuildObsidianRobot(b *blueprint) bool {
-	if r.obsRobots >= b.geodeRobotObs {
-		// we'll generate more obsidian in one minute than we'll ever possibly use
-		return false
-	}
-	// From reddit: https://www.reddit.com/r/adventofcode/comments/zpy5rm/2022_day_19_what_are_your_insights_and/
-	// Note that we can do a bit better:
-	// For any resource R that's not geode:
-	// if you already have X robots creating resource R,
-	// a current stock of Y for that resource,
-	// T minutes left,
-	// and no robot requires more than Z of resource R to build,
-	// and X * T+Y >= T * Z,
-	// then you never need to build another robot mining R anymore.
-	if r.obsRobots*r.remainingTime+r.obs >= r.remainingTime*b.geodeRobotObs {
-		return false
-	}
+// func (r resources) shouldBuildObsidianRobot(b *blueprint) bool {
+// 	if r.obsRobots >= b.geodeRobotObs {
+// 		// we'll generate more obsidian in one minute than we'll ever possibly use
+// 		return false
+// 	}
+// 	// From reddit: https://www.reddit.com/r/adventofcode/comments/zpy5rm/2022_day_19_what_are_your_insights_and/
+// 	// Note that we can do a bit better:
+// 	// For any resource R that's not geode:
+// 	// if you already have X robots creating resource R,
+// 	// a current stock of Y for that resource,
+// 	// T minutes left,
+// 	// and no robot requires more than Z of resource R to build,
+// 	// and X * T+Y >= T * Z,
+// 	// then you never need to build another robot mining R anymore.
+// 	if r.obsRobots*r.remainingTime+r.obs >= r.remainingTime*b.geodeRobotObs {
+// 		return false
+// 	}
 
-	// curObsTrajectory := r.obs + (r.obsRobots * r.remainingTime)
-	// without := curObsTrajectory / b.geodeRobotObs
-	// with := (curObsTrajectory + r.remainingTime) / b.geodeRobotObs
-	// if with == 0 || with <= without {
-	// 	// building this obsidian robot won't enable us to build another geode robot
-	// 	// so it's not worth it.
-	// 	return false
-	// }
-	return true
-}
+// 	// curObsTrajectory := r.obs + (r.obsRobots * r.remainingTime)
+// 	// without := curObsTrajectory / b.geodeRobotObs
+// 	// with := (curObsTrajectory + r.remainingTime) / b.geodeRobotObs
+// 	// if with == 0 || with <= without {
+// 	// 	// building this obsidian robot won't enable us to build another geode robot
+// 	// 	// so it's not worth it.
+// 	// 	return false
+// 	// }
+// 	return true
+// }
 
 func (r resources) buildObsidianRobot(b *blueprint) resources {
 	r.ore -= b.obsRobotOre
@@ -114,37 +93,37 @@ func (r resources) canBuildClayRobot(b *blueprint) bool {
 	return r.ore >= b.clayRobot
 }
 
-func (r resources) shouldBuildClayRobot(b *blueprint) bool {
-	if r.clayRobots >= b.obsRobotClay {
-		// we'll generate more clay in one minute than we'll ever possibly use
-		return false
-	}
+// func (r resources) shouldBuildClayRobot(b *blueprint) bool {
+// 	if r.clayRobots >= b.obsRobotClay {
+// 		// we'll generate more clay in one minute than we'll ever possibly use
+// 		return false
+// 	}
 
-	// From reddit: https://www.reddit.com/r/adventofcode/comments/zpy5rm/2022_day_19_what_are_your_insights_and/
-	// Note that we can do a bit better:
-	// For any resource R that's not geode:
-	// if you already have X robots creating resource R,
-	// a current stock of Y for that resource,
-	// T minutes left,
-	// and no robot requires more than Z of resource R to build,
-	// and X * T+Y >= T * Z,
-	// then you never need to build another robot mining R anymore.
-	if r.clayRobots*r.remainingTime+r.clay >= r.remainingTime*b.obsRobotClay {
-		return false
-	}
+// 	// From reddit: https://www.reddit.com/r/adventofcode/comments/zpy5rm/2022_day_19_what_are_your_insights_and/
+// 	// Note that we can do a bit better:
+// 	// For any resource R that's not geode:
+// 	// if you already have X robots creating resource R,
+// 	// a current stock of Y for that resource,
+// 	// T minutes left,
+// 	// and no robot requires more than Z of resource R to build,
+// 	// and X * T+Y >= T * Z,
+// 	// then you never need to build another robot mining R anymore.
+// 	if r.clayRobots*r.remainingTime+r.clay >= r.remainingTime*b.obsRobotClay {
+// 		return false
+// 	}
 
-	// curClayTrajectory := r.clay + (r.clayRobots * r.remainingTime)
-	// without := curClayTrajectory / b.obsRobotClay
-	// with := (curClayTrajectory + r.remainingTime) / b.obsRobotClay
+// 	// curClayTrajectory := r.clay + (r.clayRobots * r.remainingTime)
+// 	// without := curClayTrajectory / b.obsRobotClay
+// 	// with := (curClayTrajectory + r.remainingTime) / b.obsRobotClay
 
-	// if with == 0 || with <= without {
-	// 	// building this clay robot won't enable us to build another obsidian robot
-	// 	// so it's not worth it.
-	// 	return false
-	// }
+// 	// if with == 0 || with <= without {
+// 	// 	// building this clay robot won't enable us to build another obsidian robot
+// 	// 	// so it's not worth it.
+// 	// 	return false
+// 	// }
 
-	return true
-}
+// 	return true
+// }
 
 func (r resources) buildClayRobot(b *blueprint) resources {
 	r.ore -= b.clayRobot
@@ -156,32 +135,32 @@ func (r resources) canBuildOreRobot(b *blueprint) bool {
 	return r.ore >= b.oreRobot
 }
 
-func (r resources) shouldBuildOreRobot(b *blueprint) bool {
-	max := b.maxOreReq()
-	if r.oreRobots >= max {
-		// we'll generate more ore in one minute than we'll ever possibly use
-		return false
-	}
+// func (r resources) shouldBuildOreRobot(b *blueprint) bool {
+// 	max := b.maxOreReq()
+// 	if r.oreRobots >= max {
+// 		// we'll generate more ore in one minute than we'll ever possibly use
+// 		return false
+// 	}
 
-	// From reddit: https://www.reddit.com/r/adventofcode/comments/zpy5rm/2022_day_19_what_are_your_insights_and/
-	// Note that we can do a bit better:
-	// For any resource R that's not geode:
-	// if you already have X robots creating resource R,
-	// a current stock of Y for that resource,
-	// T minutes left,
-	// and no robot requires more than Z of resource R to build,
-	// and X * T+Y >= T * Z,
-	// then you never need to build another robot mining R anymore.
-	if r.oreRobots*r.remainingTime+r.ore >= r.remainingTime*max {
-		return false
-	}
+// 	// From reddit: https://www.reddit.com/r/adventofcode/comments/zpy5rm/2022_day_19_what_are_your_insights_and/
+// 	// Note that we can do a bit better:
+// 	// For any resource R that's not geode:
+// 	// if you already have X robots creating resource R,
+// 	// a current stock of Y for that resource,
+// 	// T minutes left,
+// 	// and no robot requires more than Z of resource R to build,
+// 	// and X * T+Y >= T * Z,
+// 	// then you never need to build another robot mining R anymore.
+// 	if r.oreRobots*r.remainingTime+r.ore >= r.remainingTime*max {
+// 		return false
+// 	}
 
-	// if b.oreRobot > r.remainingTime {
-	// 	// this ore robot won't pay for itself.
-	// 	return false
-	// }
-	return true
-}
+// 	// if b.oreRobot > r.remainingTime {
+// 	// 	// this ore robot won't pay for itself.
+// 	// 	return false
+// 	// }
+// 	return true
+// }
 
 func (r resources) buildOreRobot(b *blueprint) resources {
 	r.ore -= b.oreRobot
@@ -190,14 +169,13 @@ func (r resources) buildOreRobot(b *blueprint) resources {
 }
 
 func incrementTime(
-	r resources,
-) resources {
+	r *resources,
+) {
 	r.remainingTime--
 	r.ore += r.oreRobots
 	r.clay += r.clayRobots
 	r.obs += r.obsRobots
 	r.geode += r.geodeRobots
-	return r
 }
 
 func One(
@@ -244,54 +222,86 @@ func getMostGeodesIn24Minutes(
 	best := optimizeForGeodes(
 		b,
 		r,
+		skipNone,
 	)
 	fmt.Printf("Most geodes:\n%+v\n\t%+v\n", b, best)
 	return best.geode
 }
 
+type skip uint8
+
+const (
+	skipNone skip = 0
+	skipObs  skip = 1 << iota
+	skipClay
+	skipOre
+)
+
 func optimizeForGeodes(
 	b *blueprint,
 	r resources,
+	s skip,
 ) resources {
-
-	r = incrementTime(r)
-	// fmt.Printf("\nRemaining Time: %d\n%+v\n%+v\n\n", r.remainingTime, b, r)
-	if r.remainingTime == 0 {
-		// no time left. the input is the best answer.
+	if r.remainingTime <= 0 {
 		return r
 	}
-	// don't use any resources this generation.
-	best := optimizeForGeodes(b, r)
 
-	if r.canBuildGeodeRobot(b) {
-		// there's enough ore and obsidian to build a geode robot. Build it and then optimize with it.
-		other := optimizeForGeodes(b, r.buildGeodeRobot(b))
-		if other.geode >= best.geode {
-			best = other
+	best := r
+
+	if r.obsRobots > 0 { // geode building
+		r := r
+		for !r.canBuildGeodeRobot(b) && r.remainingTime > 0 {
+			incrementTime(&r)
+		}
+		if r.remainingTime > 0 {
+			r = r.buildGeodeRobot(b)
+			incrementTime(&r)
+			r = optimizeForGeodes(b, r, skipNone)
+			if r.geode > best.geode {
+				best = r
+			}
 		}
 	}
-
-	if r.canBuildObsidianRobot(b) && r.shouldBuildObsidianRobot((b)) {
-		// there's enough ore and clay to build an obsidian robot. Build it and then optimize with it.
-		other := optimizeForGeodes(b, r.buildObsidianRobot(b))
-		if other.geode >= best.geode {
-			best = other
+	if s != skipObs && r.clayRobots > 0 { // obs building
+		r := r
+		for !r.canBuildObsidianRobot(b) && r.remainingTime > 0 {
+			incrementTime(&r)
+		}
+		if r.remainingTime > 0 {
+			r = r.buildObsidianRobot(b)
+			incrementTime(&r)
+			r = optimizeForGeodes(b, r, skipObs)
+			if r.geode > best.geode {
+				best = r
+			}
 		}
 	}
-
-	if r.canBuildClayRobot(b) && r.shouldBuildClayRobot(b) {
-		// there's enough ore to build a clay robot. Build it and then optimize with it.
-		other := optimizeForGeodes(b, r.buildClayRobot(b))
-		if other.geode >= best.geode {
-			best = other
+	if s != skipClay { // clay building
+		r := r
+		for !r.canBuildClayRobot(b) && r.remainingTime > 0 {
+			incrementTime(&r)
+		}
+		if r.remainingTime > 0 {
+			r = r.buildClayRobot(b)
+			incrementTime(&r)
+			r = optimizeForGeodes(b, r, skipClay)
+			if r.geode > best.geode {
+				best = r
+			}
 		}
 	}
-
-	if r.canBuildOreRobot(b) && r.shouldBuildOreRobot(b) {
-		// there's enough ore to build an ore robot. Build it and then optimize with it.
-		other := optimizeForGeodes(b, r.buildOreRobot(b))
-		if other.geode >= best.geode {
-			best = other
+	if s != skipOre { // ore building
+		r := r
+		for !r.canBuildClayRobot(b) && r.remainingTime > 0 {
+			incrementTime(&r)
+		}
+		if r.remainingTime > 0 {
+			r = r.buildClayRobot(b)
+			incrementTime(&r)
+			r = optimizeForGeodes(b, r, skipOre)
+			if r.geode > best.geode {
+				best = r
+			}
 		}
 	}
 
