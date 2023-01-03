@@ -7,7 +7,7 @@ func One(
 ) (int, error) {
 
 	b := getBoard(input)
-	ab := newAllBoards(b)
+	ab := populatedAllBoards(b)
 
 	s := position{
 		row: 0,
@@ -25,16 +25,9 @@ func One(
 	}
 
 	p := navigate(&ab, s, 0, g)
-	if p == nil {
+	if p.numSteps == -1 {
 		return 0, fmt.Errorf("path not found")
 	}
 
-	numSteps := 0
-	for p != nil {
-		numSteps++
-		p = p.prev
-	}
-	numSteps--
-
-	return numSteps, nil
+	return p.numSteps, nil
 }

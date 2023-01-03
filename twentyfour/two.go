@@ -6,7 +6,7 @@ func Two(
 	input string,
 ) (int, error) {
 	b := getBoard(input)
-	ab := newAllBoards(b)
+	ab := populatedAllBoards(b)
 
 	s := position{
 		row: 0,
@@ -24,41 +24,22 @@ func Two(
 	}
 
 	p := navigate(&ab, s, 0, g)
-	if p == nil {
+	if p.numSteps == -1 {
 		return 0, fmt.Errorf("path not found")
 	}
-	sb := p.bs
+	numSteps := p.numSteps
 
-	numSteps := 0
-	for p != nil {
-		numSteps++
-		p = p.prev
-	}
-	numSteps--
-
-	p = navigate(&ab, s, sb, g)
-	if p == nil {
+	p = navigate(&ab, s, p.bs, g)
+	if p.numSteps == -1 {
 		return 0, fmt.Errorf("path not found")
 	}
-	sb = p.bs
+	numSteps += p.numSteps
 
-	for p != nil {
-		numSteps++
-		p = p.prev
-	}
-	numSteps--
-
-	p = navigate(&ab, s, sb, g)
-	if p == nil {
+	p = navigate(&ab, s, p.bs, g)
+	if p.numSteps == -1 {
 		return 0, fmt.Errorf("path not found")
 	}
-	sb = p.bs
-
-	for p != nil {
-		numSteps++
-		p = p.prev
-	}
-	numSteps--
+	numSteps += p.numSteps
 
 	return numSteps, nil
 }

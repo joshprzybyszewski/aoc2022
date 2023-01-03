@@ -1,13 +1,14 @@
 package twentyfour
 
+type boardState uint16
+
 const (
 	numBoardStates boardState = 25 * 120 // 25 rows, 120 columns
-	// but I think this reduces down to 5 rows, 24 columns ==> 120 states
 )
 
 type allBoards [numBoardStates]board
 
-func newAllBoards(
+func populatedAllBoards(
 	initial board,
 ) allBoards {
 	ab := allBoards{}
