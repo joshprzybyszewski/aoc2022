@@ -32,7 +32,6 @@ func Two(
 	numSteps := 0
 	for p != nil {
 		numSteps++
-		// fmt.Println(prettyBoard(ab.getBoardAtState(p.bs), p.cur))
 		p = p.prev
 	}
 	numSteps--
@@ -45,7 +44,6 @@ func Two(
 
 	for p != nil {
 		numSteps++
-		// fmt.Println(prettyBoard(ab.getBoardAtState(p.bs), p.cur))
 		p = p.prev
 	}
 	numSteps--
@@ -58,7 +56,6 @@ func Two(
 
 	for p != nil {
 		numSteps++
-		// fmt.Println(prettyBoard(ab.getBoardAtState(p.bs), p.cur))
 		p = p.prev
 	}
 	numSteps--

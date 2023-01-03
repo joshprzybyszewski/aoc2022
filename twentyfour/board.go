@@ -15,52 +15,6 @@ const (
 
 type board [27][122]square
 
-func next(
-	b board,
-) board {
-	var n board
-	var c int
-	var s square
-	for r := range b {
-		for c, s = range b[r] {
-			if s == wall {
-				n[r][c] = wall
-				continue
-			}
-
-			if s&right != 0 {
-				if c == len(b[r])-2 {
-					n[r][1] |= right
-				} else {
-					n[r][c+1] |= right
-				}
-			}
-			if s&down != 0 {
-				if r == len(b)-2 {
-					n[1][c] |= down
-				} else {
-					n[r+1][c] |= down
-				}
-			}
-			if s&left != 0 {
-				if c == 1 {
-					n[r][len(b[r])-2] |= left
-				} else {
-					n[r][c-1] |= left
-				}
-			}
-			if s&up != 0 {
-				if r == 1 {
-					n[len(b)-2][c] |= up
-				} else {
-					n[r-1][c] |= up
-				}
-			}
-		}
-	}
-	return n
-}
-
 func getBoard(
 	input string,
 ) board {

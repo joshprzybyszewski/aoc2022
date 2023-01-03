@@ -13,9 +13,53 @@ func newAllBoards(
 	ab := allBoards{}
 	ab[0] = initial
 	for i := 1; i < len(ab); i++ {
-		ab[i] = next(ab[i-1])
+		next(&ab[i-1], &ab[i])
 	}
 	return ab
+}
+
+func next(
+	src, dst *board,
+) {
+	var c int
+	var s square
+	for r := range src {
+		for c, s = range src[r] {
+			if s == wall {
+				dst[r][c] = wall
+				continue
+			}
+
+			if s&right == right {
+				if c == len(src[r])-2 {
+					dst[r][1] |= right
+				} else {
+					dst[r][c+1] |= right
+				}
+			}
+			if s&down == down {
+				if r == len(src)-2 {
+					dst[1][c] |= down
+				} else {
+					dst[r+1][c] |= down
+				}
+			}
+			if s&left == left {
+				if c == 1 {
+					dst[r][len(src[r])-2] |= left
+				} else {
+					dst[r][c-1] |= left
+				}
+			}
+			if s&up == up {
+				if r == 1 {
+					dst[len(src)-2][c] |= up
+				} else {
+					dst[r-1][c] |= up
+				}
+			}
+		}
+	}
 }
 
 func (ab *allBoards) getBoardAtState(
