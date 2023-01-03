@@ -24,7 +24,7 @@ func One(
 		}
 	}
 
-	p := navigate(&ab, s, g)
+	p := navigate(&ab, s, 0, g)
 	if p == nil {
 		return 0, fmt.Errorf("path not found")
 	}
@@ -32,9 +32,9 @@ func One(
 	numSteps := 0
 	for p != nil {
 		numSteps++
-		// fmt.Println(prettyBoard(ab.getBoardAtState(p.bs), p.cur))
 		p = p.prev
 	}
+	numSteps--
 
-	return numSteps - 1, nil
+	return numSteps, nil
 }

@@ -18,13 +18,14 @@ type path struct {
 func navigate(
 	ab *allBoards,
 	start position,
+	startingState boardState,
 	goal position,
 ) *path {
 	n := navigator{
 		ab: ab,
 		pending: []*path{{
 			cur: start,
-			bs:  0,
+			bs:  startingState,
 		}},
 		goal: goal,
 	}
