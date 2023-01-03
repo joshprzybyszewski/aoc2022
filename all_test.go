@@ -24,7 +24,7 @@ func BenchmarkAll(b *testing.B) {
 				b.Skip()
 			}
 
-			answer1, answer2, err := util.Answers(day)
+			answer1, err := util.Part1Answer(day)
 			if err != nil {
 				b.Logf("Error getting answers: %q", err)
 				b.Skip()
@@ -70,6 +70,12 @@ func BenchmarkAll(b *testing.B) {
 						}
 					}
 				})
+			}
+
+			answer2, err := util.Part2Answer(day)
+			if err != nil {
+				b.Logf("Error getting answers: %q", err)
+				return
 			}
 
 			if part2 != nil {
