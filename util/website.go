@@ -21,6 +21,16 @@ func init() {
 func getInputFromWebsite(
 	day int,
 ) (string, error) {
+	if secret == `` {
+		// From the website, look in the Network tab.
+		// Refresh the page, and inspect a network call to the basic site.
+		// Look at the request headers, and find the one called "cookie".
+		// Copy that (it probably looks like "secret=<long hex>").
+		// Paste it into your environment where you're running this program.
+		// `export AOC_2022_SECRET="pastedvalue"` and that should work for all of 2022.
+		return ``, fmt.Errorf("Secret cookie not set in environment!")
+	}
+
 	inputURL := fmt.Sprintf(`https://adventofcode.com/%d/day/%d/input`, year, day)
 
 	req, err := http.NewRequest(`GET`, inputURL, nil)

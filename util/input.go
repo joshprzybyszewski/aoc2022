@@ -14,6 +14,8 @@ func Input(
 ) (string, error) {
 	input, err := getInputFromLocalFile(day)
 	if err != nil {
+		fmt.Printf("Input file not found at %q\n", getInputFilname(day))
+		fmt.Printf("Attempting to fetch input file from website...\n")
 		err = writeInputToLocalFile(day)
 		if err != nil {
 			return ``, err
