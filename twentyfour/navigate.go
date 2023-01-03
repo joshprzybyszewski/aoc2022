@@ -18,7 +18,7 @@ func navigate(
 	goal position,
 ) path {
 
-	var handled allBoards
+	var handled [numBoardStates]board
 	pending := make([]path, 0, 1028)
 	pending = append(pending, path{
 		cur: start,
@@ -33,12 +33,12 @@ func navigate(
 		if p.cur == goal {
 			return p
 		}
-		if handled.getBoardAtState(p.bs)[p.cur.row][p.cur.col] != empty {
+		if handled[p.bs][p.cur.row][p.cur.col] != empty {
 			pending = pending[1:]
 			continue
 		}
 
-		handled.getBoardAtState(p.bs)[p.cur.row][p.cur.col] = wall
+		handled[p.bs][p.cur.row][p.cur.col] = wall
 
 		// check possible next positions for the updated board state
 		bs = (p.bs + 1) % numBoardStates

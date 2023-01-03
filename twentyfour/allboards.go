@@ -3,20 +3,34 @@ package twentyfour
 type boardState uint16
 
 const (
-	numBoardStates boardState = 25 * 120 // 25 rows, 120 columns
+	// This should be 25 * 120, but we know that we never iterate
+	// past a depth of 1024... so...
+	numBoardStates boardState = 1024 // 25 rows, 120 columns
 )
 
-type allBoards [numBoardStates]board
+type allBoards struct {
+	max boardState
+	all [numBoardStates]board
+}
 
 func populatedAllBoards(
 	initial board,
 ) allBoards {
 	ab := allBoards{}
-	ab[0] = initial
-	for i := 1; i < len(ab); i++ {
-		next(&ab[i-1], &ab[i])
-	}
+	ab.all[0] = initial
 	return ab
+}
+
+func (ab *allBoards) getBoardAtState(
+	bs boardState,
+) *board {
+	if bs > ab.max {
+		for i := ab.max + 1; i <= bs; i++ {
+			next(&ab.all[i-1], &ab.all[i])
+		}
+		ab.max = bs
+	}
+	return &ab.all[bs]
 }
 
 func next(
@@ -61,10 +75,4 @@ func next(
 			}
 		}
 	}
-}
-
-func (ab *allBoards) getBoardAtState(
-	i boardState,
-) *board {
-	return &ab[i]
 }
