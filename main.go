@@ -18,7 +18,7 @@ func main() {
 		defer util.Profile()()
 	}
 
-	day := 24
+	day := 25
 	input, err := util.Input(day)
 	if err != nil {
 		panic(err)
