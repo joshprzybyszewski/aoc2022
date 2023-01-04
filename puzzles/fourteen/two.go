@@ -1,14 +1,9 @@
 package fourteen
 
-import (
-	"strings"
-)
-
 func Two(
 	input string,
 ) (int, error) {
-	lines := strings.Split(input, "\n")
-	g, err := getGrid(lines)
+	g, err := getGrid(input)
 	if err != nil {
 		return 0, err
 	}

@@ -2,9 +2,24 @@ package fourteen
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 )
+
+func One(
+	input string,
+) (int, error) {
+	g, err := getGrid(input)
+	if err != nil {
+		return 0, err
+	}
+
+	units := 0
+	for g.addSand(500, 0) {
+		units++
+	}
+
+	return units, nil
+}
 
 type coord struct {
 	x, y int
@@ -154,80 +169,4 @@ func (g *grid) check(x, y int) material {
 		return rock
 	}
 	return g.mats[y][x]
-}
-
-func One(
-	input string,
-) (int, error) {
-	lines := strings.Split(input, "\n")
-	g, err := getGrid(lines)
-	if err != nil {
-		return 0, err
-	}
-
-	units := 0
-	for g.addSand(500, 0) {
-		units++
-	}
-
-	return units, nil
-}
-
-func getGrid(lines []string) (grid, error) {
-	g := newGrid()
-
-	for _, line := range lines {
-		if line == `` {
-			continue
-		}
-		coords, err := getCoords(line)
-		if err != nil {
-			return grid{}, err
-		}
-		for i := 0; i < len(coords)-1; i++ {
-			c := coords[i]
-			next := coords[i+1]
-			for {
-				g.addRock(c.x, c.y)
-
-				if c.x < next.x {
-					c.x++
-				} else if c.x > next.x {
-					c.x--
-				} else if c.y < next.y {
-					c.y++
-				} else if c.y > next.y {
-					c.y--
-				} else {
-					break
-				}
-			}
-		}
-	}
-
-	return g, nil
-
-}
-
-func getCoords(line string) ([]coord, error) {
-	ss := strings.Split(line, ` -> `)
-	output := make([]coord, 0, len(ss))
-	for _, s := range ss {
-		ci := strings.Index(s, `,`)
-		x, err := strconv.Atoi(s[:ci])
-		if err != nil {
-			return nil, err
-		}
-		y, err := strconv.Atoi(s[ci+1:])
-		if err != nil {
-			return nil, err
-		}
-
-		output = append(output, coord{
-			x: x,
-			y: y,
-		})
-	}
-
-	return output, nil
 }
