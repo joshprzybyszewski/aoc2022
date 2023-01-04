@@ -2,7 +2,9 @@ package twentythree
 
 import (
 	"fmt"
+	"runtime"
 	"strings"
+	"sync"
 )
 
 func One(
@@ -12,7 +14,7 @@ func One(
 	elves := convertInputToElfLocations(input)
 	numElves := len(elves)
 	for r := 0; r < 10; r++ {
-		_ = updateMap(elves, r)
+		_ = updateMap(elves, numElves, r)
 	}
 
 	min, max := getBounds(elves)
@@ -99,11 +101,12 @@ const (
 
 func updateMap(
 	elves map[coord]bool,
-	roundIndex int,
+	numElves, roundIndex int,
 ) bool {
 	roundIndex %= 4
 
 	proposals := map[coord][]coord{}
+	var proposalsLock sync.Mutex
 
 	checkElf := func(c coord) {
 		cl := allClear
@@ -188,15 +191,32 @@ func updateMap(
 				p.x--
 			}
 		}
+		proposalsLock.Lock()
+		defer proposalsLock.Unlock()
 		proposals[p] = append(proposals[p], c)
 	}
 
-	for c, b := range elves {
-		if !b {
-			continue
-		}
-		checkElf(c)
+	var wg sync.WaitGroup
+
+	work := make(chan coord, numElves)
+	for i := 0; i < runtime.NumCPU(); i++ {
+		go func() {
+			for w := range work {
+				checkElf(w)
+				wg.Done()
+			}
+		}()
 	}
+
+	for c, b := range elves {
+		if b {
+			wg.Add(1)
+			work <- c
+		}
+	}
+
+	wg.Wait()
+	close(work)
 
 	if len(proposals) == 0 {
 		// steady state achieved
