@@ -6,81 +6,78 @@ import (
 )
 
 func getGrid(input string) (grid, error) {
+	const newline = "\n"
+	const del = " -> "
+	const comma = ","
 	g := newGrid()
 
-	var coords []coord
 	var err error
-	var i int
-	var c, next coord
+	var prev coord
+	var deli, commai, x, y int
 
-	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
+	for nli := strings.Index(input, newline); nli >= 0; nli = strings.Index(input, newline) {
 		if nli == 0 {
 			input = input[nli+1:]
 			continue
 		}
 
-		coords, err = getCoords(input[:nli])
+		commai = strings.Index(input, comma)
+		x, err = strconv.Atoi(input[:commai])
 		if err != nil {
 			return grid{}, err
 		}
-		for i = 0; i < len(coords)-1; i++ {
-			c = coords[i]
-			next = coords[i+1]
-			for {
-				g.addRock(c.x, c.y)
+		deli = strings.Index(input, del)
+		y, err = strconv.Atoi(input[commai+1 : deli])
+		if err != nil {
+			return grid{}, err
+		}
+		input = input[deli+len(del):]
+		prev = coord{x: x, y: y}
 
-				if c.x < next.x {
-					c.x++
-				} else if c.x > next.x {
-					c.x--
-				} else if c.y < next.y {
-					c.y++
-				} else if c.y > next.y {
-					c.y--
+		for {
+			deli = strings.Index(input, del)
+			nli = strings.Index(input, newline)
+
+			if nli == 0 {
+				break
+			}
+
+			commai = strings.Index(input, comma)
+
+			x, err = strconv.Atoi(input[:commai])
+			if err != nil {
+				return grid{}, err
+			}
+			if deli == -1 || deli > nli {
+				y, err = strconv.Atoi(input[commai+1 : nli])
+				input = input[nli:]
+			} else {
+				y, err = strconv.Atoi(input[commai+1 : deli])
+				input = input[deli+len(del):]
+			}
+			if err != nil {
+				return grid{}, err
+			}
+
+			for {
+				g.addRock(prev.x, prev.y)
+
+				if prev.x < x {
+					prev.x++
+				} else if prev.x > x {
+					prev.x--
+				} else if prev.y < y {
+					prev.y++
+				} else if prev.y > y {
+					prev.y--
 				} else {
 					break
 				}
 			}
+
 		}
 		input = input[nli+1:]
 	}
 
 	return g, nil
-}
-
-func getCoords(line string) ([]coord, error) {
-	const del = " -> "
-	var ci, x, y int
-	var err error
-
-	output := make([]coord, 0, 4)
-	for deli := strings.Index(line, del); len(line) > 0; deli = strings.Index(line, del) {
-		if deli == 0 {
-			line = line[deli+len(del):]
-			continue
-		}
-
-		ci = strings.Index(line, `,`)
-		x, err = strconv.Atoi(line[:ci])
-		if err != nil {
-			return nil, err
-		}
-		if deli == -1 {
-			y, err = strconv.Atoi(line[ci+1:])
-			line = line[:0]
-		} else {
-			y, err = strconv.Atoi(line[ci+1 : deli])
-			line = line[deli+len(del):]
-		}
-		if err != nil {
-			return nil, err
-		}
-
-		output = append(output, coord{
-			x: x,
-			y: y,
-		})
-	}
-
-	return output, nil
 }
