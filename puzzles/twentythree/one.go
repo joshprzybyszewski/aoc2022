@@ -25,11 +25,11 @@ func One(
 
 	a := (max.x - min.x + 1) * (max.y - min.y + 1)
 
-	return a - len(es), nil
+	return int(a) - len(es), nil
 }
 
 type coord struct {
-	x, y int
+	x, y int16
 }
 
 func (c coord) nw() coord {
@@ -194,6 +194,9 @@ func updateMap(
 			} else if cl&west == west {
 				p.x--
 			}
+		}
+		if p == c {
+			return
 		}
 		proposalsLock.Lock()
 		defer proposalsLock.Unlock()

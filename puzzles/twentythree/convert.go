@@ -5,7 +5,7 @@ func convertInputToElfLocations(input string) map[coord]bool {
 	// so they're likely to expand out (9/2)x in every direction
 	output := make(map[coord]bool, 74*74*5)
 
-	x, y := 0, 0
+	var x, y int16
 	for _, ch := range input {
 		switch ch {
 		case '#':
