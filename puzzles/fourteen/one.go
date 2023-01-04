@@ -19,15 +19,19 @@ const (
 )
 
 type grid struct {
+
+	// part 2:
+	// min: {x:342 y:0}
+	// max: {x:658 y:159}
 	// [row][col]
-	mats    [][]material
+	mats [159][659]material
+
 	maxRock int
 	floor   int
 }
 
-func newGrid() *grid {
-	return &grid{
-		mats:    make([][]material, 0, 256),
+func newGrid() grid {
+	return grid{
 		maxRock: 0,
 		floor:   -1,
 	}
@@ -149,12 +153,6 @@ func (g *grid) check(x, y int) material {
 	if g.floor >= 0 && y == g.floor {
 		return rock
 	}
-	if y >= len(g.mats) {
-		g.mats = append(g.mats, make([][]material, y-len(g.mats)+1)...)
-	}
-	if x >= len(g.mats[y]) {
-		g.mats[y] = append(g.mats[y], make([]material, x-len(g.mats[y])+1)...)
-	}
 	return g.mats[y][x]
 }
 
@@ -175,7 +173,7 @@ func One(
 	return units, nil
 }
 
-func getGrid(lines []string) (*grid, error) {
+func getGrid(lines []string) (grid, error) {
 	g := newGrid()
 
 	for _, line := range lines {
@@ -184,7 +182,7 @@ func getGrid(lines []string) (*grid, error) {
 		}
 		coords, err := getCoords(line)
 		if err != nil {
-			return nil, err
+			return grid{}, err
 		}
 		for i := 0; i < len(coords)-1; i++ {
 			c := coords[i]
