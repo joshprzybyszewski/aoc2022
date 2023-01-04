@@ -18,12 +18,9 @@ func Two(
 
 	ts := newTuples(len(rs))
 
-	var x1, x2 int
+	var x1, x2, gap int
 	var ok bool
-	var t tuple
 	var r report
-
-	output := make([]tuple, 0, len(rs))
 
 	for y := 0; y <= max; y++ {
 		for _, r = range rs {
@@ -32,24 +29,9 @@ func Two(
 				ts.add(x1, x2)
 			}
 		}
-		output = output[:0]
-		output = ts.populate(output)
-		// this assumes there's always output for the row
-		for _, t = range output {
-			if t.t2 < 0 {
-				// don't look at tuples that end before 0
-				continue
-			}
-			if t.t1 > max {
-				// don't look at any more tuples that start after the max
-				break
-			}
-			if t.t1 > 0 {
-				return (t.t1-1)*max + y, nil
-			}
-			if t.t2 < max {
-				return (t.t2+1)*max + y, nil
-			}
+		gap = ts.findGap(0, max)
+		if gap >= 0 {
+			return gap*max + y, nil
 		}
 	}
 

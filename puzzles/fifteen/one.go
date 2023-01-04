@@ -35,7 +35,7 @@ func (s *sortedInts) clear() {
 
 func (s *sortedInts) add(v int) {
 	// find the index to insert v
-	i := sort.SearchInts(s.vals, v)
+	i := s.getIndexFor(v)
 	if i == len(s.vals) {
 		// if it's at the end, just append
 		s.vals = append(s.vals, v)
@@ -50,6 +50,19 @@ func (s *sortedInts) add(v int) {
 
 	// insert the new value at the correct location
 	s.vals[i] = v
+}
+
+func (s *sortedInts) getIndexFor(v int) int {
+	// instead of using sort.SearchInts, we're going to iterate through the slice
+	// backwards. This is because the reports are sorted in ascending x, then ascending y order.
+
+	// return sort.SearchInts(s.vals, v)
+	for i := len(s.vals) - 1; i > 0; i-- {
+		if v >= s.vals[i] {
+			return i + 1
+		}
+	}
+	return 0
 }
 
 type tuples struct {
@@ -107,6 +120,55 @@ func (t *tuples) populate(
 	t.ends.clear()
 
 	return rngs
+}
+
+func (t *tuples) findGap(
+	start, end int,
+) int {
+
+	defer t.starts.clear()
+	defer t.ends.clear()
+	if len(t.starts.vals) == 0 {
+		// no entries!
+		return start - 1
+	}
+
+	var si, ei int
+
+	active := 0
+
+	for si < len(t.starts.vals) && ei < len(t.ends.vals) {
+		if t.starts.vals[si] > end {
+			// didn't find a gap
+			return start - 1
+		}
+
+		if t.starts.vals[si] <= t.ends.vals[ei] {
+			si++
+			active++
+			if si == len(t.starts.vals) {
+				// didn't find a gap
+				return start - 1
+			}
+		} else {
+			active--
+			if active == 0 {
+				// found the end of the window
+				if t.ends.vals[ei] > start {
+					if t.ends.vals[ei] > end {
+						// the end is past the range (we shouldn't hit this condition?)
+						return start - 1
+					}
+					// it's within the [start:end] range!
+					return t.ends.vals[ei] + 1
+				}
+			}
+			ei++
+		}
+
+	}
+
+	return start - 1
 }
 
 func One(
@@ -206,13 +268,12 @@ func getReports(
 ) ([33]report, error) {
 	// Sensor at x=2, y=18: closest beacon is at x=-2, y=15
 
-	var output [33]report //:= make([]report, 0, 33)
+	slice := make([]report, 0, 33)
 
 	var i1, i2,
 		sx, sy,
 		bx, by int
 	var err error
-	oi := 0
 	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
 		if nli == 0 {
 			input = input[nli+1:]
@@ -245,13 +306,23 @@ func getReports(
 			return [33]report{}, err
 		}
 
-		output[oi] = newReport(
+		slice = append(slice, newReport(
 			sx, sy,
 			bx, by,
-		)
-		oi++
+		))
 		input = input[nli+1:]
 	}
 
+	sort.Slice(slice, func(i, j int) bool {
+		if slice[i].sx == slice[j].sx {
+			return slice[i].sy < slice[j].sy
+		}
+		return slice[i].sx < slice[j].sx
+	})
+
+	var output [33]report
+	for i := range slice {
+		output[i] = slice[i]
+	}
 	return output, nil
 }
