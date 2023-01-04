@@ -1,21 +1,33 @@
 package sixteen
 
+import (
+	"sort"
+)
+
 func buildGraph(
 	startingNode string,
-	valves []*valve,
+	valves *valves,
 ) graph {
 	nameToIndex := make(map[string]int, numNodes)
 	vs := make(map[string]*valve, len(valves))
 
-	nodes := [numNodes]value{}
-	ni := 0
-	for _, v := range valves {
-		vs[v.name] = v
+	indexesWithFlow := make([]int, 0, numNodes)
+
+	for i, v := range valves {
+		vs[v.name] = &valves[i]
 		if v.flow > 0 {
-			nodes[ni] = value(v.flow)
-			nameToIndex[v.name] = ni
-			ni++
+			indexesWithFlow = append(indexesWithFlow, i)
 		}
+	}
+
+	sort.Slice(indexesWithFlow, func(i, j int) bool {
+		return valves[indexesWithFlow[i]].flow > valves[indexesWithFlow[j]].flow
+	})
+
+	nodes := [numNodes]value{}
+	for i, vi := range indexesWithFlow {
+		nodes[i] = value(valves[vi].flow)
+		nameToIndex[valves[vi].name] = i
 	}
 
 	edges := [numNodes][numNodes]distance{}

@@ -13,7 +13,7 @@ func Two(
 	if err != nil {
 		return 0, err
 	}
-	g := buildGraph(startingNode, valves)
+	g := buildGraph(startingNode, &valves)
 
 	return getBestPathForDuet(
 		&g,

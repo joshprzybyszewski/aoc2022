@@ -18,7 +18,7 @@ func One(
 	if err != nil {
 		return 0, err
 	}
-	g := buildGraph(startingNode, valves)
+	g := buildGraph(startingNode, &valves)
 
 	return getBestPath(
 		&g,
