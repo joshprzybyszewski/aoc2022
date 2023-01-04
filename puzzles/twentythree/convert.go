@@ -24,3 +24,14 @@ func convertInputToElfLocations(input string) map[coord]bool {
 
 	return output
 }
+
+func populateSlice(
+	m map[coord]bool,
+	s []coord,
+) {
+	si := 0
+	for c := range m {
+		s[si] = c
+		si++
+	}
+}

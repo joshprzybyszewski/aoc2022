@@ -12,16 +12,20 @@ func One(
 ) (int, error) {
 
 	elves := convertInputToElfLocations(input)
-	numElves := len(elves)
+	es := make([]coord, len(elves))
+	populateSlice(elves, es)
+	var ri uint8
 	for r := 0; r < 10; r++ {
-		_ = updateMap(elves, numElves, r)
+		_ = updateMap(elves, es, ri)
+		ri++
+		ri &= 3
 	}
 
 	min, max := getBounds(elves)
 
 	a := (max.x - min.x + 1) * (max.y - min.y + 1)
 
-	return a - numElves, nil
+	return a - len(es), nil
 }
 
 type coord struct {
@@ -101,14 +105,14 @@ const (
 
 func updateMap(
 	elves map[coord]bool,
-	numElves, roundIndex int,
+	es []coord,
+	roundIndex uint8,
 ) bool {
-	roundIndex %= 4
-
-	proposals := map[coord][]coord{}
+	proposals := map[coord]int{}
 	var proposalsLock sync.Mutex
 
-	checkElf := func(c coord) {
+	checkElf := func(ci int) {
+		c := es[ci]
 		cl := allClear
 
 		if elves[c.nw()] {
@@ -193,12 +197,16 @@ func updateMap(
 		}
 		proposalsLock.Lock()
 		defer proposalsLock.Unlock()
-		proposals[p] = append(proposals[p], c)
+		if _, ok := proposals[p]; ok {
+			proposals[p] = -1
+		} else {
+			proposals[p] = ci
+		}
 	}
 
 	var wg sync.WaitGroup
 
-	work := make(chan coord, numElves)
+	work := make(chan int, len(es))
 	for i := 0; i < runtime.NumCPU(); i++ {
 		go func() {
 			for w := range work {
@@ -208,11 +216,9 @@ func updateMap(
 		}()
 	}
 
-	for c, b := range elves {
-		if b {
-			wg.Add(1)
-			work <- c
-		}
+	for i := range es {
+		wg.Add(1)
+		work <- i
 	}
 
 	wg.Wait()
@@ -223,9 +229,10 @@ func updateMap(
 		return true
 	}
 
-	for dst, srcs := range proposals {
-		if len(srcs) == 1 {
-			elves[srcs[0]] = false
+	for dst, ci := range proposals {
+		if ci >= 0 {
+			elves[es[ci]] = false
+			es[ci] = dst
 			elves[dst] = true
 		}
 	}
