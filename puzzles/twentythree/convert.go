@@ -1,17 +1,18 @@
 package twentythree
 
-func convertInputToElfLocations(input string) []coord {
+func convertInputToElfLocations(input string) map[coord]bool {
 	// there are 74 rows and cols. It's probably about half full of elves.
-	output := make([]coord, 0, 74*74/2)
+	// so they're likely to expand out (9/2)x in every direction
+	output := make(map[coord]bool, 74*74*5)
 
 	x, y := 0, 0
 	for _, ch := range input {
 		switch ch {
 		case '#':
-			output = append(output, coord{
+			output[coord{
 				x: x,
 				y: y,
-			})
+			}] = true
 			x++
 		case '.':
 			x++

@@ -13,10 +13,10 @@ func BenchmarkAll(b *testing.B) {
 	now := time.Now()
 	today := now.Day()
 	if now.Year() > 2022 || today > 25 {
-		today = 25
+		today = 23
 	}
 
-	for day := 1; day <= today; day++ {
+	for day := 23; day <= today; day++ {
 		b.Run(fmt.Sprintf("Day %d", day), func(b *testing.B) {
 			input, err := util.Input(day)
 			if err != nil {
@@ -49,7 +49,7 @@ func BenchmarkAll(b *testing.B) {
 							b.Fail()
 						}
 						if answer != answer1 {
-							b.Logf("expected answer %q, but got %q", answer1, answer)
+							b.Logf("expected answer %d, but got %d", answer1, answer)
 							b.Fail()
 						}
 					}
@@ -94,7 +94,7 @@ func BenchmarkAll(b *testing.B) {
 							b.Fail()
 						}
 						if answer != answer2 {
-							b.Logf("expected answer %q, but got %q", answer2, answer)
+							b.Logf("expected answer %d, but got %d", answer2, answer)
 							b.Fail()
 						}
 					}

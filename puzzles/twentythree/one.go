@@ -10,109 +10,203 @@ func One(
 ) (int, error) {
 
 	elves := convertInputToElfLocations(input)
-	// print(elves)
+	numElves := len(elves)
 	for r := 0; r < 10; r++ {
-		elves, _ = getNextPositions(elves, r)
-		// print(elves)
+		_ = updateMap(elves, r)
 	}
 
 	min, max := getBounds(elves)
-	// fmt.Printf("min: %+v\n", min)
-	// fmt.Printf("max: %+v\n", max)
 
 	a := (max.x - min.x + 1) * (max.y - min.y + 1)
 
-	return a - len(elves), nil
+	return a - numElves, nil
 }
 
 type coord struct {
 	x, y int
 }
 
-func getNextPositions(
-	elves []coord,
-	roundIndex int,
-) ([]coord, bool) {
-
-	next := make([]coord, 0, len(elves))
-	t := newKDTree(elves)
-
-	var nearby []coord
-	var n, p coord
-	var right, down, left, up bool
-
-	proposed := make(map[coord][]int)
-
-	for i, e := range elves {
-		right, down, left, up = true, true, true, true
-		nearby = t.search(coordRange{
-			x0: e.x - 1,
-			x1: e.x + 1,
-			y0: e.y - 1,
-			y1: e.y + 1,
-		})
-		if len(nearby) == 1 {
-			// none nearby: don't move.
-			next = append(next, e)
-			continue
-		}
-
-		for _, n = range nearby {
-			if n == e {
-				continue
-			}
-			if n.x == e.x+1 {
-				right = false
-			}
-			if n.x == e.x-1 {
-				left = false
-			}
-			if n.y == e.y-1 {
-				up = false
-			}
-			if n.y == e.y+1 {
-				down = false
-			}
-		}
-		if !up && !down && !left && !right {
-			// no valid moves. Don't propose
-			next = append(next, e)
-			continue
-		}
-
-		p = getProposal(
-			e,
-			roundIndex,
-			up, down, left, right,
-		)
-
-		proposed[p] = append(proposed[p], i)
-	}
-
-	if len(proposed) == 0 {
-		return next, true
-	}
-
-	for c, indexes := range proposed {
-		if len(indexes) == 1 {
-			next = append(next, c)
-			continue
-		}
-		for _, i := range indexes {
-			next = append(next, elves[i])
-		}
-	}
-
-	return next, false
+func (c coord) nw() coord {
+	c.x--
+	c.y--
+	return c
 }
 
-func getBounds(elves []coord) (coord, coord) {
+func (c coord) n() coord {
+	c.y--
+	return c
+}
+
+func (c coord) ne() coord {
+	c.x++
+	c.y--
+	return c
+}
+
+func (c coord) e() coord {
+	c.x++
+	return c
+}
+
+func (c coord) se() coord {
+	c.x++
+	c.y++
+	return c
+}
+
+func (c coord) s() coord {
+	c.y++
+	return c
+}
+
+func (c coord) sw() coord {
+	c.x--
+	c.y++
+	return c
+}
+
+func (c coord) w() coord {
+	c.x--
+	return c
+}
+
+type clears uint8
+
+const (
+	north clears = 1 << iota
+	south
+	east
+	west
+
+	notNorth = ^north
+	notSouth = ^south
+	notEast  = ^east
+	notWest  = ^west
+
+	allClear  clears = north | south | east | west
+	noneClear clears = 0
+)
+
+func updateMap(
+	elves map[coord]bool,
+	roundIndex int,
+) bool {
+	roundIndex %= 4
+
+	proposals := map[coord][]coord{}
+
+	checkElf := func(c coord) {
+		cl := allClear
+
+		if elves[c.nw()] {
+			cl &= notNorth & notWest
+		}
+		if elves[c.se()] {
+			cl &= notSouth & notEast
+		}
+
+		if (cl&(north|east) != 0) && elves[c.ne()] {
+			cl &= notNorth & notEast
+		}
+		if (cl&(south|west) != 0) && elves[c.sw()] {
+			cl &= notSouth & notWest
+		}
+		if cl&north != 0 && elves[c.n()] {
+			cl &= notNorth
+		}
+		if cl&south != 0 && elves[c.s()] {
+			cl &= notSouth
+		}
+		if cl&east != 0 && elves[c.e()] {
+			cl &= notEast
+		}
+		if cl&west != 0 && elves[c.w()] {
+			cl &= notWest
+		}
+
+		if cl == allClear || cl == noneClear {
+			// do nothing
+			return
+		}
+
+		p := c
+		switch roundIndex {
+		case 0:
+			if cl&north != 0 {
+				p.y--
+			} else if cl&south != 0 {
+				p.y++
+			} else if cl&west != 0 {
+				p.x--
+			} else if cl&east != 0 {
+				p.x++
+			}
+		case 1:
+			if cl&south != 0 {
+				p.y++
+			} else if cl&west != 0 {
+				p.x--
+			} else if cl&east != 0 {
+				p.x++
+			} else if cl&north != 0 {
+				p.y--
+			}
+		case 2:
+			if cl&west != 0 {
+				p.x--
+			} else if cl&east != 0 {
+				p.x++
+			} else if cl&north != 0 {
+				p.y--
+			} else if cl&south != 0 {
+				p.y++
+			}
+		case 3:
+			if cl&east != 0 {
+				p.x++
+			} else if cl&north != 0 {
+				p.y--
+			} else if cl&south != 0 {
+				p.y++
+			} else if cl&west != 0 {
+				p.x--
+			}
+		}
+		proposals[p] = append(proposals[p], c)
+	}
+
+	for c, b := range elves {
+		if !b {
+			continue
+		}
+		checkElf(c)
+	}
+
+	if len(proposals) == 0 {
+		// steady state achieved
+		return true
+	}
+
+	for dst, srcs := range proposals {
+		if len(srcs) == 1 {
+			elves[srcs[0]] = false
+			elves[dst] = true
+		}
+	}
+
+	return false
+}
+
+func getBounds(elves map[coord]bool) (coord, coord) {
 	min := coord{
 		x: 74,
 		y: 74,
 	}
 	var max coord
-	for _, e := range elves {
+	for e, b := range elves {
+		if !b {
+			continue
+		}
 		if e.x < min.x {
 			min.x = e.x
 		}
@@ -129,80 +223,69 @@ func getBounds(elves []coord) (coord, coord) {
 	return min, max
 }
 
-func getProposal(
-	e coord,
-	roundIndex int,
-	up, down, left, right bool,
-) coord {
-	roundIndex %= 4
-	if roundIndex == 0 {
-		if up {
-			e.y--
-		} else if down {
-			e.y++
-		} else if left {
-			e.x--
-		} else if right {
-			e.x++
-		}
-		return e
-	}
-	if roundIndex == 1 {
-		if down {
-			e.y++
-		} else if left {
-			e.x--
-		} else if right {
-			e.x++
-		} else if up {
-			e.y--
-		}
-		return e
-	}
-	if roundIndex == 2 {
-		if left {
-			e.x--
-		} else if right {
-			e.x++
-		} else if up {
-			e.y--
-		} else if down {
-			e.y++
-		}
-		return e
-	}
-	if right {
-		e.x++
-	} else if up {
-		e.y--
-	} else if down {
-		e.y++
-	} else if left {
-		e.x--
-	}
-	return e
-}
-
 func print(
-	elves []coord,
+	elves map[coord]bool,
 ) {
 	min, max := getBounds(elves)
-	t := newKDTree(elves)
 
 	var sb strings.Builder
 
 	for y := min.y; y <= max.y; y++ {
 		for x := min.x; x <= max.x; x++ {
-			n := t.search(coordRange{
-				x0: x,
-				x1: x,
-				y0: y,
-				y1: y,
-			})
-			if len(n) == 1 {
+			if elves[coord{
+				x: x,
+				y: y,
+			}] {
 				sb.WriteByte('#')
 			} else {
 				sb.WriteByte('.')
+			}
+		}
+		sb.WriteByte('\n')
+	}
+	fmt.Println(sb.String())
+}
+
+func printWithProposals(
+	elves map[coord]bool,
+	proposals map[coord][]coord,
+) {
+	min, max := getBounds(elves)
+	for dst := range proposals {
+		if dst.x < min.x {
+			min.x = dst.x
+		}
+		if dst.x > max.x {
+			max.x = dst.x
+		}
+		if dst.y < min.y {
+			min.y = dst.y
+		}
+		if dst.y > max.y {
+			max.y = dst.y
+		}
+	}
+
+	var sb strings.Builder
+
+	for y := min.y; y <= max.y; y++ {
+		for x := min.x; x <= max.x; x++ {
+			c := coord{
+				x: x,
+				y: y,
+			}
+			if elves[c] {
+				if len(proposals[c]) > 0 {
+					sb.WriteByte('?')
+				} else {
+					sb.WriteByte('#')
+				}
+			} else {
+				if len(proposals[c]) > 0 {
+					sb.WriteByte('0' + byte(len(proposals[c])))
+				} else {
+					sb.WriteByte('.')
+				}
 			}
 		}
 		sb.WriteByte('\n')
