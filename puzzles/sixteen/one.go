@@ -33,7 +33,7 @@ func getBestPath(
 
 	var wg sync.WaitGroup
 	var best soloPath
-	var bestLock sync.Mutex
+	var bestLock sync.RWMutex
 	checkBest := func(o soloPath) {
 		bestLock.Lock()
 		defer bestLock.Unlock()
@@ -43,9 +43,9 @@ func getBestPath(
 	}
 
 	canBeatBest := func(s soloPath) bool {
-		bestLock.Lock()
+		bestLock.RLock()
 		br := best.released
-		bestLock.Unlock()
+		bestLock.RUnlock()
 
 		rem := pressure(s.remaining)
 		potRel := s.released

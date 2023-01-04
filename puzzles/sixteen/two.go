@@ -28,7 +28,7 @@ func getBestPathForDuet(
 
 	var wg sync.WaitGroup
 	var best duetPath
-	var bestLock sync.Mutex
+	var bestLock sync.RWMutex
 	checkBest := func(o duetPath) {
 		bestLock.Lock()
 		defer bestLock.Unlock()
@@ -38,9 +38,9 @@ func getBestPathForDuet(
 	}
 
 	canBeatBest := func(dp duetPath) bool {
-		bestLock.Lock()
+		bestLock.RLock()
 		br := best.released
-		bestLock.Unlock()
+		bestLock.RUnlock()
 
 		r1 := pressure(dp.one.remaining)
 		r2 := pressure(dp.two.remaining)
