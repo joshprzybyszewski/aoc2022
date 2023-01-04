@@ -60,7 +60,7 @@ func getGrid(input string) (grid, error) {
 			}
 
 			for {
-				g.addRock(prev.x, prev.y)
+				g.addRock(prev.y, prev.x)
 
 				if prev.x < x {
 					prev.x++

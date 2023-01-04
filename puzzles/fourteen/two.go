@@ -11,9 +11,9 @@ func Two(
 	g.addFloor()
 
 	units := 0
-	for g.addSand(500, 0) {
+	for g.addSand(0, 500) {
 		units++
-		if g.check(500, 0) == sand {
+		if g.check(0, 500) == sand {
 			break
 		}
 	}

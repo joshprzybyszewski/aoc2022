@@ -14,7 +14,7 @@ func One(
 	}
 
 	units := 0
-	for g.addSand(500, 0) {
+	for g.addSand(0, 500) {
 		units++
 	}
 
@@ -39,7 +39,7 @@ type grid struct {
 	// min: {x:342 y:0}
 	// max: {x:658 y:159}
 	// [row][col]
-	mats [159][659]material
+	mats [159][660]material
 
 	maxRock int
 	floor   int
@@ -114,15 +114,13 @@ func (g *grid) window() (coord, coord) {
 	return tl, br
 }
 
-func (g *grid) addRock(x, y int) {
-	if g.floor >= 0 {
-		panic(`should not have set floor before finishing adding rock`)
-	}
+func (g *grid) addRock(y, x int) {
+	// if g.floor >= 0 {
+	// 	panic(`should not have set floor before finishing adding rock`)
+	// }
 	if y > g.maxRock {
 		g.maxRock = y
 	}
-
-	g.check(x, y)
 
 	g.mats[y][x] = rock
 }
@@ -131,32 +129,31 @@ func (g *grid) addFloor() {
 	g.floor = g.maxRock + 2
 }
 
-func (g *grid) addSand(x, y int) bool {
-	if g.floor < 0 && y > g.maxRock {
-		return false
+func (g *grid) addSand(y, x int) bool {
+	y1 := y + 1
+	if g.floor < 0 {
+		if y > g.maxRock {
+			return false
+		}
+	} else if y1 == g.floor {
+		// it has come to rest
+		g.mats[y][x] = sand
+		return true
 	}
-	switch g.check(x, y+1) {
-	case rock, sand:
-		// can't fall straight down
-	default:
+
+	if g.check(y1, x) == air {
 		// check from below
-		return g.addSand(x, y+1)
+		return g.addSand(y1, x)
 	}
 
-	switch g.check(x-1, y+1) {
-	case rock, sand:
-		// can't fall down to the left
-	default:
+	if g.check(y1, x-1) == air {
 		// check down to the left
-		return g.addSand(x-1, y+1)
+		return g.addSand(y1, x-1)
 	}
 
-	switch g.check(x+1, y+1) {
-	case rock, sand:
-		// can't fall down to the right
-	default:
+	if g.check(y1, x+1) == air {
 		// check down to the right
-		return g.addSand(x+1, y+1)
+		return g.addSand(y1, x+1)
 	}
 
 	// it has come to rest
@@ -164,9 +161,6 @@ func (g *grid) addSand(x, y int) bool {
 	return true
 }
 
-func (g *grid) check(x, y int) material {
-	if g.floor >= 0 && y == g.floor {
-		return rock
-	}
+func (g *grid) check(y, x int) material {
 	return g.mats[y][x]
 }
