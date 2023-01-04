@@ -12,7 +12,7 @@ func One(
 	elves := convertInputToElfLocations(input)
 	// print(elves)
 	for r := 0; r < 10; r++ {
-		elves = getNextPositions(elves, r)
+		elves, _ = getNextPositions(elves, r)
 		// print(elves)
 	}
 
@@ -32,7 +32,8 @@ type coord struct {
 func getNextPositions(
 	elves []coord,
 	roundIndex int,
-) []coord {
+) ([]coord, bool) {
+
 	next := make([]coord, 0, len(elves))
 	t := newKDTree(elves)
 
@@ -88,6 +89,10 @@ func getNextPositions(
 		proposed[p] = append(proposed[p], i)
 	}
 
+	if len(proposed) == 0 {
+		return next, true
+	}
+
 	for c, indexes := range proposed {
 		if len(indexes) == 1 {
 			next = append(next, c)
@@ -98,7 +103,7 @@ func getNextPositions(
 		}
 	}
 
-	return next
+	return next, false
 }
 
 func getBounds(elves []coord) (coord, coord) {
