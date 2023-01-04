@@ -47,16 +47,16 @@ func getBestPath(
 		br := best.released
 		bestLock.Unlock()
 
-		r := pressure(s.remaining)
-		pot := pressure(0)
+		rem := pressure(s.remaining)
+		potRel := s.released
 
 		for n := node(0); n < numNodes; n++ {
 			if !s.isOpen(n) {
-				pot += r * pressure(g.getValue(n))
-				if pot > br {
+				potRel += rem * pressure(g.getValue(n))
+				if potRel > br {
 					return true
 				}
-				r--
+				rem -= 2
 			}
 		}
 

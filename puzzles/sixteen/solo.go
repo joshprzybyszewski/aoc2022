@@ -24,14 +24,15 @@ func maximize(
 		// no time
 		return s
 	}
-	if !bbc(s) {
-		// can't beat the best, so why try?
-		return s
-	}
 
 	s.valves = s.valves.open(s.cur)
 	s.remaining -= 1
 	s.released += (pressure(s.remaining) * pressure(g.getValue(s.cur)))
+
+	if !bbc(s) {
+		// can't beat the best, so why try?
+		return s
+	}
 
 	best := s
 	var ts, tmax soloPath

@@ -44,7 +44,7 @@ func getBestPathForDuet(
 
 		r1 := pressure(dp.one.remaining)
 		r2 := pressure(dp.two.remaining)
-		pot := pressure(0)
+		pot := dp.released
 
 		for n := node(0); n < numNodes; n++ {
 			if !dp.isOpen(n) {
@@ -53,13 +53,13 @@ func getBestPathForDuet(
 					if pot > br {
 						return true
 					}
-					r1--
+					r1 -= 2
 				} else {
 					pot += r2 * pressure(g.getValue(n))
 					if pot > br {
 						return true
 					}
-					r2--
+					r2 -= 2
 				}
 			}
 		}
