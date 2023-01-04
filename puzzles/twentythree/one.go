@@ -17,12 +17,12 @@ func One(
 
 	var ri uint8
 	for r := 0; r < 10; r++ {
-		_ = updateMap(&w, ri)
+		_ = runRound(&w, ri)
 		ri++
 		ri &= 3
 	}
 
-	min, max := getBounds(&space)
+	min, max := getBounds(elves)
 
 	a := (max.x - min.x + 1) * (max.y - min.y + 1)
 
@@ -60,7 +60,7 @@ const (
 	noneClear clears = 0
 )
 
-func updateMap(
+func runRound(
 	w *workforce,
 	roundIndex uint8,
 ) bool {
@@ -81,37 +81,33 @@ func updateMap(
 	return false
 }
 
-func getBounds(elves *space) (coord, coord) {
+func getBounds(elves []coord) (coord, coord) {
 	min := coord{
 		x: 74,
 		y: 74,
 	}
 	var max coord
 	// TODO be smarter about this.
-	for x := range elves {
-		for y := range elves[x] {
-			if !elves[x][y] {
-				continue
-			}
-			if x < min.x {
-				min.x = x
-			}
-			if x > max.x {
-				max.x = x
-			}
-			if y < min.y {
-				min.y = y
-			}
-			if y > max.y {
-				max.y = y
-			}
+	for _, e := range elves {
+		if e.x < min.x {
+			min.x = e.x
+		}
+		if e.y < min.y {
+			min.y = e.y
+		}
+		if e.x > max.x {
+			max.x = e.x
+		}
+		if e.y > max.y {
+			max.y = e.y
 		}
 	}
 	return min, max
 }
 
 func print(
-	elves *space,
+	space *space,
+	elves []coord,
 ) {
 	min, max := getBounds(elves)
 
@@ -119,7 +115,7 @@ func print(
 
 	for y := min.y; y <= max.y; y++ {
 		for x := min.x; x <= max.x; x++ {
-			if elves[x][y] {
+			if space[x][y] {
 				sb.WriteByte('#')
 			} else {
 				sb.WriteByte('.')
@@ -131,7 +127,8 @@ func print(
 }
 
 func printWithProposals(
-	elves *space,
+	space *space,
+	elves []coord,
 	proposals map[coord][]coord,
 ) {
 	min, max := getBounds(elves)
@@ -158,7 +155,7 @@ func printWithProposals(
 				x: x,
 				y: y,
 			}
-			if elves[x][y] {
+			if space[x][y] {
 				if len(proposals[c]) > 0 {
 					sb.WriteByte('?')
 				} else {

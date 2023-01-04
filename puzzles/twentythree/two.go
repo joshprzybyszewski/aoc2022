@@ -13,7 +13,7 @@ func Two(
 	steady := false
 	var ri uint8
 	for r := 0; ; r++ {
-		steady = updateMap(&w, ri)
+		steady = runRound(&w, ri)
 		if steady {
 			return r + 1, nil
 		}
