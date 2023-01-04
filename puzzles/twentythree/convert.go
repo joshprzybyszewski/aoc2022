@@ -1,37 +1,37 @@
 package twentythree
 
-func convertInputToElfLocations(input string) map[coord]bool {
-	// there are 74 rows and cols. It's probably about half full of elves.
-	// so they're likely to expand out (9/2)x in every direction
-	output := make(map[coord]bool, 74*74*5)
+const (
+	// min: {x:-14 y:-13}
+	// max: {x:127 y:126}
+	maxDir = 144
+)
 
-	var x, y int16
+// [x][y]
+type space [maxDir][maxDir]bool
+
+func convertInputToElfLocations(input string) (space, []coord) {
+	var output space
+	coords := make([]coord, 0, 74*74/2)
+
+	// offset by 15, because that's as far negative as it goes in p2
+	const offset = 15
+	x, y := offset, offset
 	for _, ch := range input {
 		switch ch {
 		case '#':
-			output[coord{
+			output[x][y] = true
+			coords = append(coords, coord{
 				x: x,
 				y: y,
-			}] = true
+			})
 			x++
 		case '.':
 			x++
 		case '\n':
 			y++
-			x = 0
+			x = offset
 		}
 	}
 
-	return output
-}
-
-func populateSlice(
-	m map[coord]bool,
-	s []coord,
-) {
-	si := 0
-	for c := range m {
-		s[si] = c
-		si++
-	}
+	return output, coords
 }

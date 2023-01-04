@@ -2,78 +2,35 @@ package twentythree
 
 import (
 	"fmt"
-	"runtime"
 	"strings"
-	"sync"
 )
 
 func One(
 	input string,
 ) (int, error) {
 
-	elves := convertInputToElfLocations(input)
-	es := make([]coord, len(elves))
-	populateSlice(elves, es)
+	space, elves := convertInputToElfLocations(input)
+
+	w := newWorkforce(&space, elves)
+	w.start()
+	defer w.stop()
+
 	var ri uint8
 	for r := 0; r < 10; r++ {
-		_ = updateMap(elves, es, ri)
+		_ = updateMap(&w, ri)
 		ri++
 		ri &= 3
 	}
 
-	min, max := getBounds(elves)
+	min, max := getBounds(&space)
 
 	a := (max.x - min.x + 1) * (max.y - min.y + 1)
 
-	return int(a) - len(es), nil
+	return int(a) - len(elves), nil
 }
 
 type coord struct {
-	x, y int16
-}
-
-func (c coord) nw() coord {
-	c.x--
-	c.y--
-	return c
-}
-
-func (c coord) n() coord {
-	c.y--
-	return c
-}
-
-func (c coord) ne() coord {
-	c.x++
-	c.y--
-	return c
-}
-
-func (c coord) e() coord {
-	c.x++
-	return c
-}
-
-func (c coord) se() coord {
-	c.x++
-	c.y++
-	return c
-}
-
-func (c coord) s() coord {
-	c.y++
-	return c
-}
-
-func (c coord) sw() coord {
-	c.x--
-	c.y++
-	return c
-}
-
-func (c coord) w() coord {
-	c.x--
-	return c
+	x, y int
 }
 
 type clears uint8
@@ -104,129 +61,10 @@ const (
 )
 
 func updateMap(
-	elves map[coord]bool,
-	es []coord,
+	w *workforce,
 	roundIndex uint8,
 ) bool {
-	proposals := map[coord]int{}
-	var proposalsLock sync.Mutex
-
-	checkElf := func(ci int) {
-		c := es[ci]
-		cl := allClear
-
-		if elves[c.nw()] {
-			cl &= southEast
-		}
-		if elves[c.se()] {
-			cl &= northWest
-		}
-
-		if (cl&northEast != 0) && elves[c.ne()] {
-			cl &= southWest
-		}
-		if (cl&southWest != 0) && elves[c.sw()] {
-			cl &= northEast
-		}
-
-		if cl == noneClear {
-			// already eliminated all directions. do nothing
-			return
-		}
-
-		if cl&north == north && elves[c.n()] {
-			cl &= notNorth
-		}
-		if cl&south == south && elves[c.s()] {
-			cl &= notSouth
-		}
-		if cl&east == east && elves[c.e()] {
-			cl &= notEast
-		}
-		if cl&west == west && elves[c.w()] {
-			cl &= notWest
-		}
-
-		if cl == allClear || cl == noneClear {
-			// do nothing
-			return
-		}
-
-		p := c
-		switch roundIndex {
-		case 0:
-			if cl&north == north {
-				p.y--
-			} else if cl&south == south {
-				p.y++
-			} else if cl&west == west {
-				p.x--
-			} else if cl&east == east {
-				p.x++
-			}
-		case 1:
-			if cl&south == south {
-				p.y++
-			} else if cl&west == west {
-				p.x--
-			} else if cl&east == east {
-				p.x++
-			} else if cl&north == north {
-				p.y--
-			}
-		case 2:
-			if cl&west == west {
-				p.x--
-			} else if cl&east == east {
-				p.x++
-			} else if cl&north == north {
-				p.y--
-			} else if cl&south == south {
-				p.y++
-			}
-		case 3:
-			if cl&east == east {
-				p.x++
-			} else if cl&north == north {
-				p.y--
-			} else if cl&south == south {
-				p.y++
-			} else if cl&west == west {
-				p.x--
-			}
-		}
-		if p == c {
-			return
-		}
-		proposalsLock.Lock()
-		defer proposalsLock.Unlock()
-		if _, ok := proposals[p]; ok {
-			proposals[p] = -1
-		} else {
-			proposals[p] = ci
-		}
-	}
-
-	var wg sync.WaitGroup
-
-	work := make(chan int, len(es))
-	for i := 0; i < runtime.NumCPU(); i++ {
-		go func() {
-			for w := range work {
-				checkElf(w)
-				wg.Done()
-			}
-		}()
-	}
-
-	for i := range es {
-		wg.Add(1)
-		work <- i
-	}
-
-	wg.Wait()
-	close(work)
-
+	proposals := w.run(roundIndex)
 	if len(proposals) == 0 {
 		// steady state achieved
 		return true
@@ -234,43 +72,46 @@ func updateMap(
 
 	for dst, ci := range proposals {
 		if ci >= 0 {
-			elves[es[ci]] = false
-			es[ci] = dst
-			elves[dst] = true
+			w.space[w.elves[ci].x][w.elves[ci].y] = false
+			w.elves[ci] = dst
+			w.space[dst.x][dst.y] = true
 		}
 	}
 
 	return false
 }
 
-func getBounds(elves map[coord]bool) (coord, coord) {
+func getBounds(elves *space) (coord, coord) {
 	min := coord{
 		x: 74,
 		y: 74,
 	}
 	var max coord
-	for e, b := range elves {
-		if !b {
-			continue
-		}
-		if e.x < min.x {
-			min.x = e.x
-		}
-		if e.x > max.x {
-			max.x = e.x
-		}
-		if e.y < min.y {
-			min.y = e.y
-		}
-		if e.y > max.y {
-			max.y = e.y
+	// TODO be smarter about this.
+	for x := range elves {
+		for y := range elves[x] {
+			if !elves[x][y] {
+				continue
+			}
+			if x < min.x {
+				min.x = x
+			}
+			if x > max.x {
+				max.x = x
+			}
+			if y < min.y {
+				min.y = y
+			}
+			if y > max.y {
+				max.y = y
+			}
 		}
 	}
 	return min, max
 }
 
 func print(
-	elves map[coord]bool,
+	elves *space,
 ) {
 	min, max := getBounds(elves)
 
@@ -278,10 +119,7 @@ func print(
 
 	for y := min.y; y <= max.y; y++ {
 		for x := min.x; x <= max.x; x++ {
-			if elves[coord{
-				x: x,
-				y: y,
-			}] {
+			if elves[x][y] {
 				sb.WriteByte('#')
 			} else {
 				sb.WriteByte('.')
@@ -293,7 +131,7 @@ func print(
 }
 
 func printWithProposals(
-	elves map[coord]bool,
+	elves *space,
 	proposals map[coord][]coord,
 ) {
 	min, max := getBounds(elves)
@@ -320,7 +158,7 @@ func printWithProposals(
 				x: x,
 				y: y,
 			}
-			if elves[c] {
+			if elves[x][y] {
 				if len(proposals[c]) > 0 {
 					sb.WriteByte('?')
 				} else {
