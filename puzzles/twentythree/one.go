@@ -78,10 +78,20 @@ const (
 	east
 	west
 
+	northWest = north | west
+	northEast = north | east
+	southEast = south | east
+	southWest = south | west
+
 	notNorth = ^north
 	notSouth = ^south
 	notEast  = ^east
 	notWest  = ^west
+
+	notNorthWest = ^(north | west)
+	notNorthEast = ^(north | east)
+	notSouthEast = ^(south | east)
+	notSouthWest = ^(south | west)
 
 	allClear  clears = north | south | east | west
 	noneClear clears = 0
@@ -99,28 +109,34 @@ func updateMap(
 		cl := allClear
 
 		if elves[c.nw()] {
-			cl &= notNorth & notWest
+			cl &= southEast
 		}
 		if elves[c.se()] {
-			cl &= notSouth & notEast
+			cl &= northWest
 		}
 
-		if (cl&(north|east) != 0) && elves[c.ne()] {
-			cl &= notNorth & notEast
+		if (cl&northEast != 0) && elves[c.ne()] {
+			cl &= southWest
 		}
-		if (cl&(south|west) != 0) && elves[c.sw()] {
-			cl &= notSouth & notWest
+		if (cl&southWest != 0) && elves[c.sw()] {
+			cl &= northEast
 		}
-		if cl&north != 0 && elves[c.n()] {
+
+		if cl == noneClear {
+			// already eliminated all directions. do nothing
+			return
+		}
+
+		if cl&north == north && elves[c.n()] {
 			cl &= notNorth
 		}
-		if cl&south != 0 && elves[c.s()] {
+		if cl&south == south && elves[c.s()] {
 			cl &= notSouth
 		}
-		if cl&east != 0 && elves[c.e()] {
+		if cl&east == east && elves[c.e()] {
 			cl &= notEast
 		}
-		if cl&west != 0 && elves[c.w()] {
+		if cl&west == west && elves[c.w()] {
 			cl &= notWest
 		}
 
@@ -132,43 +148,43 @@ func updateMap(
 		p := c
 		switch roundIndex {
 		case 0:
-			if cl&north != 0 {
+			if cl&north == north {
 				p.y--
-			} else if cl&south != 0 {
+			} else if cl&south == south {
 				p.y++
-			} else if cl&west != 0 {
+			} else if cl&west == west {
 				p.x--
-			} else if cl&east != 0 {
+			} else if cl&east == east {
 				p.x++
 			}
 		case 1:
-			if cl&south != 0 {
+			if cl&south == south {
 				p.y++
-			} else if cl&west != 0 {
+			} else if cl&west == west {
 				p.x--
-			} else if cl&east != 0 {
+			} else if cl&east == east {
 				p.x++
-			} else if cl&north != 0 {
+			} else if cl&north == north {
 				p.y--
 			}
 		case 2:
-			if cl&west != 0 {
+			if cl&west == west {
 				p.x--
-			} else if cl&east != 0 {
+			} else if cl&east == east {
 				p.x++
-			} else if cl&north != 0 {
+			} else if cl&north == north {
 				p.y--
-			} else if cl&south != 0 {
+			} else if cl&south == south {
 				p.y++
 			}
 		case 3:
-			if cl&east != 0 {
+			if cl&east == east {
 				p.x++
-			} else if cl&north != 0 {
+			} else if cl&north == north {
 				p.y--
-			} else if cl&south != 0 {
+			} else if cl&south == south {
 				p.y++
-			} else if cl&west != 0 {
+			} else if cl&west == west {
 				p.x--
 			}
 		}
