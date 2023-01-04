@@ -37,6 +37,36 @@ func getBestPathForDuet(
 		}
 	}
 
+	canBeatBest := func(dp duetPath) bool {
+		bestLock.Lock()
+		br := best.released
+		bestLock.Unlock()
+
+		r1 := pressure(dp.one.remaining)
+		r2 := pressure(dp.two.remaining)
+		pot := pressure(0)
+
+		for n := node(0); n < numNodes; n++ {
+			if !dp.isOpen(n) {
+				if r1 > r2 {
+					pot += r1 * pressure(g.getValue(n))
+					if pot > br {
+						return true
+					}
+					r1--
+				} else {
+					pot += r2 * pressure(g.getValue(n))
+					if pot > br {
+						return true
+					}
+					r2--
+				}
+			}
+		}
+
+		return false
+	}
+
 	// numNodes^2 is plenty of space
 	work := make(chan struct{ i, j int }, numNodes*numNodes)
 	for i := 0; i < runtime.NumCPU(); i++ {
@@ -58,6 +88,7 @@ func getBestPathForDuet(
 							remaining: remaining - d2,
 						},
 					},
+					canBeatBest,
 				)
 				checkBest(p)
 				wg.Done()

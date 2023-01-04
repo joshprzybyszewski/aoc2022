@@ -42,6 +42,27 @@ func getBestPath(
 		}
 	}
 
+	canBeatBest := func(s soloPath) bool {
+		bestLock.Lock()
+		br := best.released
+		bestLock.Unlock()
+
+		r := pressure(s.remaining)
+		pot := pressure(0)
+
+		for n := node(0); n < numNodes; n++ {
+			if !s.isOpen(n) {
+				pot += r * pressure(g.getValue(n))
+				if pot > br {
+					return true
+				}
+				r--
+			}
+		}
+
+		return false
+	}
+
 	work := make(chan int, numNodes)
 	for i := 0; i < runtime.NumCPU(); i++ {
 		go func() {
@@ -56,6 +77,7 @@ func getBestPath(
 						cur:       node(w),
 						remaining: remaining - d,
 					},
+					canBeatBest,
 				)
 				checkBest(em)
 				wg.Done()

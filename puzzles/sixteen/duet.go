@@ -1,5 +1,7 @@
 package sixteen
 
+type duetBeatBestChecker func(s duetPath) bool
+
 type duetPath struct {
 	one, two traveller
 
@@ -26,9 +28,14 @@ func (s *duetPath) openTwo(n1, n2 node) {
 func maximizeDuet(
 	g *graph,
 	s duetPath,
+	dbbc duetBeatBestChecker,
 ) duetPath {
 	if s.one.remaining == 0 && s.two.remaining == 0 {
 		// no time
+		return s
+	}
+	if !dbbc(s) {
+		// can't beat the best, so why try?
 		return s
 	}
 
@@ -55,7 +62,7 @@ func maximizeDuet(
 			} else {
 				s.two.remaining = 0
 			}
-			return maximizeDuet(g, s)
+			return maximizeDuet(g, s, dbbc)
 		}
 
 		// travel and maximize
@@ -86,7 +93,7 @@ func maximizeDuet(
 				ts.two.cur = n
 			}
 
-			tmax = maximizeDuet(g, ts)
+			tmax = maximizeDuet(g, ts, dbbc)
 			if tmax.released > best.released {
 				best = tmax
 			}
@@ -127,7 +134,7 @@ func maximizeDuet(
 		} else {
 			return s
 		}
-		return maximizeDuet(g, ts)
+		return maximizeDuet(g, ts, dbbc)
 	}
 
 	best := s
@@ -166,7 +173,7 @@ func maximizeDuet(
 			ts.two.remaining -= d2
 			ts.two.cur = n2
 
-			tmax = maximizeDuet(g, ts)
+			tmax = maximizeDuet(g, ts, dbbc)
 			if tmax.released > best.released {
 				best = tmax
 			}
