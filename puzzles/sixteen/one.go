@@ -52,11 +52,15 @@ func getBestPath(
 
 		for n := node(0); n < numNodes; n++ {
 			if !s.isOpen(n) {
+				rem--
 				potRel += rem * pressure(g.getValue(n))
 				if potRel > br {
 					return true
 				}
-				rem -= 2
+				rem--
+				if rem < 0 {
+					break
+				}
 			}
 		}
 
