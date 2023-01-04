@@ -1,13 +1,12 @@
 package twentyone
 
 import (
-	"fmt"
 	"os"
 	"strings"
 )
 
 const (
-	mathFileName = `twentyone/math.go`
+	mathFileName = `puzzles/twentyone/math.go`
 )
 
 var (
@@ -71,8 +70,4 @@ var (`)
 		return err
 	}
 	return nil
-}
-
-func getInputFilname() string {
-	return fmt.Sprintf("twentyone/math.go")
 }
