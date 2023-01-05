@@ -1,27 +1,109 @@
 package nineteen
 
-type blueprint struct {
-	// ore cost to construct an ore robot
-	oreRobot int
+import (
+	"strconv"
+	"strings"
+)
 
-	// ore cost to construct a clay robot
-	clayRobot int
+const (
+	numBlueprints = 30 // number of lines in input
+)
 
-	// the ore and clay cost to construct an obsidian robot
-	obsRobotOre  int
-	obsRobotClay int
+type allBlueprints [numBlueprints]blueprint
 
-	// the ore and obsidian cost to construct a geode robot
-	geodeRobotOre int
-	geodeRobotObs int
+type oreRobotCost struct {
+	ore int
 }
 
-func (b *blueprint) maxOreNeed() int {
-	// TODO store this as a field
-	return max4(
-		b.geodeRobotOre,
-		b.obsRobotOre,
-		b.clayRobot,
-		b.oreRobot,
-	)
+type clayRobotCost struct {
+	ore int
+}
+
+type obsidianRobotCost struct {
+	ore  int
+	clay int
+}
+
+type geodeRobotCost struct {
+	ore      int
+	obsidian int
+}
+
+type blueprint struct {
+	oreRobotCost      oreRobotCost
+	clayRobotCost     clayRobotCost
+	obsidianRobotCost obsidianRobotCost
+	geodeRobotCost    geodeRobotCost
+}
+
+func getBlueprints(
+	input string,
+) (allBlueprints, error) {
+	var alli int
+	var all allBlueprints
+
+	var i1, i2 int
+	var tmp int
+	var err error
+
+	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
+		if nli == 0 {
+			input = input[nli+1:]
+			continue
+		}
+
+		i1 = strings.Index(input, `costs `) + 6
+		i2 = i1 + strings.Index(input[i1:], ` `)
+		tmp, err = strconv.Atoi(input[i1:i2])
+		if err != nil {
+			return allBlueprints{}, err
+		}
+		all[alli].oreRobotCost.ore = tmp
+
+		i1 = i2 + strings.Index(input[i2:], `costs `) + 6
+		i2 = i1 + strings.Index(input[i1:], ` `)
+		tmp, err = strconv.Atoi(input[i1:i2])
+		if err != nil {
+			return allBlueprints{}, err
+		}
+		all[alli].clayRobotCost.ore = tmp
+
+		i1 = i2 + strings.Index(input[i2:], `costs `) + 6
+		i2 = i1 + strings.Index(input[i1:], ` `)
+		tmp, err = strconv.Atoi(input[i1:i2])
+		if err != nil {
+			return allBlueprints{}, err
+		}
+		all[alli].obsidianRobotCost.ore = tmp
+
+		i1 = i2 + strings.Index(input[i2:], `and `) + 4
+		i2 = i1 + strings.Index(input[i1:], ` `)
+		tmp, err = strconv.Atoi(input[i1:i2])
+		if err != nil {
+			return allBlueprints{}, err
+		}
+		all[alli].obsidianRobotCost.clay = tmp
+
+		i1 = i2 + strings.Index(input[i2:], `costs `) + 6
+		i2 = i1 + strings.Index(input[i1:], ` `)
+		tmp, err = strconv.Atoi(input[i1:i2])
+		if err != nil {
+			return allBlueprints{}, err
+		}
+		all[alli].geodeRobotCost.ore = tmp
+
+		i1 = i2 + strings.Index(input[i2:], `and `) + 4
+		i2 = i1 + strings.Index(input[i1:], ` `)
+		tmp, err = strconv.Atoi(input[i1:i2])
+		if err != nil {
+			return allBlueprints{}, err
+		}
+		all[alli].geodeRobotCost.obsidian = tmp
+
+		input = input[nli+1:]
+		alli++
+	}
+
+	return all, nil
+
 }
