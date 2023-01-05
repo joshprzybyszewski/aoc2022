@@ -4,8 +4,26 @@ const (
 	maxMinutes = part2Minutes + 1
 )
 
+var (
+	// this only has 13 entries instead of `maxMinutes` because the 12th minute
+	// overflows uint8.
+	possibleProductionByTimeRemaining [13]uint8
+)
+
+func init() {
+	var sum uint8
+	for i := 0; i < len(possibleProductionByTimeRemaining); i++ {
+		possibleProductionByTimeRemaining[i] = sum
+		for j := 1; j < i; j++ {
+			sum += uint8(j)
+		}
+	}
+}
+
 type maximizer struct {
 	b *blueprint
+
+	knownBest stuff
 }
 
 func newMaximizer(
@@ -18,51 +36,66 @@ func newMaximizer(
 	return m
 }
 
+func (m *maximizer) setKnownBest(
+	s stuff,
+) {
+	if s.bank.geode > m.knownBest.bank.geode {
+		m.knownBest = s
+	}
+}
+
+// canBeatKnownBest returns true if, by building robots, the given stuff could be the known best.
+func (m *maximizer) canBeatKnownBest(
+	now, terminal stuff,
+	remainingMinutes uint8,
+) bool {
+	if remainingMinutes <= 1 {
+		// if there's one or fewer minute(s) remaining, then no robot is worth building.
+		return false
+	}
+	if int(remainingMinutes) >= len(possibleProductionByTimeRemaining) {
+		// can't know yet.
+		return true
+	}
+
+	// In theory, we could build a geode robot every minute for the remaining minutes
+	// and that would be the most geodes we could produce.
+	possibleProduction := possibleProductionByTimeRemaining[remainingMinutes]
+	if terminal.bank.geode+possibleProduction < m.knownBest.bank.geode {
+		return false
+	}
+
+	return true
+}
+
 func (m *maximizer) maximizeGeodes(
 	s stuff,
 	remainingMinutes uint8,
 	// TODO use DP to keep track of seen states?
-) stuff {
+) {
 
 	best := s
 	elapseN(&best, remainingMinutes)
+	m.setKnownBest(best)
 
-	if remainingMinutes <= 1 {
-		// if there's one minute remaining, it's not worth building a robot
-		// if there's fewer than 1 minute remaining, elapse handles that.
-		return best
+	if !m.canBeatKnownBest(s, best, remainingMinutes) {
+		return
 	}
 
-	other, ok := m.buildGeodeRobot(s, remainingMinutes)
-	if ok && other.bank.geode > best.bank.geode {
-		best = other
-	}
+	m.buildGeodeRobot(s, remainingMinutes)
+	m.buildObsidianRobot(s, remainingMinutes)
+	m.buildClayRobot(s, remainingMinutes)
+	m.buildOreRobot(s, remainingMinutes)
 
-	other, ok = m.buildObsidianRobot(s, remainingMinutes)
-	if ok && other.bank.geode > best.bank.geode {
-		best = other
-	}
-
-	other, ok = m.buildClayRobot(s, remainingMinutes)
-	if ok && other.bank.geode > best.bank.geode {
-		best = other
-	}
-
-	other, ok = m.buildOreRobot(s, remainingMinutes)
-	if ok && other.bank.geode > best.bank.geode {
-		best = other
-	}
-
-	return best
 }
 
 func (m *maximizer) buildGeodeRobot(
 	s stuff,
 	remainingMinutes uint8,
-) (stuff, bool) {
+) {
 	if s.robots.obsidian == 0 {
 		// we'll never be able to because we cannot generate obsidian.
-		return stuff{}, false
+		return
 	}
 
 	var idleMinutes uint8
@@ -78,22 +111,22 @@ func (m *maximizer) buildGeodeRobot(
 
 	if idleMinutes+1 >= remainingMinutes {
 		// could not generate then build the robot in time to use it.
-		return stuff{}, false
+		return
 	}
 
-	return m.maximizeGeodes(s, remainingMinutes-idleMinutes-1), true
+	m.maximizeGeodes(s, remainingMinutes-idleMinutes-1)
 }
 
 func (m *maximizer) buildObsidianRobot(
 	s stuff,
 	remainingMinutes uint8,
-) (stuff, bool) {
+) {
 	if s.robots.clay == 0 {
 		// we'll never be able to because we cannot generate clay.
-		return stuff{}, false
+		return
 	} else if s.robots.obsidian >= m.b.geodeRobotCost.obsidian {
 		// we shouldn't build an obsidian robot because we already have enough
-		return stuff{}, false
+		return
 	}
 
 	var idleMinutes uint8
@@ -109,19 +142,19 @@ func (m *maximizer) buildObsidianRobot(
 
 	if idleMinutes+1 >= remainingMinutes {
 		// could not generate then build the robot in time to use it.
-		return stuff{}, false
+		return
 	}
 
-	return m.maximizeGeodes(s, remainingMinutes-idleMinutes-1), true
+	m.maximizeGeodes(s, remainingMinutes-idleMinutes-1)
 }
 
 func (m *maximizer) buildClayRobot(
 	s stuff,
 	remainingMinutes uint8,
-) (stuff, bool) {
+) {
 	if s.robots.clay >= m.b.obsidianRobotCost.clay {
 		// we shouldn't build a clay robot because we already have enough
-		return stuff{}, false
+		return
 	}
 
 	var idleMinutes uint8
@@ -137,22 +170,22 @@ func (m *maximizer) buildClayRobot(
 
 	if idleMinutes+1 >= remainingMinutes {
 		// could not generate then build the robot in time to use it.
-		return stuff{}, false
+		return
 	}
 
-	return m.maximizeGeodes(s, remainingMinutes-idleMinutes-1), true
+	m.maximizeGeodes(s, remainingMinutes-idleMinutes-1)
 }
 
 func (m *maximizer) buildOreRobot(
 	s stuff,
 	remainingMinutes uint8,
-) (stuff, bool) {
+) {
 	if s.robots.ore >= m.b.oreRobotCost.ore &&
 		s.robots.ore >= m.b.clayRobotCost.ore &&
 		s.robots.ore >= m.b.obsidianRobotCost.ore &&
 		s.robots.ore >= m.b.geodeRobotCost.ore {
 		// we shouldn't build an ore robot because we already have enough
-		return stuff{}, false
+		return
 	}
 
 	var idleMinutes uint8
@@ -168,8 +201,8 @@ func (m *maximizer) buildOreRobot(
 
 	if idleMinutes+1 >= remainingMinutes {
 		// could not generate then build the robot in time to use it.
-		return stuff{}, false
+		return
 	}
 
-	return m.maximizeGeodes(s, remainingMinutes-idleMinutes-1), true
+	m.maximizeGeodes(s, remainingMinutes-idleMinutes-1)
 }

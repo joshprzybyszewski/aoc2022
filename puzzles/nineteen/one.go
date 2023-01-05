@@ -50,10 +50,10 @@ func harvest(
 ) int {
 	m := newMaximizer(b)
 
-	s := m.maximizeGeodes(
+	m.maximizeGeodes(
 		newInitialStuff(),
 		minutes,
 	)
 
-	return int(s.bank.geode)
+	return int(m.knownBest.bank.geode)
 }

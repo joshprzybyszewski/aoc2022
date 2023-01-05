@@ -12,6 +12,7 @@ const (
 func Two(
 	input string,
 ) (int, error) {
+
 	all, err := getBlueprints(input)
 	if err != nil {
 		return 0, err
