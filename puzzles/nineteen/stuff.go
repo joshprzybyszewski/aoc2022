@@ -1,5 +1,7 @@
 package nineteen
 
+import "fmt"
+
 type raw struct {
 	ore      int
 	clay     int
@@ -18,6 +20,22 @@ func newInitialStuff() stuff {
 			ore: 1,
 		},
 	}
+}
+
+func (s stuff) String() string {
+	output := "Stuff:\n"
+	output += "\tBank:\n"
+	output += fmt.Sprintf("\t\tOre:      %2d\n", s.bank.ore)
+	output += fmt.Sprintf("\t\tClay:     %2d\n", s.bank.clay)
+	output += fmt.Sprintf("\t\tObsidian: %2d\n", s.bank.obsidian)
+	output += fmt.Sprintf("\t\tGeode:    %2d\n", s.bank.geode)
+	output += "\tRobots:\n"
+	output += fmt.Sprintf("\t\tOre:      %2d\n", s.robots.ore)
+	output += fmt.Sprintf("\t\tClay:     %2d\n", s.robots.clay)
+	output += fmt.Sprintf("\t\tObsidian: %2d\n", s.robots.obsidian)
+	output += fmt.Sprintf("\t\tGeode:    %2d\n", s.robots.geode)
+
+	return output
 }
 
 func elapse(
@@ -58,14 +76,14 @@ func maximizeGeodes(
 	s stuff,
 	remainingMinutes int,
 ) stuff {
+	best := s
+	elapse(&best, remainingMinutes)
+
 	if remainingMinutes <= 1 {
 		// if there's one minute remaining, it's not worth building a robot
 		// if there's fewer than 1 minute remaining, elapse handles that.
-		elapse(&s, remainingMinutes)
-		return s
+		return best
 	}
-
-	best := s
 
 	other, ok := buildGeodeRobot(b, s, remainingMinutes)
 	if ok && other.bank.geode > best.bank.geode {

@@ -1,6 +1,7 @@
 package nineteen
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 )
@@ -16,6 +17,22 @@ type blueprint struct {
 	clayRobotCost     raw
 	obsidianRobotCost raw
 	geodeRobotCost    raw
+}
+
+func (b *blueprint) String() string {
+	output := "Costs:\n"
+	output += "\tOre Robot:\n"
+	output += fmt.Sprintf("\t\tOre:      %2d\n", b.oreRobotCost.ore)
+	output += "\tClay Robot:\n"
+	output += fmt.Sprintf("\t\tOre:      %2d\n", b.clayRobotCost.ore)
+	output += "\tObsidian Robot:\n"
+	output += fmt.Sprintf("\t\tOre:      %2d\n", b.obsidianRobotCost.ore)
+	output += fmt.Sprintf("\t\tClay:     %2d\n", b.obsidianRobotCost.clay)
+	output += "\tGeode Robot:\n"
+	output += fmt.Sprintf("\t\tOre:      %2d\n", b.geodeRobotCost.ore)
+	output += fmt.Sprintf("\t\tObsidian: %2d\n", b.geodeRobotCost.obsidian)
+
+	return output
 }
 
 func getBlueprints(
