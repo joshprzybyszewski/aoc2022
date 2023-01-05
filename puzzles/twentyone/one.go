@@ -4,13 +4,13 @@ import "fmt"
 
 func One(
 	input string,
-) (int64, error) {
+) (int, error) {
 	monkeys, nameToIndex, err := convertToMonkeys(input)
 	if err != nil {
 		return 0, err
 	}
 
-	return monkeys[nameToIndex[`root`]].eval(), nil
+	return int(monkeys[nameToIndex[`root`]].eval()), nil
 }
 
 type operation uint8
@@ -110,24 +110,23 @@ func (m *monkey) eval() int64 {
 }
 
 func (m *monkey) dependsOn(
-	other *monkey,
+	target *monkey,
 ) bool {
 	if m == nil {
 		return false
 	}
-	if m == other {
+	if m == target {
 		return true
 	}
 
-	return m.left.dependsOn(other) || m.right.dependsOn(other)
+	return m.left.dependsOn(target) || m.right.dependsOn(target)
 }
 
 func (m *monkey) reverseEval(
 	prev int64,
-	other *monkey,
+	target *monkey,
 ) (int64, bool) {
-	// fmt.Printf("Received: %d\n", prev)
-	if m == other {
+	if m == target {
 		return prev, true
 	}
 
@@ -135,16 +134,18 @@ func (m *monkey) reverseEval(
 		// no evaluation
 		return int64(m.value), false
 	}
-	okl := m.left.dependsOn(other)
-	okr := m.right.dependsOn(other)
-	if !okl && !okr {
-		// fmt.Printf("\tDoesn't depend.\n")
-		return int64(m.eval()), false
+
+	leftDep := m.left.dependsOn(target)
+	if !leftDep {
+		if !m.right.dependsOn(target) {
+			// neither side depends on the target => standard evaluation
+			return m.eval(), false
+		}
 	}
 
 	var known, next int64
 
-	if okl {
+	if leftDep {
 		known = int64(m.right.eval())
 	} else {
 		known = int64(m.left.eval())
@@ -153,72 +154,21 @@ func (m *monkey) reverseEval(
 	switch m.op {
 	case mult:
 		next = prev / known
-		// if prev%known != 0 {
-		// 	panic(`int division`)
-		// }
 	case div:
 		next = known * prev
 	case add:
 		next = prev - known
 	case sub:
-		if okl {
+		// this tricked me:
+		if leftDep {
 			next = known + prev
 		} else {
 			next = known - prev
 		}
 	}
 
-	if okl {
-		switch m.op {
-		case mult:
-			if prev != next*known {
-				panic(`ahhh`)
-			}
-		case div:
-			if prev != next/known {
-				panic(`ahhh`)
-			}
-		case add:
-			if prev != next+known {
-				panic(`ahhh`)
-			}
-		case sub:
-			if prev != next-known {
-				panic(`ahhh`)
-			}
-		default:
-			panic(`ahhh`)
-		}
-	} else {
-		switch m.op {
-		case mult:
-			if exp := known * next; prev != exp {
-				fmt.Printf("exp: %d\nact: %d\n", exp, prev)
-				panic(`ahhh`)
-			}
-		case div:
-			if exp := known / next; prev != exp {
-				fmt.Printf("exp: %d\nact: %d\n", exp, prev)
-				panic(`ahhh`)
-			}
-		case add:
-			if exp := known + next; prev != exp {
-				fmt.Printf("exp: %d\nact: %d\n", exp, prev)
-				panic(`ahhh`)
-			}
-		case sub:
-			if exp := known - next; prev != exp {
-				fmt.Printf("exp: %d\nact: %d\n", exp, prev)
-				panic(`ahhh`)
-			}
-		default:
-			panic(`ahhh`)
-		}
+	if leftDep {
+		return m.left.reverseEval(next, target)
 	}
-
-	if okl {
-		return m.left.reverseEval(next, other)
-	} else {
-		return m.right.reverseEval(next, other)
-	}
+	return m.right.reverseEval(next, target)
 }
