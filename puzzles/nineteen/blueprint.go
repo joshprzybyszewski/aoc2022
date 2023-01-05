@@ -57,7 +57,7 @@ func getBlueprints(
 		if err != nil {
 			return allBlueprints{}, err
 		}
-		all[alli].oreRobotCost.ore = tmp
+		all[alli].oreRobotCost.ore = uint8(tmp)
 
 		i1 = i2 + strings.Index(input[i2:], `costs `) + 6
 		i2 = i1 + strings.Index(input[i1:], ` `)
@@ -65,7 +65,7 @@ func getBlueprints(
 		if err != nil {
 			return allBlueprints{}, err
 		}
-		all[alli].clayRobotCost.ore = tmp
+		all[alli].clayRobotCost.ore = uint8(tmp)
 
 		i1 = i2 + strings.Index(input[i2:], `costs `) + 6
 		i2 = i1 + strings.Index(input[i1:], ` `)
@@ -73,7 +73,7 @@ func getBlueprints(
 		if err != nil {
 			return allBlueprints{}, err
 		}
-		all[alli].obsidianRobotCost.ore = tmp
+		all[alli].obsidianRobotCost.ore = uint8(tmp)
 
 		i1 = i2 + strings.Index(input[i2:], `and `) + 4
 		i2 = i1 + strings.Index(input[i1:], ` `)
@@ -81,7 +81,7 @@ func getBlueprints(
 		if err != nil {
 			return allBlueprints{}, err
 		}
-		all[alli].obsidianRobotCost.clay = tmp
+		all[alli].obsidianRobotCost.clay = uint8(tmp)
 
 		i1 = i2 + strings.Index(input[i2:], `costs `) + 6
 		i2 = i1 + strings.Index(input[i1:], ` `)
@@ -89,7 +89,7 @@ func getBlueprints(
 		if err != nil {
 			return allBlueprints{}, err
 		}
-		all[alli].geodeRobotCost.ore = tmp
+		all[alli].geodeRobotCost.ore = uint8(tmp)
 
 		i1 = i2 + strings.Index(input[i2:], `and `) + 4
 		i2 = i1 + strings.Index(input[i1:], ` `)
@@ -97,7 +97,7 @@ func getBlueprints(
 		if err != nil {
 			return allBlueprints{}, err
 		}
-		all[alli].geodeRobotCost.obsidian = tmp
+		all[alli].geodeRobotCost.obsidian = uint8(tmp)
 
 		input = input[nli+1:]
 		alli++

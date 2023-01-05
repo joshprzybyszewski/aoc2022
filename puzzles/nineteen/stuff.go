@@ -3,10 +3,10 @@ package nineteen
 import "fmt"
 
 type raw struct {
-	ore      int
-	clay     int
-	obsidian int
-	geode    int
+	ore      uint8
+	clay     uint8
+	obsidian uint8
+	geode    uint8
 }
 
 type stuff struct {
@@ -40,20 +40,21 @@ func (s stuff) String() string {
 
 func elapse(
 	s *stuff,
-	minutes int,
 ) {
-	if minutes < 0 {
-		panic(`josh come on`)
-	}
-	if minutes == 0 {
-		// :confusion-intensifies:
-		return
-	}
+	s.bank.ore += s.robots.ore
+	s.bank.clay += s.robots.clay
+	s.bank.obsidian += s.robots.obsidian
+	s.bank.geode += s.robots.geode
+}
 
-	s.bank.ore += (minutes * s.robots.ore)
-	s.bank.clay += (minutes * s.robots.clay)
-	s.bank.obsidian += (minutes * s.robots.obsidian)
-	s.bank.geode += (minutes * s.robots.geode)
+func elapseN(
+	s *stuff,
+	remainingMinutes uint8,
+) {
+	s.bank.ore += (remainingMinutes * s.robots.ore)
+	s.bank.clay += (remainingMinutes * s.robots.clay)
+	s.bank.obsidian += (remainingMinutes * s.robots.obsidian)
+	s.bank.geode += (remainingMinutes * s.robots.geode)
 }
 
 func pay(

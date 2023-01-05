@@ -1,14 +1,11 @@
 package nineteen
 
 const (
-	maxMinutes = part2Minutes
+	maxMinutes = part2Minutes + 1
 )
 
 type maximizer struct {
 	b *blueprint
-
-	// [minutesRemaining][ore][clay][obsidian][geode]
-	seen [maxMinutes]map[stuff]struct{}
 }
 
 func newMaximizer(
@@ -18,32 +15,17 @@ func newMaximizer(
 		b: b,
 	}
 
-	for i := range m.seen {
-		m.seen[i] = make(map[stuff]struct{})
-	}
-
 	return m
-}
-
-func (m *maximizer) hasSeen(
-	s stuff,
-	remainingMinutes int,
-) bool {
-	_, ok := m.seen[remainingMinutes][s]
-	if ok {
-		return true
-	}
-	m.seen[remainingMinutes][s] = struct{}{}
-	return false
 }
 
 func (m *maximizer) maximizeGeodes(
 	s stuff,
-	remainingMinutes int,
+	remainingMinutes uint8,
 	// TODO use DP to keep track of seen states?
 ) stuff {
+
 	best := s
-	elapse(&best, remainingMinutes)
+	elapseN(&best, remainingMinutes)
 
 	if remainingMinutes <= 1 {
 		// if there's one minute remaining, it's not worth building a robot
@@ -76,22 +58,22 @@ func (m *maximizer) maximizeGeodes(
 
 func (m *maximizer) buildGeodeRobot(
 	s stuff,
-	remainingMinutes int,
+	remainingMinutes uint8,
 ) (stuff, bool) {
 	if s.robots.obsidian == 0 {
 		// we'll never be able to because we cannot generate obsidian.
 		return stuff{}, false
 	}
 
-	idleMinutes := 0
+	var idleMinutes uint8
 	for idleMinutes < remainingMinutes && !pay(&s.bank, m.b.geodeRobotCost) {
 		idleMinutes++
 
-		elapse(&s, 1)
+		elapse(&s)
 	}
 
 	// it takes one minute to build the robot
-	elapse(&s, 1)
+	elapse(&s)
 	s.robots.geode++
 
 	if idleMinutes+1 >= remainingMinutes {
@@ -104,7 +86,7 @@ func (m *maximizer) buildGeodeRobot(
 
 func (m *maximizer) buildObsidianRobot(
 	s stuff,
-	remainingMinutes int,
+	remainingMinutes uint8,
 ) (stuff, bool) {
 	if s.robots.clay == 0 {
 		// we'll never be able to because we cannot generate clay.
@@ -114,15 +96,15 @@ func (m *maximizer) buildObsidianRobot(
 		return stuff{}, false
 	}
 
-	idleMinutes := 0
+	var idleMinutes uint8
 	for idleMinutes < remainingMinutes && !pay(&s.bank, m.b.obsidianRobotCost) {
 		idleMinutes++
 
-		elapse(&s, 1)
+		elapse(&s)
 	}
 
 	// it takes one minute to build the robot
-	elapse(&s, 1)
+	elapse(&s)
 	s.robots.obsidian++
 
 	if idleMinutes+1 >= remainingMinutes {
@@ -135,22 +117,22 @@ func (m *maximizer) buildObsidianRobot(
 
 func (m *maximizer) buildClayRobot(
 	s stuff,
-	remainingMinutes int,
+	remainingMinutes uint8,
 ) (stuff, bool) {
 	if s.robots.clay >= m.b.obsidianRobotCost.clay {
 		// we shouldn't build a clay robot because we already have enough
 		return stuff{}, false
 	}
 
-	idleMinutes := 0
+	var idleMinutes uint8
 	for idleMinutes < remainingMinutes && !pay(&s.bank, m.b.clayRobotCost) {
 		idleMinutes++
 
-		elapse(&s, 1)
+		elapse(&s)
 	}
 
 	// it takes one minute to build the robot
-	elapse(&s, 1)
+	elapse(&s)
 	s.robots.clay++
 
 	if idleMinutes+1 >= remainingMinutes {
@@ -163,7 +145,7 @@ func (m *maximizer) buildClayRobot(
 
 func (m *maximizer) buildOreRobot(
 	s stuff,
-	remainingMinutes int,
+	remainingMinutes uint8,
 ) (stuff, bool) {
 	if s.robots.ore >= m.b.oreRobotCost.ore &&
 		s.robots.ore >= m.b.clayRobotCost.ore &&
@@ -173,15 +155,15 @@ func (m *maximizer) buildOreRobot(
 		return stuff{}, false
 	}
 
-	idleMinutes := 0
+	var idleMinutes uint8
 	for idleMinutes < remainingMinutes && !pay(&s.bank, m.b.oreRobotCost) {
 		idleMinutes++
 
-		elapse(&s, 1)
+		elapse(&s)
 	}
 
 	// it takes one minute to build the robot
-	elapse(&s, 1)
+	elapse(&s)
 	s.robots.ore++
 
 	if idleMinutes+1 >= remainingMinutes {
