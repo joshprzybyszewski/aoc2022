@@ -1,33 +1,46 @@
 package nineteen
 
-const (
-	part1Minutes = 24
+import (
+	"runtime"
+	"sync"
 )
 
 const (
-	testInput = `Blueprint 1: Each ore robot costs 4 ore. Each clay robot costs 2 ore. Each obsidian robot costs 3 ore and 14 clay. Each geode robot costs 2 ore and 7 obsidian.
-Blueprint 2: Each ore robot costs 2 ore. Each clay robot costs 3 ore. Each obsidian robot costs 3 ore and 8 clay. Each geode robot costs 3 ore and 12 obsidian.
-`
+	part1Minutes = 24
 )
 
 func One(
 	input string,
 ) (int, error) {
-	// input = testInput
 	all, err := getBlueprints(input)
 	if err != nil {
 		return 0, err
 	}
 
-	total := 0
-	for i := range all {
-		if input == testInput && i > 1 {
-			break
-		}
-		total += ((i + 1) * harvest(&all[i], part1Minutes))
+	var vals [numBlueprints]int
+	var wg sync.WaitGroup
+	work := make(chan int, len(vals))
+	for i := 0; i < runtime.NumCPU(); i++ {
+		go func() {
+			for w := range work {
+				vals[w] = harvest(&all[w], part1Minutes)
+				wg.Done()
+			}
+		}()
 	}
 
-	// 995 is too low
+	for i := 0; i < len(vals); i++ {
+		wg.Add(1)
+		work <- i
+	}
+
+	wg.Wait()
+
+	total := 0
+	for i := range vals {
+		total += ((i + 1) * vals[i])
+	}
+
 	return total, nil
 }
 
