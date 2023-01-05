@@ -48,11 +48,12 @@ func harvest(
 	b *blueprint,
 	minutes uint8,
 ) int {
-	s := newInitialStuff()
-
 	m := newMaximizer(b)
 
-	s = m.maximizeGeodes(s, minutes)
+	s := m.maximizeGeodes(
+		newInitialStuff(),
+		minutes,
+	)
 
 	return int(s.bank.geode)
 }
