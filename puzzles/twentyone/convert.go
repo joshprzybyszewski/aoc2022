@@ -18,7 +18,7 @@ func convertToMonkeys(
 	for i, im := range inputMonkeys {
 		nameToIndex[im.name] = i
 		monkeys[i] = &monkey{
-			value: im.value,
+			value: int64(im.value),
 			op:    operation(im.operation),
 		}
 	}

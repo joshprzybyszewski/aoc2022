@@ -4,7 +4,7 @@ import "fmt"
 
 func One(
 	input string,
-) (int, error) {
+) (int64, error) {
 	monkeys, nameToIndex, err := convertToMonkeys(input)
 	if err != nil {
 		return 0, err
@@ -23,7 +23,7 @@ const (
 )
 
 type monkey struct {
-	value int
+	value int64
 
 	left  *monkey
 	right *monkey
@@ -83,7 +83,7 @@ func buildIndents(n int) string {
 	return out
 }
 
-func (m *monkey) eval() int {
+func (m *monkey) eval() int64 {
 	if m.left == nil {
 		return m.value
 	}
@@ -123,9 +123,9 @@ func (m *monkey) dependsOn(
 }
 
 func (m *monkey) reverseEval(
-	prev uint64,
+	prev int64,
 	other *monkey,
-) (uint64, bool) {
+) (int64, bool) {
 	// fmt.Printf("Received: %d\n", prev)
 	if m == other {
 		return prev, true
@@ -133,21 +133,21 @@ func (m *monkey) reverseEval(
 
 	if m.left == nil {
 		// no evaluation
-		return uint64(m.value), false
+		return int64(m.value), false
 	}
 	okl := m.left.dependsOn(other)
 	okr := m.right.dependsOn(other)
 	if !okl && !okr {
 		// fmt.Printf("\tDoesn't depend.\n")
-		return uint64(m.eval()), false
+		return int64(m.eval()), false
 	}
 
-	var known, next uint64
+	var known, next int64
 
 	if okl {
-		known = uint64(m.right.eval())
+		known = int64(m.right.eval())
 	} else {
-		known = uint64(m.left.eval())
+		known = int64(m.left.eval())
 	}
 
 	switch m.op {
@@ -158,18 +158,61 @@ func (m *monkey) reverseEval(
 		// }
 	case div:
 		next = known * prev
-		if next < known {
-			panic(`mult overflow`)
-		}
 	case add:
 		next = prev - known
-		if next < 0 {
-			panic(`negative`)
-		}
 	case sub:
-		next = known + prev
-		if next < known {
-			panic(`add overflow`)
+		if okl {
+			next = known + prev
+		} else {
+			next = known - prev
+		}
+	}
+
+	if okl {
+		switch m.op {
+		case mult:
+			if prev != next*known {
+				panic(`ahhh`)
+			}
+		case div:
+			if prev != next/known {
+				panic(`ahhh`)
+			}
+		case add:
+			if prev != next+known {
+				panic(`ahhh`)
+			}
+		case sub:
+			if prev != next-known {
+				panic(`ahhh`)
+			}
+		default:
+			panic(`ahhh`)
+		}
+	} else {
+		switch m.op {
+		case mult:
+			if exp := known * next; prev != exp {
+				fmt.Printf("exp: %d\nact: %d\n", exp, prev)
+				panic(`ahhh`)
+			}
+		case div:
+			if exp := known / next; prev != exp {
+				fmt.Printf("exp: %d\nact: %d\n", exp, prev)
+				panic(`ahhh`)
+			}
+		case add:
+			if exp := known + next; prev != exp {
+				fmt.Printf("exp: %d\nact: %d\n", exp, prev)
+				panic(`ahhh`)
+			}
+		case sub:
+			if exp := known - next; prev != exp {
+				fmt.Printf("exp: %d\nact: %d\n", exp, prev)
+				panic(`ahhh`)
+			}
+		default:
+			panic(`ahhh`)
 		}
 	}
 

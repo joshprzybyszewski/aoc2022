@@ -62,11 +62,11 @@ func Two(
 		}
 
 		v := root.right.eval()
-		out, ok := root.left.reverseEval(uint64(v), humn)
+		out, ok := root.left.reverseEval(int64(v), humn)
 		if !ok {
 			return ``, fmt.Errorf(`left's reverse eval is not ok`)
 		}
-		humn.value = int(out)
+		humn.value = out
 		if l := root.left.eval(); l != v {
 			return ``, fmt.Errorf(`found the wrong answer: %d => %d instead of %d`, out, l, v)
 		}
@@ -74,11 +74,11 @@ func Two(
 	}
 
 	v := root.left.eval()
-	out, ok := root.right.reverseEval(uint64(v), humn)
+	out, ok := root.right.reverseEval(int64(v), humn)
 	if !ok {
 		return ``, fmt.Errorf(`right's reverse eval is not ok`)
 	}
-	humn.value = int(out)
+	humn.value = out
 	if r := root.right.eval(); r != v {
 		return ``, fmt.Errorf(`found the wrong answer: %d => %d instead of %d`, out, r, v)
 	}
