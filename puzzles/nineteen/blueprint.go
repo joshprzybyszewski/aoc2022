@@ -11,29 +11,11 @@ const (
 
 type allBlueprints [numBlueprints]blueprint
 
-type oreRobotCost struct {
-	ore int
-}
-
-type clayRobotCost struct {
-	ore int
-}
-
-type obsidianRobotCost struct {
-	ore  int
-	clay int
-}
-
-type geodeRobotCost struct {
-	ore      int
-	obsidian int
-}
-
 type blueprint struct {
-	oreRobotCost      oreRobotCost
-	clayRobotCost     clayRobotCost
-	obsidianRobotCost obsidianRobotCost
-	geodeRobotCost    geodeRobotCost
+	oreRobotCost      raw
+	clayRobotCost     raw
+	obsidianRobotCost raw
+	geodeRobotCost    raw
 }
 
 func getBlueprints(
