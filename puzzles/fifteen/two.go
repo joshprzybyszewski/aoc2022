@@ -16,17 +16,47 @@ func Two(
 		return 0, err
 	}
 
+	var x1, x2 int
+	var ok bool
+	var start [numReports]int
+	var spans [numReports]tuple
+	for i := range spans {
+		x1, x2, ok = rs[i].getSeenInRow(0)
+		if ok {
+			spans[i].t1 = x1
+			spans[i].t2 = x2
+		} else {
+			spans[i].t2 = -1
+			start[i] = rs[i].sy - rs[i].dist
+		}
+	}
+
 	ts := newTuples(len(rs))
 
-	var x1, x2, gap int
-	var ok bool
-	var r report
+	var gap int
 
 	for y := 0; y <= max; y++ {
-		for _, r = range rs {
-			x1, x2, ok = r.getSeenInRow(y)
-			if ok {
-				ts.add(x1, x2)
+		for i := range spans {
+			if spans[i].t2 < spans[i].t1 {
+				if y == start[i] {
+					x1, x2, _ = rs[i].getSeenInRow(y)
+					spans[i].t1 = x1
+					spans[i].t2 = x2
+					ts.add(spans[i].t1, spans[i].t2)
+				}
+			} else {
+				if y <= rs[i].sy {
+					spans[i].t1--
+					spans[i].t2++
+					ts.add(spans[i].t1, spans[i].t2)
+				} else if spans[i].t1 == spans[i].t2 {
+					spans[i].t1 = 1
+					spans[i].t2 = 0
+				} else {
+					spans[i].t1++
+					spans[i].t2--
+					ts.add(spans[i].t1, spans[i].t2)
+				}
 			}
 		}
 		gap = ts.findGap(0, max)
