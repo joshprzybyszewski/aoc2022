@@ -1,27 +1,25 @@
 package thirteen
 
-import (
-	"strings"
-)
+import "strings"
 
 func Two(
 	input string,
 ) (int, error) {
-	marker1 := []interface{}{
-		[]interface{}{
-			2,
-		},
-	}
-	marker2 := []interface{}{
-		[]interface{}{
-			6,
-		},
-	}
+	marker1 := []thing{{
+		slice: []thing{{
+			value: 2,
+		}},
+	}}
+	marker2 := []thing{{
+		slice: []thing{{
+			value: 6,
+		}},
+	}}
 
 	m1, m2 := 1, 1
 
 	var checkM1First bool
-	switch compare(marker1, marker2) {
+	switch compareSlices(marker1, marker2) {
 	case valid:
 		checkM1First = false
 		m2++
@@ -30,7 +28,7 @@ func Two(
 		m1++
 	}
 
-	var l interface{}
+	var l []thing
 	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
 		if nli == 0 {
 			// skip empty lines
@@ -42,20 +40,20 @@ func Two(
 		input = input[nli+1:]
 
 		if checkM1First {
-			switch compare(l, marker1) {
+			switch compareSlices(l, marker1) {
 			case valid:
 				m1++
-				switch compare(l, marker2) {
+				switch compareSlices(l, marker2) {
 				case valid:
 					m2++
 				}
 			}
 		} else {
-			switch compare(l, marker2) {
+			switch compareSlices(l, marker2) {
 			case valid:
 				m2++
 
-				switch compare(l, marker1) {
+				switch compareSlices(l, marker1) {
 				case valid:
 					m1++
 				}

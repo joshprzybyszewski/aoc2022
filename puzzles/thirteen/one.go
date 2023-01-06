@@ -10,7 +10,7 @@ func One(
 ) (int, error) {
 
 	sum := 0
-	var l, r interface{}
+	var l, r []thing
 	var i, nli, nli2 int
 	var line1, line2 string
 
@@ -42,7 +42,7 @@ func One(
 		l, _ = parse(line1, 0)
 		r, _ = parse(line2, 0)
 
-		switch compare(l, r) {
+		switch compareSlices(l, r) {
 		case valid:
 			sum += i + 1
 		case unknown:
@@ -62,57 +62,63 @@ const (
 	invalid
 )
 
-func compare(
-	l, r interface{},
+func compareSlices(
+	l, r []thing,
 ) answer {
-	lv, okl := l.(int)
-	rv, okr := r.(int)
-	if okl && okr {
+	var a answer
+	for i := range l {
+		if i >= len(r) {
+			return invalid
+		}
+
+		a = compare(l[i], r[i])
+		if a != unknown {
+			return a
+		}
+	}
+	if len(l) < len(r) {
+		return valid
+	}
+	return unknown
+}
+
+func compare(
+	l, r thing,
+) answer {
+	if l.slice == nil && r.slice == nil {
 		// compare ints
-		if lv < rv {
+		if l.value < r.value {
 			return valid
-		} else if lv > rv {
+		} else if l.value > r.value {
 			return invalid
 		}
 		return unknown
-	} else if !okl && !okr {
-		ls := l.([]interface{})
-		rs := r.([]interface{})
-		// compare lists
-		var a answer
-		for i := range ls {
-			if i >= len(rs) {
-				return invalid
-			}
-
-			a = compare(ls[i], rs[i])
-			if a != unknown {
-				return a
-			}
-		}
-		if len(ls) < len(rs) {
-			return valid
-		}
-		return unknown
-	} else if okl {
-		return compare([]interface{}{lv}, r)
-	} else if okr {
-		return compare(l, []interface{}{rv})
+	} else if l.slice != nil && r.slice != nil {
+		return compareSlices(l.slice, r.slice)
+	} else if l.slice == nil {
+		return compareSlices([]thing{l}, r.slice)
+	} else if r.slice == nil {
+		return compareSlices(l.slice, []thing{r})
 	}
 	panic(`cannot reach here`)
+}
+
+type thing struct {
+	value int
+	slice []thing
 }
 
 func parse(
 	line string,
 	start int,
-) (interface{}, int) {
+) ([]thing, int) {
 	if line[start] != '[' {
 		panic(`got unexpected input`)
 	}
 
-	output := make([]interface{}, 0)
+	output := make([]thing, 0)
 
-	var child interface{}
+	var child []thing
 	var endIndex, ci, bi, v int
 	var err error
 
@@ -120,7 +126,9 @@ func parse(
 		switch line[i] {
 		case '[':
 			child, endIndex = parse(line, i)
-			output = append(output, child)
+			output = append(output, thing{
+				slice: child,
+			})
 			i = endIndex + 1
 		case ']':
 			return output, i
@@ -136,7 +144,7 @@ func parse(
 			if err != nil {
 				panic(err)
 			}
-			output = append(output, v)
+			output = append(output, thing{value: v})
 			i += ci
 		}
 	}
