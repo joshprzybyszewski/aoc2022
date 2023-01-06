@@ -10,11 +10,11 @@ type workforce struct {
 	elves      []coord
 	roundIndex uint8
 
-	proposals     map[coord]int
+	proposals     map[coord]uint16
 	proposalsLock sync.Mutex
 
 	wg   sync.WaitGroup
-	work chan int
+	work chan uint16
 }
 
 func newWorkforce(
@@ -22,9 +22,10 @@ func newWorkforce(
 	elves []coord,
 ) workforce {
 	return workforce{
-		space: space,
-		elves: elves,
-		work:  make(chan int, len(elves)),
+		space:     space,
+		elves:     elves,
+		proposals: make(map[coord]uint16, len(elves)),
+		work:      make(chan uint16, len(elves)),
 	}
 }
 
@@ -34,7 +35,7 @@ func (w *workforce) start() {
 			var c, p coord
 			var cl clears
 
-			checkElf := func(ci int) {
+			checkElf := func(ci uint16) {
 				c = w.elves[ci]
 				cl = allClear
 
@@ -125,7 +126,7 @@ func (w *workforce) start() {
 				w.proposalsLock.Lock()
 				defer w.proposalsLock.Unlock()
 				if _, ok := w.proposals[p]; ok {
-					w.proposals[p] = -1
+					w.proposals[p] = uint16(len(w.elves))
 				} else {
 					w.proposals[p] = ci
 				}
@@ -145,13 +146,17 @@ func (w *workforce) stop() {
 
 func (w *workforce) run(
 	roundIndex uint8,
-) map[coord]int {
+) map[coord]uint16 {
 	w.roundIndex = roundIndex
-	w.proposals = make(map[coord]int, len(w.elves))
+	// it requires fewer allocs to delete all entries rather than
+	// re-make-ing the map.
+	for k := range w.proposals {
+		delete(w.proposals, k)
+	}
 
 	for i := range w.elves {
 		w.wg.Add(1)
-		w.work <- i
+		w.work <- uint16(i)
 	}
 
 	w.wg.Wait()

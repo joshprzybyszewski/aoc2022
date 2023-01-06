@@ -24,13 +24,13 @@ func One(
 
 	min, max := getBounds(elves)
 
-	a := (max.x - min.x + 1) * (max.y - min.y + 1)
+	a := (int(max.x-min.x) + 1) * (int(max.y-min.y) + 1)
 
 	return int(a) - len(elves), nil
 }
 
 type coord struct {
-	x, y int
+	x, y uint8
 }
 
 type clears uint8
@@ -70,8 +70,9 @@ func runRound(
 		return true
 	}
 
+	maxCI := uint16(len(w.elves))
 	for dst, ci := range proposals {
-		if ci >= 0 {
+		if ci < maxCI {
 			w.space[w.elves[ci].x][w.elves[ci].y] = false
 			w.elves[ci] = dst
 			w.space[dst.x][dst.y] = true

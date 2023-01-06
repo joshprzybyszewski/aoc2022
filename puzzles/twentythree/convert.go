@@ -14,7 +14,7 @@ func convertInputToElfLocations(input string) (space, []coord) {
 	coords := make([]coord, 0, 74*74/2)
 
 	// offset by 15, because that's as far negative as it goes in p2
-	const offset = 15
+	const offset = uint8(15)
 	x, y := offset, offset
 	for _, ch := range input {
 		switch ch {

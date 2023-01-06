@@ -20,5 +20,4 @@ func Two(
 		ri++
 		ri &= 3
 	}
-	// return 0, nil
 }
