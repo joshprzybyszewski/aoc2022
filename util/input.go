@@ -1,8 +1,10 @@
 package util
 
 import (
+	_ "embed"
 	"fmt"
-	"os"
+
+	"github.com/joshprzybyszewski/aoc2022/util/inputfiles"
 )
 
 const (
@@ -12,28 +14,18 @@ const (
 func Input(
 	day int,
 ) (string, error) {
-	input, err := getInputFromLocalFile(day)
+	input, err := inputfiles.Fetch(day)
 	if err != nil {
-		fmt.Printf("Input file not found at %q\n", getInputFilname(day))
+		fmt.Printf("inputfiles.Fetch errored: %q\n", err.Error())
 		fmt.Printf("Attempting to fetch input file from website...\n")
 		err = writeInputToLocalFile(day)
 		if err != nil {
 			return ``, err
 		}
-		return getInputFromLocalFile(day)
+		return inputfiles.Fetch(day)
 	}
 
 	return input, nil
-}
-
-func getInputFromLocalFile(
-	day int,
-) (string, error) {
-	data, err := os.ReadFile(getInputFilname(day))
-	if err != nil {
-		return ``, err
-	}
-	return string(data), nil
 }
 
 func writeInputToLocalFile(
@@ -43,19 +35,5 @@ func writeInputToLocalFile(
 	if err != nil {
 		return err
 	}
-	f, err := os.Create(getInputFilname(day))
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	_, err = f.WriteString(input)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func getInputFilname(day int) string {
-	return fmt.Sprintf("input/day%d.txt", day)
+	return inputfiles.Store(day, input)
 }
