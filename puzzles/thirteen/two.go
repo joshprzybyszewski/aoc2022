@@ -7,8 +7,6 @@ import (
 func Two(
 	input string,
 ) (int, error) {
-	lines := strings.Split(input, "\n")
-
 	marker1 := []interface{}{
 		[]interface{}{
 			2,
@@ -33,12 +31,15 @@ func Two(
 	}
 
 	var l interface{}
-	for _, line := range lines {
-		if line == `` {
+	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
+		if nli == 0 {
+			// skip empty lines
+			input = input[1:]
 			continue
 		}
 
-		l, _ = parse(line, 0)
+		l, _ = parse(input[:nli], 0)
+		input = input[nli+1:]
 
 		if checkM1First {
 			switch compare(l, marker1) {

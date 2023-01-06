@@ -8,23 +8,47 @@ import (
 func One(
 	input string,
 ) (int, error) {
-	lines := strings.Split(input, "\n")
 
 	sum := 0
 	var l, r interface{}
-	for i := 0; i < len(lines); i += 3 {
-		if lines[i] == `` || lines[i+1] == `` {
+	var i, nli, nli2 int
+	var line1, line2 string
+
+	for len(input) > 0 {
+		nli = strings.Index(input, "\n")
+		if nli < 0 {
+			break
+		} else if nli == 0 {
+			// skip empty line
+			input = input[1:]
 			continue
+		} else {
+			line1 = input[:nli]
 		}
-		l, _ = parse(lines[i], 0)
-		r, _ = parse(lines[i+1], 0)
+
+		nli2 = nli + 1 + strings.Index(input[nli+1:], "\n")
+		if nli2 == nli+1 {
+			// skip past empty line
+			input = input[nli2+1:]
+			continue
+		} else if nli2 < nli {
+			line2 = input[nli+1:]
+			input = input[:0]
+		} else {
+			line2 = input[nli+1 : nli2]
+			input = input[nli2+1:]
+		}
+
+		l, _ = parse(line1, 0)
+		r, _ = parse(line2, 0)
 
 		switch compare(l, r) {
 		case valid:
-			sum += (i / 3) + 1
+			sum += i + 1
 		case unknown:
 			panic(`unexpected`)
 		}
+		i++
 	}
 
 	return sum, nil
