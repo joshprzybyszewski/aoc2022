@@ -119,9 +119,6 @@ func (w *workforce) start() {
 						p.x--
 					}
 				}
-				if p == c {
-					return
-				}
 
 				w.proposalsLock.Lock()
 				defer w.proposalsLock.Unlock()
