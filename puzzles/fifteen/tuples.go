@@ -51,7 +51,7 @@ func (s *sortedInts) getIndexFor(v int) int {
 	// backwards. This is because the reports are sorted in ascending x, then ascending y order.
 
 	// return sort.SearchInts(s.vals, v)
-	for i := len(s.vals) - 1; i > 0; i-- {
+	for i := len(s.vals) - 1; i >= 0; i-- {
 		if v >= s.vals[i] {
 			return i + 1
 		}

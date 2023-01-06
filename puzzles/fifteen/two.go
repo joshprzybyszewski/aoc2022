@@ -34,9 +34,10 @@ func Two(
 	ts := newTuples(len(rs))
 
 	var gap int
+	var i int
 
 	for y := 0; y <= max; y++ {
-		for i := range spans {
+		for i = range spans {
 			if spans[i].t2 < spans[i].t1 {
 				if y == start[i] {
 					x1, x2, _ = rs[i].getSeenInRow(y)
