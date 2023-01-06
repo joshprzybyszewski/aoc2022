@@ -99,7 +99,7 @@ func BenchmarkAll(b *testing.B) {
 						}
 					}
 				})
-			} else {
+			} else if part2String != nil {
 				b.Run(`Part Two`, func(b *testing.B) {
 					var answer string
 					var err error

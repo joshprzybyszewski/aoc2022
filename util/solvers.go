@@ -45,10 +45,8 @@ func Solvers(
 		return wrapIntSolver(ten.One), ten.Two
 	case 11:
 		return wrapIntSolver(eleven.One), wrapInt64Solver(eleven.Two)
-	// case 21:
-	// 	return wrapInt64Solver(twentyone.One), wrapInt64Solver(twentyone.Two)
 	case 25:
-		return twentyfive.One, wrapIntSolver(twentyfive.Two)
+		return twentyfive.One, nil
 
 	}
 	return nil, nil
@@ -66,10 +64,6 @@ func IntSolvers(
 		return three.One, three.Two
 	case 4:
 		return four.One, four.Two
-	case 5:
-		// the answers are strings
-		return nil, nil
-		// return five.One, five.Two
 	case 6:
 		return six.One, six.Two
 	case 7:
@@ -108,8 +102,6 @@ func IntSolvers(
 		return twentythree.One, twentythree.Two
 	case 24:
 		return twentyfour.One, twentyfour.Two
-	case 25:
-		return nil, twentyfive.Two
 	}
 	return nil, nil
 }

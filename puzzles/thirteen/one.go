@@ -104,18 +104,14 @@ func compare(
 }
 
 type thing struct {
-	value int
 	slice []thing
+	value int
 }
 
 func parse(
 	line string,
 	start int,
 ) ([]thing, int) {
-	if line[start] != '[' {
-		panic(`got unexpected input`)
-	}
-
 	output := make([]thing, 0)
 
 	var child []thing
