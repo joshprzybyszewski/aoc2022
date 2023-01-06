@@ -9,6 +9,7 @@ import (
 
 var (
 	shouldProfile = flag.Bool("profile", false, "if set, will produce a profile output")
+	targetDay     = flag.Int("day", 0, "if set, will only run the given day")
 )
 
 func main() {
@@ -18,10 +19,28 @@ func main() {
 		defer util.Profile()()
 	}
 
-	day := 19
+	if targetDay != nil && *targetDay > 0 && *targetDay <= 25 {
+		err := runDay(*targetDay)
+		if err != nil {
+			panic(err)
+		}
+		return
+	}
+
+	for day := 1; day <= 25; day++ {
+		err := runDay(day)
+		if err != nil {
+			panic(err)
+		}
+	}
+}
+
+func runDay(
+	day int,
+) error {
 	input, err := util.Input(day)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	part1, part2 := util.Solvers(day)
@@ -33,6 +52,7 @@ func main() {
 		input,
 		part1, part2,
 	)
+	return nil
 }
 
 func runParts(
@@ -58,5 +78,5 @@ func runParts(
 		fmt.Printf("Part 2 error: %q\n", err)
 		panic(err)
 	}
-	fmt.Printf("Part 2 Answer: %q\n", answer)
+	fmt.Printf("Part 2 Answer: %q\n\n\n", answer)
 }
