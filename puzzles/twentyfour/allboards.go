@@ -14,10 +14,10 @@ type allBoards struct {
 }
 
 func populatedAllBoards(
-	initial board,
+	initial *board,
 ) allBoards {
 	ab := allBoards{}
-	ab.all[0] = initial
+	ab.all[0] = *initial
 	return ab
 }
 

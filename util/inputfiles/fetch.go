@@ -6,10 +6,6 @@ import (
 	"os"
 )
 
-const (
-	year = 2022
-)
-
 var (
 	//go:embed day1.txt
 	day1Input string

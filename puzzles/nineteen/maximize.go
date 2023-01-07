@@ -1,9 +1,5 @@
 package nineteen
 
-const (
-	maxMinutes = part2Minutes + 1
-)
-
 var (
 	// this only has 13 entries instead of `maxMinutes` because the 12th minute
 	// overflows uint8.
@@ -46,7 +42,7 @@ func (m *maximizer) setKnownBest(
 
 // canBeatKnownBest returns true if, by building robots, the given stuff could be the known best.
 func (m *maximizer) canBeatKnownBest(
-	now, terminal stuff,
+	terminal stuff,
 	remainingMinutes uint8,
 ) bool {
 	if remainingMinutes <= 1 {
@@ -60,12 +56,7 @@ func (m *maximizer) canBeatKnownBest(
 
 	// In theory, we could build a geode robot every minute for the remaining minutes
 	// and that would be the most geodes we could produce.
-	possibleProduction := possibleProductionByTimeRemaining[remainingMinutes]
-	if terminal.bank.geode+possibleProduction < m.knownBest.bank.geode {
-		return false
-	}
-
-	return true
+	return terminal.bank.geode+possibleProductionByTimeRemaining[remainingMinutes] >= m.knownBest.bank.geode
 }
 
 func (m *maximizer) maximizeGeodes(
@@ -78,7 +69,7 @@ func (m *maximizer) maximizeGeodes(
 	elapseN(&best, remainingMinutes)
 	m.setKnownBest(best)
 
-	if !m.canBeatKnownBest(s, best, remainingMinutes) {
+	if !m.canBeatKnownBest(best, remainingMinutes) {
 		return
 	}
 

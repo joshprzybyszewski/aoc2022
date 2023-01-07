@@ -4,8 +4,8 @@ import "testing"
 
 func TestToSnafu(t *testing.T) {
 	testCases := []struct {
-		input int
 		exp   string
+		input int
 	}{{
 		input: 0,
 		exp:   `0`,

@@ -2,7 +2,7 @@ package sixteen
 
 type pressure int
 
-type traveller struct {
+type traveler struct {
 	cur       node
 	remaining distance
 }

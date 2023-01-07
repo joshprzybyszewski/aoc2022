@@ -22,8 +22,10 @@ func One(
 	head.y = 115
 	tail.y = 115
 
-	// 168 = 52-(-115) + 1
-	// 282 = 166-(-115)+1
+	/*
+		168 = 52-(-115) + 1
+		282 = 166-(-115)+1
+	*/
 	var seen [168][282]bool
 
 	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {

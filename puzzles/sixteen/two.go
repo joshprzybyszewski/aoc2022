@@ -84,11 +84,11 @@ func getBestPathForDuet(
 				p = maximizeDuet(
 					g,
 					duetPath{
-						one: traveller{
+						one: traveler{
 							cur:       node(w.i),
 							remaining: remaining - d1,
 						},
-						two: traveller{
+						two: traveler{
 							cur:       node(w.j),
 							remaining: remaining - d2,
 						},

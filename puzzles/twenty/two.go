@@ -40,7 +40,7 @@ func Two(
 	linkedList, zero := convertToDoublyLinkedList(numbers)
 
 	for i := 0; i < numRoundsOfMixing; i++ {
-		mixSteps(linkedList, zero)
+		mixSteps(linkedList)
 	}
 
 	oneThou := zero.getNthValue(1000 % len(numbers))

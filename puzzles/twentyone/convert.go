@@ -15,33 +15,34 @@ func convertToMonkeys(
 	monkeys := make([]*monkey, len(inputMonkeys))
 
 	nameToIndex := make(map[string]int, len(inputMonkeys))
-	for i, im := range inputMonkeys {
-		nameToIndex[im.name] = i
+	for i := range inputMonkeys {
+		nameToIndex[inputMonkeys[i].name] = i
 		monkeys[i] = &monkey{
-			value: int64(im.value),
-			op:    operation(im.operation),
+			value: int64(inputMonkeys[i].value),
+			op:    operation(inputMonkeys[i].operation),
 		}
 	}
 
-	for i, im := range inputMonkeys {
-		if im.left == `` {
+	for i := range inputMonkeys {
+		if inputMonkeys[i].left == `` {
 			continue
 		}
-		monkeys[i].left = monkeys[nameToIndex[im.left]]
-		if im.right != `` {
-			monkeys[i].right = monkeys[nameToIndex[im.right]]
+		monkeys[i].left = monkeys[nameToIndex[inputMonkeys[i].left]]
+		if inputMonkeys[i].right != `` {
+			monkeys[i].right = monkeys[nameToIndex[inputMonkeys[i].right]]
 		}
 	}
 	return monkeys, nameToIndex, nil
 }
 
 type inputMonkey struct {
-	value     int
-	operation byte
-
 	name  string
 	left  string
 	right string
+
+	operation byte
+
+	value int
 }
 
 func convertInput(

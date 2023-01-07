@@ -57,7 +57,6 @@ func BenchmarkAll(b *testing.B) {
 			} else {
 				b.Run(`Part One`, func(b *testing.B) {
 					var answer string
-					var err error
 					for n := 0; n < b.N; n++ {
 						answer, err = part1String(input)
 						if err != nil {

@@ -103,15 +103,15 @@ func moveInCube(
 }
 
 type space struct {
-	row uint
-	col uint
-
-	isWall bool
-
 	up    *space
 	right *space
 	down  *space
 	left  *space
+
+	row uint
+	col uint
+
+	isWall bool
 }
 
 func newSpace(

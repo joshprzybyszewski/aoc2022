@@ -51,7 +51,7 @@ linters-settings:
     local-prefixes: github.com/joshprzybsyzewski/aoc2022
   gocyclo:
     # minimal code complexity to report, 30 by default (but we recommend 10-20)
-    min-complexity: 10
+    min-complexity: 30
   gocognit:
     # minimal code complexity to report, 30 by default (but we recommend 10-20)
     min-complexity: 10

@@ -7,7 +7,7 @@ func One(
 ) (int, error) {
 
 	b := getBoard(input)
-	ab := populatedAllBoards(b)
+	ab := populatedAllBoards(&b)
 
 	s := position{
 		row: 0,

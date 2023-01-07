@@ -3,7 +3,7 @@ package sixteen
 type duetBeatBestChecker func(s duetPath) bool
 
 type duetPath struct {
-	one, two traveller
+	one, two traveler
 
 	valves  valveState
 	numOpen node

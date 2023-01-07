@@ -4,9 +4,9 @@ func Two(
 	input string,
 ) (int, error) {
 
-	space, elves := convertInputToElfLocations(input)
+	s, elves := convertInputToElfLocations(input)
 
-	w := newWorkforce(&space, elves)
+	w := newWorkforce(&s, elves)
 	w.start()
 	defer w.stop()
 

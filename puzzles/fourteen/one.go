@@ -115,9 +115,6 @@ func (g *grid) window() (coord, coord) {
 }
 
 func (g *grid) addRock(y, x int) {
-	// if g.floor >= 0 {
-	// 	panic(`should not have set floor before finishing adding rock`)
-	// }
 	if y > g.maxRock {
 		g.maxRock = y
 	}

@@ -51,16 +51,17 @@ func getBestPath(
 		potRel := s.released
 
 		for n := node(0); n < numNodes; n++ {
-			if !s.isOpen(n) {
-				rem--
-				potRel += rem * pressure(g.getValue(n))
-				if potRel > br {
-					return true
-				}
-				rem--
-				if rem < 0 {
-					break
-				}
+			if s.isOpen(n) {
+				continue
+			}
+			rem--
+			potRel += rem * pressure(g.getValue(n))
+			if potRel > br {
+				return true
+			}
+			rem--
+			if rem < 0 {
+				break
 			}
 		}
 

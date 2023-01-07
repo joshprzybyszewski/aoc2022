@@ -6,18 +6,6 @@ import (
 	"strings"
 )
 
-var (
-	exampleNumbers = []int{
-		1,
-		2,
-		-3,
-		3,
-		-2,
-		0,
-		4,
-	}
-)
-
 func One(
 	input string,
 ) (int, error) {
@@ -45,7 +33,7 @@ func One(
 		return 0, fmt.Errorf("did not have zero in the data set")
 	}
 
-	mixSteps(linkedList, zero)
+	mixSteps(linkedList)
 
 	oneThou := zero.getNthValue(1000 % len(numbers))
 	twoThou := zero.getNthValue(2000 % len(numbers))
@@ -83,7 +71,6 @@ func convertToDoublyLinkedList(numbers []int) ([]*node, *node) {
 
 func mixSteps(
 	nodes []*node,
-	zero *node,
 ) {
 	for _, n := range nodes {
 		if n.val > 0 {
@@ -95,10 +82,10 @@ func mixSteps(
 }
 
 type node struct {
-	val int
-
 	prev *node
 	next *node
+
+	val int
 }
 
 func newNode(val int) *node {

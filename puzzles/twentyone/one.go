@@ -23,11 +23,11 @@ const (
 )
 
 type monkey struct {
-	value int64
-
 	left  *monkey
 	right *monkey
 	op    operation
+
+	value int64
 }
 
 func (m *monkey) Print() {
@@ -132,7 +132,7 @@ func (m *monkey) reverseEval(
 
 	if m.left == nil {
 		// no evaluation
-		return int64(m.value), false
+		return m.value, false
 	}
 
 	leftDep := m.left.dependsOn(target)
@@ -146,9 +146,9 @@ func (m *monkey) reverseEval(
 	var known, next int64
 
 	if leftDep {
-		known = int64(m.right.eval())
+		known = m.right.eval()
 	} else {
-		known = int64(m.left.eval())
+		known = m.left.eval()
 	}
 
 	switch m.op {

@@ -14,12 +14,10 @@ const (
 type rock [4]uint8
 
 func (r *rock) isFarLeft() bool {
-	// return (r[0]|r[1]|r[2]|r[3])&leftwall != 0
 	return (r[3]|r[2]|r[1]|r[0])&leftwall != 0
 }
 
 func (r *rock) isFarRight() bool {
-	// return (r[0]|r[1]|r[2]|r[3])&rightwall != 0
 	return (r[3]|r[2]|r[1]|r[0])&rightwall != 0
 }
 
@@ -152,24 +150,12 @@ func (c *chamber) canPushLeft() bool {
 	if c.settled[c.pending.bottom]&(c.pending.rock[0]<<1) != 0 {
 		return false
 	}
-	// if c.pendingIndex == dashIndex {
-	// 	// the dash has no other rows
-	// 	return true
-	// }
 	if c.settled[c.pending.bottom+1]&(c.pending.rock[1]<<1) != 0 {
 		return false
 	}
-	// if c.pendingIndex == squareIndex {
-	// 	// the square has no other rows
-	// 	return true
-	// }
 	if c.settled[c.pending.bottom+2]&(c.pending.rock[2]<<1) != 0 {
 		return false
 	}
-	// if c.pendingIndex != towerIndex {
-	// 	// only the tower has a fourth row
-	// 	return true
-	// }
 
 	return c.settled[c.pending.bottom+3]&(c.pending.rock[3]<<1) == 0
 }
@@ -192,24 +178,12 @@ func (c *chamber) canPushRight() bool {
 	if c.settled[c.pending.bottom]&(c.pending.rock[0]>>1) != 0 {
 		return false
 	}
-	// if c.pendingIndex == dashIndex {
-	// 	// the dash has no other rows
-	// 	return true
-	// }
 	if c.settled[c.pending.bottom+1]&(c.pending.rock[1]>>1) != 0 {
 		return false
 	}
-	// if c.pendingIndex == squareIndex {
-	// 	// the square has no other rows
-	// 	return true
-	// }
 	if c.settled[c.pending.bottom+2]&(c.pending.rock[2]>>1) != 0 {
 		return false
 	}
-	// if c.pendingIndex != towerIndex {
-	// 	// only the tower has a fourth row
-	// 	return true
-	// }
 
 	return c.settled[c.pending.bottom+3]&(c.pending.rock[3]>>1) == 0
 }

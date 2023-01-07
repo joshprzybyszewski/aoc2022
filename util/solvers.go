@@ -129,15 +129,3 @@ func wrapInt64Solver(
 		return fmt.Sprintf("%d", i), nil
 	}
 }
-
-func wrapUint64Solver(
-	is func(string) (uint64, error),
-) func(string) (string, error) {
-	return func(input string) (string, error) {
-		i, err := is(input)
-		if err != nil {
-			return ``, err
-		}
-		return fmt.Sprintf("%d", i), nil
-	}
-}
