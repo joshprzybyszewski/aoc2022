@@ -8,38 +8,72 @@ import (
 func Two(
 	input string,
 ) (int, error) {
+	lines := strings.Split(input, "\n")
 
-	var val int
-	var err error
-	elves := make([]int, 0, 236)
-	cur := 0
-	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
-		if nli == 0 {
-			elves = append(elves, cur)
-			cur = 0
-		} else {
-			val, err = strconv.Atoi(input[0:nli])
-			if err != nil {
-				return 0, err
+	sum := 0
+	for _, line := range lines {
+		sum += getValueWithString([]byte(line))
+	}
+
+	return sum, nil
+}
+
+var stringValues = [][]byte{
+	[]byte(`zero`),
+	[]byte(`one`),
+	[]byte(`two`),
+	[]byte(`three`),
+	[]byte(`four`),
+	[]byte(`five`),
+	[]byte(`six`),
+	[]byte(`seven`),
+	[]byte(`eight`),
+	[]byte(`nine`),
+}
+
+func getStringValue(val []byte) int {
+	for i, sv := range stringValues {
+		val := val
+		if len(val) > len(sv) {
+			val = val[:len(sv)]
+		}
+		if bytes.Equal(val, sv) {
+			return i
+
+		}
+	}
+	return -1
+}
+
+func getValueWithString(line []byte) int {
+	first, last := -1, -1
+
+	for i, c := range line {
+		if c >= '0' && c <= '9' {
+			if first == -1 {
+				first = int(c - '0')
 			}
-			cur += val
+			last = int(c - '0')
+			continue
 		}
-		input = input[nli+1:]
-	}
-	top3 := [3]int{-1, -1, -1}
-
-	for _, e := range elves {
-		if e > top3[0] {
-			top3[2] = top3[1]
-			top3[1] = top3[0]
-			top3[0] = e
-		} else if e > top3[1] {
-			top3[2] = top3[1]
-			top3[1] = e
-		} else if e > top3[2] {
-			top3[2] = e
+		next := line[i:]
+		if i+5 < len(line) {
+			next = line[i : i+5]
 		}
+
+		val := getStringValue(next)
+		if val == -1 {
+			continue
+		}
+		if first == -1 {
+			first = val
+		}
+		last = val
+
+	}
+	if first == -1 {
+		return 0
 	}
 
-	return top3[0] + top3[1] + top3[2], nil
+	return first*10 + last
 }
