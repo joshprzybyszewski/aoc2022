@@ -1,7 +1,6 @@
 package two
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 )
@@ -19,8 +18,6 @@ func One(
 
 	sum := 0
 	for i, line := range lines {
-		fmt.Printf("Game %d:\n", i+1)
-
 		handfuls := strings.Split(
 			line[strings.Index(line, `:`)+1:],
 			";",
@@ -29,18 +26,14 @@ func One(
 		for _, handfulStr := range handfuls {
 			handful := interpretSeen(handfulStr)
 			if !isPossible(handful, max) {
-				fmt.Printf("  impossible: %+v\n", handful)
 				hasImpossible = true
 				break
 			}
-			// fmt.Printf("  possible: %+v\n", handful)
 		}
 
 		if !hasImpossible {
 			sum += (i + 1)
-			fmt.Printf("new sum: %d\n", sum)
 		}
-
 	}
 
 	return sum, nil
