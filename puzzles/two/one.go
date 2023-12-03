@@ -1,6 +1,7 @@
 package two
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 )
@@ -18,16 +19,26 @@ func One(
 
 	sum := 0
 	for i, line := range lines {
+		fmt.Printf("Game %d:\n", i+1)
 
 		handfuls := strings.Split(
 			line[strings.Index(line, `:`)+1:],
 			";",
 		)
+		hasImpossible := false
 		for _, handfulStr := range handfuls {
 			handful := interpretSeen(handfulStr)
 			if !isPossible(handful, max) {
-				sum += (i + 1)
+				fmt.Printf("  impossible: %+v\n", handful)
+				hasImpossible = true
+				break
 			}
+			// fmt.Printf("  possible: %+v\n", handful)
+		}
+
+		if !hasImpossible {
+			sum += (i + 1)
+			fmt.Printf("new sum: %d\n", sum)
 		}
 
 	}
@@ -53,10 +64,21 @@ func interpretSeen(handfulString string) handful {
 		}
 		switch infos[1] {
 		case `red`:
+			if output.red != 0 {
+				panic(`already red set`)
+			}
 			output.red = val
 		case `green`:
+			if output.green != 0 {
+				panic(`already green set`)
+			}
+
 			output.green = val
 		case `blue`:
+			if output.blue != 0 {
+				panic(`already blue set`)
+			}
+
 			output.blue = val
 		default:
 			panic(`unknown color`)
