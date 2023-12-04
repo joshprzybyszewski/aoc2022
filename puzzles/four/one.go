@@ -13,6 +13,7 @@ type card struct {
 func newCard(size int) card {
 	return card{
 		winningNumbers: make(map[int]struct{}, size),
+		shown:          make([]int, 0, size),
 	}
 }
 
@@ -24,6 +25,16 @@ func (c card) addWinner(w int) card {
 func (c card) addShown(w int) card {
 	c.shown = append(c.shown, w)
 	return c
+}
+
+func (c card) numMatching() int {
+	total := 0
+	for _, s := range c.shown {
+		if _, ok := c.winningNumbers[s]; ok {
+			total++
+		}
+	}
+	return total
 }
 
 func (c card) value() int {
