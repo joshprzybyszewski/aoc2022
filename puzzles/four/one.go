@@ -5,13 +5,49 @@ import (
 	"strings"
 )
 
+type card struct {
+	winningNumbers map[int]struct{}
+	shown          []int
+}
+
+func newCard(size int) card {
+	return card{
+		winningNumbers: make(map[int]struct{}, size),
+	}
+}
+
+func (c card) addWinner(w int) card {
+	c.winningNumbers[w] = struct{}{}
+	return c
+}
+
+func (c card) addShown(w int) card {
+	c.shown = append(c.shown, w)
+	return c
+}
+
+func (c card) value() int {
+	total := 0
+	for _, s := range c.shown {
+		if _, ok := c.winningNumbers[s]; !ok {
+			continue
+		}
+		if total == 0 {
+			total = 1
+		} else {
+			total <<= 1
+		}
+	}
+	return total
+}
+
 func One(
 	input string,
 ) (int, error) {
 
-	var s1, e1, s2, e2, i1, i2 int
-	var err error
 	total := 0
+
+	var ci, pi int
 
 	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
 		if nli == 0 {
@@ -19,39 +55,42 @@ func One(
 			continue
 		}
 
-		// Sscanf takes 5000 allocs, but only 87000 B
-		// strings.Split takes 3000 allocs, but 112000 B
-		// Using Index takes 2 allocs, and 16387 B
-		i1 = 0
-		i2 = strings.Index(input, `-`)
-		s1, err = strconv.Atoi(input[i1:i2])
-		if err != nil {
-			return 0, err
-		}
-		i1 = i2 + 1
-		i2 = strings.Index(input, `,`)
-		e1, err = strconv.Atoi(input[i1:i2])
-		if err != nil {
-			return 0, err
-		}
-		i1 = i2 + 1
-		i2 = i1 + strings.Index(input[i1:], `-`)
-		s2, err = strconv.Atoi(input[i1:i2])
-		if err != nil {
-			return 0, err
-		}
-		i1 = i2 + 1
-		i2 = nli
-		e2, err = strconv.Atoi(input[i1:i2])
-		if err != nil {
-			return 0, err
+		ci = strings.Index(input, ":") + 1
+		pi = strings.Index(input, "|")
+
+		// TODO the numbers are not necessarily delimited by a
+		// space characer because they're pretty-printed to line
+		// up with columns above and below
+		winners := strings.Split(
+			strings.TrimSpace(input[ci:pi]),
+			" ",
+		)
+		shown := strings.Split(
+			strings.TrimSpace(input[pi+1:nli]),
+			" ",
+		)
+
+		c := newCard(max(len(winners), len(shown)))
+		for _, w := range winners {
+			v, err := strconv.Atoi(w)
+			if err != nil {
+				// TODO reconsider
+				continue
+			}
+			c = c.addWinner(v)
 		}
 
-		if (s1 >= s2 && e1 <= e2) ||
-			(s2 >= s1 && e2 <= e1) {
-			// the ranges are completely overlapping
-			total++
+		for _, s := range shown {
+			v, err := strconv.Atoi(s)
+			if err != nil {
+				// TODO reconsider
+				continue
+			}
+			c = c.addShown(v)
 		}
+
+		total += c.value()
+
 		input = input[nli+1:]
 	}
 
