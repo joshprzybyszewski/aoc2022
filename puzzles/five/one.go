@@ -39,6 +39,14 @@ func (m mapping) transform(src int) (int, bool) {
 	return m.dest + (src - m.source), true
 }
 
+func (m mapping) transformWithMax(src int) (int, int, bool) {
+	if src < m.source || src > m.source+m.length {
+		return 0, 0, false
+	}
+	diff := src - m.source
+	return m.dest + diff, m.length - diff, true
+}
+
 type allMappings []mapping
 
 func (am allMappings) add(m mapping) allMappings {
@@ -57,6 +65,18 @@ func (am allMappings) transform(src int) int {
 	return src
 }
 
+func (am allMappings) transformWithMax(src int) (int, int) {
+	var dest, max int
+	var ok bool
+	for _, m := range am {
+		dest, max, ok = m.transformWithMax(src)
+		if ok {
+			return dest, max
+		}
+	}
+	return src, 0
+}
+
 type multiMaps []allMappings
 
 func (mm multiMaps) add(am allMappings) multiMaps {
@@ -73,10 +93,23 @@ func (mm multiMaps) transform(src int) int {
 	return src
 }
 
-func One(
-	input string,
-) (int, error) {
+func (mm multiMaps) transformWithMax(src int) (int, int) {
+	max := -1
+	tmp := 0
+	for _, am := range mm {
+		src, tmp = am.transformWithMax(src)
+		if tmp < max {
+			max = tmp
+		} else if max == -1 {
+			max = tmp
+		}
+	}
+	return src, max
+}
 
+func getSeedsAndMultiMapping(
+	input string,
+) ([20]int, multiMaps, error) {
 	si, tmp := 0, 0
 	seeds := [20]int{}
 	nli := strings.Index(input, "\n")
@@ -93,6 +126,7 @@ func One(
 		tmp *= 10
 		tmp += int(input[i] - '0')
 	}
+	seeds[si] = tmp
 	input = input[nli+1:]
 
 	var mm multiMaps
@@ -116,8 +150,22 @@ func One(
 
 		input = input[nli+1:]
 	}
+	mm = mm.add(cur)
+
+	return seeds, mm, nil
+}
+
+func One(
+	input string,
+) (int, error) {
+
+	seeds, mm, err := getSeedsAndMultiMapping(input)
+	if err != nil {
+		return 0, err
+	}
 
 	lowest := mm.transform(seeds[0])
+	tmp := 0
 
 	for _, s := range seeds {
 		tmp = mm.transform(s)
@@ -126,6 +174,5 @@ func One(
 		}
 	}
 
-	// 694734096 is too high
 	return lowest, nil
 }
