@@ -19,7 +19,8 @@ func Two(
 			if tmp < lowest {
 				lowest = tmp
 			}
-			if max < 1 {
+
+			if max <= 1 {
 				s++
 			} else {
 				// skip ahead
@@ -28,7 +29,6 @@ func Two(
 		}
 	}
 
-	// 174137457 is too high
 	return lowest, nil
 
 }

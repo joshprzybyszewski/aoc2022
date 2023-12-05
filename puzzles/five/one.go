@@ -1,6 +1,7 @@
 package five
 
 import (
+	"sort"
 	"strings"
 )
 
@@ -66,15 +67,20 @@ func (am allMappings) transform(src int) int {
 }
 
 func (am allMappings) transformWithMax(src int) (int, int) {
-	var dest, max int
-	var ok bool
-	for _, m := range am {
-		dest, max, ok = m.transformWithMax(src)
-		if ok {
-			return dest, max
-		}
+	i := sort.Search(len(am), func(i int) bool {
+		return src < am[i].source+am[i].length
+	})
+	dest, max, ok := am[i].transformWithMax(src)
+	if ok {
+		return dest, max
 	}
-	return src, 0
+
+	if i == len(am) {
+		// give a huge max
+		return src, 1 << 31
+	}
+
+	return src, am[i+1].source - src
 }
 
 type multiMaps []allMappings
@@ -83,6 +89,11 @@ func (mm multiMaps) add(am allMappings) multiMaps {
 	if am == nil {
 		return mm
 	}
+
+	sort.Slice(am, func(i, j int) bool {
+		return am[i].source < am[j].source
+	})
+
 	return append(mm, am)
 }
 
