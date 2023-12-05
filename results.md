@@ -19,13 +19,13 @@ cpu: AMD EPYC 7763 64-Core Processor
 
 |Puzzle|Duration|Bytes allocated to Heap|# of Heap allocations|
 |-|-:|-:|-:|
-|Day 1 Part One|46.71 µs|22832|134|
-|Day 1 Part Two|1.13 ms|22832|134|
-|Day 2 Part One|100.68 µs|48752|1259|
-|Day 2 Part Two|155.98 µs|75536|2026|
-|Day 3 Part One|519.34 µs|45628|42|
-|Day 3 Part Two|1.70 ms|500725|8531|
-|Day 4 Part One|169.09 µs|30630|204|
-|Day 4 Part Two|181.33 µs|30636|204|
-|Day 5 Part One|45.04 µs|18528|71|
-|Day 5 Part Two|78.63 µs|18528|71|
+|Day 1 Part One|48.27 µs|22832|134|
+|Day 1 Part Two|1.03 ms|22832|134|
+|Day 2 Part One|93.58 µs|48752|1259|
+|Day 2 Part Two|148.04 µs|75536|2026|
+|Day 3 Part One|532.29 µs|45642|42|
+|Day 3 Part Two|1.46 ms|500698|8531|
+|Day 4 Part One|68.88 µs|0|0|
+|Day 4 Part Two|74.17 µs|0|0|
+|Day 5 Part One|40.17 µs|18528|71|
+|Day 5 Part Two|73.33 µs|18528|71|

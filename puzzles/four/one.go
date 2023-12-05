@@ -5,33 +5,72 @@ import (
 )
 
 type card struct {
-	// TODO make this two uint64s
-	winningNumbers map[int]struct{}
-	// TODO make this a [25]int
-	shown []int
+	winners [2]uint64
+	shown   [25]int
 }
 
-func newCard() card {
-	return card{
-		winningNumbers: make(map[int]struct{}, 10),
-		shown:          make([]int, 0, 25),
+func newCard(input string) card {
+	tmpi := 0
+	tmpVal := 0
+	pi := strings.Index(input, "|")
+	c := card{}
+	for tmpi = strings.Index(input, ":") + 1; tmpi < pi; tmpi++ {
+		if input[tmpi] == ' ' {
+			if tmpVal != 0 {
+				c = c.addWinner(tmpVal)
+			}
+			tmpVal = 0
+			continue
+		}
+		tmpVal *= 10
+		tmpVal += int(input[tmpi] - '0')
 	}
+	if tmpVal != 0 {
+		c = c.addWinner(tmpVal)
+	}
+
+	tmpi = pi + 1
+	tmpVal = 0
+	pi = 0
+	for ; tmpi < len(input); tmpi++ {
+		if input[tmpi] == ' ' {
+			if tmpVal != 0 {
+				c.shown[pi] = tmpVal
+				pi++
+			}
+			tmpVal = 0
+			continue
+		}
+		tmpVal *= 10
+		tmpVal += int(input[tmpi] - '0')
+	}
+	if tmpVal != 0 {
+		c.shown[pi] = tmpVal
+	}
+
+	return c
 }
 
 func (c card) addWinner(w int) card {
-	c.winningNumbers[w] = struct{}{}
+	if w >= 64 {
+		c.winners[1] |= 1 << (w - 64)
+	} else {
+		c.winners[0] |= 1 << w
+	}
 	return c
 }
 
-func (c card) addShown(w int) card {
-	c.shown = append(c.shown, w)
-	return c
+func (c card) isWinner(s int) bool {
+	if s >= 64 {
+		return c.winners[1]&(1<<(s-64)) != 0
+	}
+	return c.winners[0]&(1<<s) != 0
 }
 
 func (c card) numMatching() int {
 	total := 0
 	for _, s := range c.shown {
-		if _, ok := c.winningNumbers[s]; ok {
+		if c.isWinner(s) {
 			total++
 		}
 	}
@@ -41,7 +80,7 @@ func (c card) numMatching() int {
 func (c card) value() int {
 	total := 0
 	for _, s := range c.shown {
-		if _, ok := c.winningNumbers[s]; !ok {
+		if !c.isWinner(s) {
 			continue
 		}
 		if total == 0 {
@@ -59,51 +98,13 @@ func One(
 
 	total := 0
 
-	var tmpi, pi int
-	var tmpVal int
-
 	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
 		if nli == 0 {
 			input = input[1:]
 			continue
 		}
 
-		pi = strings.Index(input, "|")
-		c := newCard()
-
-		tmpVal = 0
-		for tmpi = strings.Index(input, ":") + 1; tmpi < pi; tmpi++ {
-			if input[tmpi] == ' ' {
-				if tmpVal != 0 {
-					c = c.addWinner(tmpVal)
-				}
-				tmpVal = 0
-				continue
-			}
-			tmpVal *= 10
-			tmpVal += int(input[tmpi] - '0')
-		}
-		if tmpVal != 0 {
-			c = c.addWinner(tmpVal)
-		}
-
-		tmpVal = 0
-		for tmpi = pi + 1; tmpi < nli; tmpi++ {
-			if input[tmpi] == ' ' {
-				if tmpVal != 0 {
-					c = c.addShown(tmpVal)
-				}
-				tmpVal = 0
-				continue
-			}
-			tmpVal *= 10
-			tmpVal += int(input[tmpi] - '0')
-		}
-		if tmpVal != 0 {
-			c = c.addShown(tmpVal)
-		}
-
-		total += c.value()
+		total += newCard(input[:nli]).value()
 
 		input = input[nli+1:]
 	}
