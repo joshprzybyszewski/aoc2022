@@ -1,7 +1,6 @@
 package four
 
 import (
-	"strconv"
 	"strings"
 )
 
@@ -10,10 +9,10 @@ type card struct {
 	shown          []int
 }
 
-func newCard(size int) card {
+func newCard() card {
 	return card{
-		winningNumbers: make(map[int]struct{}, size),
-		shown:          make([]int, 0, size),
+		winningNumbers: make(map[int]struct{}, 10),
+		shown:          make([]int, 0, 25),
 	}
 }
 
@@ -58,7 +57,8 @@ func One(
 
 	total := 0
 
-	var ci, pi int
+	var tmpi, pi int
+	var tmpVal int
 
 	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
 		if nli == 0 {
@@ -66,38 +66,39 @@ func One(
 			continue
 		}
 
-		ci = strings.Index(input, ":") + 1
 		pi = strings.Index(input, "|")
+		c := newCard()
 
-		// TODO the numbers are not necessarily delimited by a
-		// space characer because they're pretty-printed to line
-		// up with columns above and below
-		winners := strings.Split(
-			strings.TrimSpace(input[ci:pi]),
-			" ",
-		)
-		shown := strings.Split(
-			strings.TrimSpace(input[pi+1:nli]),
-			" ",
-		)
-
-		c := newCard(max(len(winners), len(shown)))
-		for _, w := range winners {
-			v, err := strconv.Atoi(w)
-			if err != nil {
-				// TODO reconsider
+		tmpVal = 0
+		for tmpi = strings.Index(input, ":") + 1; tmpi < pi; tmpi++ {
+			if input[tmpi] == ' ' {
+				if tmpVal != 0 {
+					c = c.addWinner(tmpVal)
+				}
+				tmpVal = 0
 				continue
 			}
-			c = c.addWinner(v)
+			tmpVal *= 10
+			tmpVal += int(input[tmpi] - '0')
+		}
+		if tmpVal != 0 {
+			c = c.addWinner(tmpVal)
 		}
 
-		for _, s := range shown {
-			v, err := strconv.Atoi(s)
-			if err != nil {
-				// TODO reconsider
+		tmpVal = 0
+		for tmpi = pi + 1; tmpi < nli; tmpi++ {
+			if input[tmpi] == ' ' {
+				if tmpVal != 0 {
+					c = c.addShown(tmpVal)
+				}
+				tmpVal = 0
 				continue
 			}
-			c = c.addShown(v)
+			tmpVal *= 10
+			tmpVal += int(input[tmpi] - '0')
+		}
+		if tmpVal != 0 {
+			c = c.addShown(tmpVal)
 		}
 
 		total += c.value()

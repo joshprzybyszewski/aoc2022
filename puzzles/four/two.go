@@ -1,7 +1,6 @@
 package four
 
 import (
-	"strconv"
 	"strings"
 )
 
@@ -9,13 +8,13 @@ func Two(
 	input string,
 ) (int, error) {
 
-	// allCards := make([]card, 0, 200)
 	numCopies := make([]int, 200)
 	total := 0
 
 	tmp, cardCopies, j := 0, 0, 0
 
-	var i, ci, pi int
+	var i, tmpi, pi int
+	var tmpVal int
 
 	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
 		if nli == 0 {
@@ -23,39 +22,39 @@ func Two(
 			continue
 		}
 
-		ci = strings.Index(input, ":") + 1
 		pi = strings.Index(input, "|")
+		c := newCard()
 
-		winners := strings.Split(
-			strings.TrimSpace(input[ci:pi]),
-			" ",
-		)
-		shown := strings.Split(
-			strings.TrimSpace(input[pi+1:nli]),
-			" ",
-		)
-
-		c := newCard(max(len(winners), len(shown)))
-		for _, w := range winners {
-			if w == `` {
+		tmpVal = 0
+		for tmpi = strings.Index(input, ":") + 1; tmpi < pi; tmpi++ {
+			if input[tmpi] == ' ' {
+				if tmpVal != 0 {
+					c = c.addWinner(tmpVal)
+				}
+				tmpVal = 0
 				continue
 			}
-			v, err := strconv.Atoi(w)
-			if err != nil {
-				panic(`ahh`)
-			}
-			c = c.addWinner(v)
+			tmpVal *= 10
+			tmpVal += int(input[tmpi] - '0')
+		}
+		if tmpVal != 0 {
+			c = c.addWinner(tmpVal)
 		}
 
-		for _, s := range shown {
-			if s == `` {
+		tmpVal = 0
+		for tmpi = pi + 1; tmpi < nli; tmpi++ {
+			if input[tmpi] == ' ' {
+				if tmpVal != 0 {
+					c = c.addShown(tmpVal)
+				}
+				tmpVal = 0
 				continue
 			}
-			v, err := strconv.Atoi(s)
-			if err != nil {
-				panic(err)
-			}
-			c = c.addShown(v)
+			tmpVal *= 10
+			tmpVal += int(input[tmpi] - '0')
+		}
+		if tmpVal != 0 {
+			c = c.addShown(tmpVal)
 		}
 
 		// one original copy.
