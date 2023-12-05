@@ -4,10 +4,10 @@ import (
 	"strings"
 )
 
-type gears map[coord][]int
+type gears map[coord][3]int
 
 func newGears() gears {
-	return make(gears)
+	return make(gears, 372)
 }
 
 func (g gears) addGear(row, col int, c byte) {
@@ -17,7 +17,7 @@ func (g gears) addGear(row, col int, c byte) {
 	g[coord{
 		row: row,
 		col: col,
-	}] = nil
+	}] = [3]int{}
 }
 
 func (g gears) addPart(row, col int, val int) {
@@ -25,14 +25,24 @@ func (g gears) addPart(row, col int, val int) {
 		row: row,
 		col: col,
 	}
-	if _, ok := g[c]; !ok {
+	data, ok := g[c]
+	if !ok {
 		return
 	}
-	g[c] = append(g[c], val)
+	if data[0] == 0 {
+		data[0] = val
+	} else if data[1] == 0 {
+		data[1] = val
+	} else {
+		data[2] = val // we don't expect more than two parts per symbol.
+	}
+	g[c] = data
 }
 
-func (s gears) nearbyGears(row, col int) nearbyGears {
-	output := make(nearbyGears, 8)
+func (s gears) addNearbyGears(
+	ng nearbyGears,
+	row, col int,
+) {
 	// check left, then below, then right, then above
 	tmp := coord{
 		row: row,
@@ -40,57 +50,46 @@ func (s gears) nearbyGears(row, col int) nearbyGears {
 	}
 	_, ok := s[tmp]
 	if ok {
-		output[tmp] = struct{}{}
+		ng[tmp] = struct{}{}
 	}
 	tmp.row--
 	_, ok = s[tmp]
 	if ok {
-		output[tmp] = struct{}{}
+		ng[tmp] = struct{}{}
 	}
 	tmp.col++
 	_, ok = s[tmp]
 	if ok {
-		output[tmp] = struct{}{}
+		ng[tmp] = struct{}{}
 	}
 	tmp.col++
 	_, ok = s[tmp]
 	if ok {
-		output[tmp] = struct{}{}
+		ng[tmp] = struct{}{}
 	}
 	tmp.row++
 	_, ok = s[tmp]
 	if ok {
-		output[tmp] = struct{}{}
+		ng[tmp] = struct{}{}
 	}
 	tmp.row++
 	_, ok = s[tmp]
 	if ok {
-		output[tmp] = struct{}{}
+		ng[tmp] = struct{}{}
 	}
 	tmp.col--
 	_, ok = s[tmp]
 	if ok {
-		output[tmp] = struct{}{}
+		ng[tmp] = struct{}{}
 	}
 	tmp.col--
 	_, ok = s[tmp]
 	if ok {
-		output[tmp] = struct{}{}
+		ng[tmp] = struct{}{}
 	}
-	return output
 }
 
 type nearbyGears map[coord]struct{}
-
-func (g nearbyGears) add(other nearbyGears) nearbyGears {
-	if g == nil {
-		return other
-	}
-	for k := range other {
-		g[k] = struct{}{}
-	}
-	return g
-}
 
 func Two(
 	fullInput string,
@@ -109,24 +108,23 @@ func Two(
 	}
 
 	curNum := 0
-	var nearby nearbyGears
+	nearby := make(nearbyGears, 32)
+	var ng coord
 	row = 0
 	input = fullInput
 	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
 		for col = 0; col < nli; col++ {
 			if input[col] < '0' || input[col] > '9' {
-				if nearby != nil {
-					for ng := range nearby {
-						g.addPart(ng.row, ng.col, curNum)
-					}
-					nearby = nil
+				for ng = range nearby {
+					g.addPart(ng.row, ng.col, curNum)
+					delete(nearby, ng)
 				}
 				curNum = 0
 				continue
 			}
 			curNum *= 10
 			curNum += int(input[col] - '0')
-			nearby = nearby.add(g.nearbyGears(row, col))
+			g.addNearbyGears(nearby, row, col)
 		}
 		input = input[nli+1:]
 		row++
@@ -135,7 +133,7 @@ func Two(
 	total := 0
 
 	for _, nums := range g {
-		if len(nums) != 2 {
+		if nums[2] != 0 {
 			continue
 		}
 
