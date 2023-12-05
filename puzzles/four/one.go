@@ -5,8 +5,10 @@ import (
 )
 
 type card struct {
+	// TODO make this two uint64s
 	winningNumbers map[int]struct{}
-	shown          []int
+	// TODO make this a [25]int
+	shown []int
 }
 
 func newCard() card {

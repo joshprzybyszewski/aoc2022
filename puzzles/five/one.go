@@ -4,78 +4,128 @@ import (
 	"strings"
 )
 
-func newStacks() [9]stack {
-	// :badpokerface: yes, I just manually created the stacks instead of reading them in.
-	// I figured it was faster to get an answer than to build a generic reader.
-	/*
-		        [J]         [B]     [T]
-		        [M] [L]     [Q] [L] [R]
-		        [G] [Q]     [W] [S] [B] [L]
-		[D]     [D] [T]     [M] [G] [V] [P]
-		[T]     [N] [N] [N] [D] [J] [G] [N]
-		[W] [H] [H] [S] [C] [N] [R] [W] [D]
-		[N] [P] [P] [W] [H] [H] [B] [N] [G]
-		[L] [C] [W] [C] [P] [T] [M] [Z] [W]
-		 1   2   3   4   5   6   7   8   9
-	*/
-	var output [9]stack
+type mapping struct {
+	dest   int
+	source int
+	length int
+}
 
-	push := func(s *stack, values string) {
-		for i := range values {
-			s.values[i] = values[i]
+func newMapping(line string) mapping {
+	m := mapping{}
+	tmp := 0
+	numSpaces := 0
+	for i := 0; i < len(line); i++ {
+		if line[i] == ' ' {
+			if numSpaces == 0 {
+				m.dest = tmp
+			} else {
+				m.source = tmp
+			}
+			numSpaces++
+			tmp = 0
+			continue
 		}
-		s.length = len(values)
+		tmp *= 10
+		tmp += int(line[i] - '0')
 	}
+	m.length = tmp
+	return m
+}
 
-	push(&output[0], `LNWTD`)
-	push(&output[1], `CPH`)
-	push(&output[2], `WPHNDGMJ`)
-	push(&output[3], `CWSNTQL`)
-	push(&output[4], `PHCN`)
-	push(&output[5], `THNDMWQB`)
-	push(&output[6], `MBRJGSL`)
-	push(&output[7], `ZNWGVBRT`)
-	push(&output[8], `WGDNPL`)
+func (m mapping) transform(src int) (int, bool) {
+	if src < m.source || src > m.source+m.length {
+		return 0, false
+	}
+	return m.dest + (src - m.source), true
+}
 
-	return output
+type allMappings []mapping
+
+func (am allMappings) add(m mapping) allMappings {
+	return append(am, m)
+}
+
+func (am allMappings) transform(src int) int {
+	var dest int
+	var ok bool
+	for _, m := range am {
+		dest, ok = m.transform(src)
+		if ok {
+			return dest
+		}
+	}
+	return src
+}
+
+type multiMaps []allMappings
+
+func (mm multiMaps) add(am allMappings) multiMaps {
+	if am == nil {
+		return mm
+	}
+	return append(mm, am)
+}
+
+func (mm multiMaps) transform(src int) int {
+	for _, am := range mm {
+		src = am.transform(src)
+	}
+	return src
 }
 
 func One(
 	input string,
-) (string, error) {
-	stacks := newStacks()
+) (int, error) {
 
-	move := func(si, di int, q int) {
-		for i := 0; i < q; i++ {
-			stacks[di].values[stacks[di].length] = stacks[si].values[stacks[si].length-1]
-			stacks[si].length--
-			stacks[di].length++
-		}
+	si, tmp := 0, 0
+	seeds := [20]int{}
+	nli := strings.Index(input, "\n")
+	if input[:7] != `seeds: ` {
+		panic(`dev error`)
 	}
+	for i := 7; i < len(input[:nli]); i++ {
+		if input[i] == ' ' {
+			seeds[si] = tmp
+			si++
+			tmp = 0
+			continue
+		}
+		tmp *= 10
+		tmp += int(input[i] - '0')
+	}
+	input = input[nli+1:]
 
-	var inst instruction
-	var err error
+	var mm multiMaps
+	var cur allMappings
 
-	// jump past the stacks information
-	input = input[strings.Index(input, "\n\n")+2:]
-
-	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
+	for nli = strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
 		if nli == 0 {
-			// skip empty lines
 			input = input[1:]
 			continue
 		}
-		inst, err = newInstruction(input[:nli])
-		if err != nil {
-			return ``, err
+
+		if input[nli-1] == ':' {
+			// this line is dictating that we have the start of a new mapping.
+			// Add the current set to the multi.
+			mm = mm.add(cur)
+			// clear out the current
+			cur = nil
+		} else {
+			cur = cur.add(newMapping(input[:nli]))
 		}
-		move(inst.source-1, inst.dest-1, inst.quantity)
+
 		input = input[nli+1:]
 	}
 
-	output := make([]byte, 0, len(stacks))
-	for i := range stacks {
-		output = append(output, stacks[i].values[stacks[i].length-1])
+	lowest := mm.transform(seeds[0])
+
+	for _, s := range seeds {
+		tmp = mm.transform(s)
+		if tmp < lowest {
+			lowest = tmp
+		}
 	}
-	return string(output), nil
+
+	// 694734096 is too high
+	return lowest, nil
 }
