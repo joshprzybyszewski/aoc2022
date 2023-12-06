@@ -8,17 +8,12 @@ func Two(
 	input string,
 ) (int, error) {
 
-	lines := strings.Split(input, "\n")
-
 	sum := 0
-	for _, line := range lines {
+	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
 		handfuls := strings.Split(
-			line[strings.Index(line, `:`)+1:],
+			input[strings.Index(input, `:`)+1:nli],
 			";",
 		)
-		if len(handfuls) == 0 {
-			continue
-		}
 		min := interpretSeen(handfuls[0])
 		for _, handfulStr := range handfuls {
 			handful := interpretSeen(handfulStr)
@@ -34,7 +29,7 @@ func Two(
 		}
 
 		sum += (min.red * min.blue * min.green)
-
+		input = input[nli+1:]
 	}
 
 	return sum, nil

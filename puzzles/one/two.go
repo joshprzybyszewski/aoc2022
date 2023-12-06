@@ -98,29 +98,5 @@ func getValueWithString(line string) int {
 		break
 	}
 
-	// last := -1
-
-	// for i = len(line) - 1; i > first; i-- {
-	// 	c = line[i]
-	// 	if c >= '0' && c <= '9' {
-	// 		last = int(c - '0')
-	// 		break
-	// 	}
-	// 	next := line[i:]
-	// 	if i+5 < len(line) {
-	// 		next = line[i : i+5]
-	// 	}
-
-	// 	tmp = getStringValue(next)
-	// 	if tmp == -1 {
-	// 		continue
-	// 	}
-	// 	last = tmp
-	// 	break
-	// }
-	// if last == -1 {
-	// 	last = first
-	// }
-
 	return first*10 + last
 }

@@ -14,12 +14,11 @@ func One(
 		blue:  14,
 	}
 
-	lines := strings.Split(input, "\n")
-
+	i := 0
 	sum := 0
-	for i, line := range lines {
+	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
 		handfuls := strings.Split(
-			line[strings.Index(line, `:`)+1:],
+			input[strings.Index(input, `:`)+1:nli],
 			";",
 		)
 		hasImpossible := false
@@ -34,6 +33,8 @@ func One(
 		if !hasImpossible {
 			sum += (i + 1)
 		}
+		input = input[nli+1:]
+		i++
 	}
 
 	return sum, nil
