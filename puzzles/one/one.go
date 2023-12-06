@@ -7,11 +7,11 @@ import (
 func One(
 	input string,
 ) (int, error) {
-	lines := strings.Split(input, "\n")
 
 	sum := 0
-	for _, line := range lines {
-		sum += getValue([]byte(line))
+	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
+		sum += getValue([]byte(input[:nli]))
+		input = input[nli+1:]
 	}
 
 	return sum, nil

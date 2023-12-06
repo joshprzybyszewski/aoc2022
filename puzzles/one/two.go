@@ -8,11 +8,10 @@ import (
 func Two(
 	input string,
 ) (int, error) {
-	lines := strings.Split(input, "\n")
-
 	sum := 0
-	for _, line := range lines {
-		sum += getValueWithString([]byte(line))
+	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
+		sum += getValueWithString([]byte(input[:nli]))
+		input = input[nli+1:]
 	}
 
 	return sum, nil
