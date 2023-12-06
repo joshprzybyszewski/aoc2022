@@ -1,5 +1,7 @@
 package six
 
+import "sort"
+
 type race struct {
 	duration uint
 	distance uint
@@ -39,16 +41,27 @@ func One(
 }
 
 func getPossibilities(r race) uint {
-	var hold, myDistance uint
-	possiblites := uint(0)
+	halfDur := r.duration / 2
 
-	for hold = 1; hold < r.duration; hold++ {
-		myDistance = hold * (r.duration - hold)
-		if myDistance > r.distance {
-			possiblites++
-		} else if possiblites > 0 {
-			return possiblites
-		}
-	}
-	return 0
+	var minHold, maxHold uint
+
+	// TODO
+	tmp := sort.Search(int(halfDur), func(h int) bool {
+		return uint(h)*(r.duration-uint(h)) > r.distance
+	})
+	minHold = uint(tmp)
+
+	tmp = sort.Search(int(halfDur)+1, func(h int) bool {
+		return (uint(h)+halfDur)*(r.duration-(uint(h)+halfDur)) < r.distance
+	})
+	maxHold = halfDur + uint(tmp) - 1
+
+	// for r.distance < maxHold*(r.duration-maxHold) {
+	// 	maxHold++
+	// }
+	// for r.distance > maxHold*(r.duration-maxHold) {
+	// 	maxHold--
+	// }
+
+	return maxHold - minHold + 1
 }
