@@ -25,43 +25,20 @@ var (
 
 func One(
 	input string,
-) (int64, error) {
-	possiblites := [4]uint{}
-
-	for i, r := range races {
-		possiblites[i] = getPossibilities(r)
+) (int, error) {
+	mult := uint(1)
+	for _, r := range races {
+		mult *= getPossibilities(r)
 	}
-
-	mult := int64(1)
-	for _, p := range possiblites {
-		mult *= int64(p)
-	}
-
-	return mult, nil
+	return int(mult), nil
 }
 
 func getPossibilities(r race) uint {
-	halfDur := r.duration / 2
-
-	var minHold, maxHold uint
-
-	// TODO
-	tmp := sort.Search(int(halfDur), func(h int) bool {
+	tmp := sort.Search(int(r.duration/2), func(h int) bool {
 		return uint(h)*(r.duration-uint(h)) > r.distance
 	})
-	minHold = uint(tmp)
+	minHold := uint(tmp)
 
-	tmp = sort.Search(int(halfDur)+1, func(h int) bool {
-		return (uint(h)+halfDur)*(r.duration-(uint(h)+halfDur)) < r.distance
-	})
-	maxHold = halfDur + uint(tmp) - 1
-
-	// for r.distance < maxHold*(r.duration-maxHold) {
-	// 	maxHold++
-	// }
-	// for r.distance > maxHold*(r.duration-maxHold) {
-	// 	maxHold--
-	// }
-
-	return maxHold - minHold + 1
+	// maxHold = r.duration - minHold
+	return r.duration - minHold - minHold + 1
 }

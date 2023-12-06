@@ -8,7 +8,5 @@ func Two(
 		distance: 284100511221341,
 	}
 
-	possiblites := getPossibilities(r)
-
-	return int(possiblites), nil
+	return int(getPossibilities(r)), nil
 }
