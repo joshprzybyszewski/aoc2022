@@ -39,6 +39,8 @@ func Solvers(
 		return wrapIntSolver(p1), wrapIntSolver(p2)
 	}
 	switch day {
+	case 6:
+		return wrapInt64Solver(six.One), wrapIntSolver(six.Two)
 	case 10:
 		return wrapIntSolver(ten.One), ten.Two
 	case 11:
@@ -64,8 +66,6 @@ func IntSolvers(
 		return four.One, four.Two
 	case 5:
 		return five.One, five.Two
-	case 6:
-		return six.One, six.Two
 	case 7:
 		return seven.One, seven.Two
 	case 8:
