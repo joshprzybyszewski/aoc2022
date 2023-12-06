@@ -30,6 +30,13 @@ var stringValues = []string{
 }
 
 func getStringValue(input string) int {
+	switch input[0] {
+	case 'z', 'o', 't', 'f', 's', 'e', 'n':
+		// these are the only valid starting chars
+	default:
+		return -1
+	}
+
 	for i, sv := range stringValues {
 		if input == sv || (len(input) > len(sv) && input[:len(sv)] == sv) {
 			return i
