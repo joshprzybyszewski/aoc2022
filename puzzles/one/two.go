@@ -1,7 +1,6 @@
 package one
 
 import (
-	"bytes"
 	"strings"
 )
 
@@ -10,44 +9,43 @@ func Two(
 ) (int, error) {
 	sum := 0
 	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
-		sum += getValueWithString([]byte(input[:nli]))
+		sum += getValueWithString(input[:nli])
 		input = input[nli+1:]
 	}
 
 	return sum, nil
 }
 
-var stringValues = [][]byte{
-	[]byte(`zero`),
-	[]byte(`one`),
-	[]byte(`two`),
-	[]byte(`three`),
-	[]byte(`four`),
-	[]byte(`five`),
-	[]byte(`six`),
-	[]byte(`seven`),
-	[]byte(`eight`),
-	[]byte(`nine`),
+var stringValues = []string{
+	`zero`,
+	`one`,
+	`two`,
+	`three`,
+	`four`,
+	`five`,
+	`six`,
+	`seven`,
+	`eight`,
+	`nine`,
 }
 
-func getStringValue(val []byte) int {
+func getStringValue(input string) int {
 	for i, sv := range stringValues {
-		val := val
-		if len(val) > len(sv) {
-			val = val[:len(sv)]
-		}
-		if bytes.Equal(val, sv) {
+		if input == sv || (len(input) > len(sv) && input[:len(sv)] == sv) {
 			return i
-
 		}
 	}
 	return -1
 }
 
-func getValueWithString(line []byte) int {
-	first, last := -1, -1
+func getValueWithString(line string) int {
+	first := -1
+	last := -1
+	var i, val int
+	var c byte
 
-	for i, c := range line {
+	for i = 0; i < len(line); i++ {
+		c = line[i]
 		if c >= '0' && c <= '9' {
 			if first == -1 {
 				first = int(c - '0')
@@ -60,7 +58,7 @@ func getValueWithString(line []byte) int {
 			next = line[i : i+5]
 		}
 
-		val := getStringValue(next)
+		val = getStringValue(next)
 		if val == -1 {
 			continue
 		}
@@ -73,6 +71,30 @@ func getValueWithString(line []byte) int {
 	if first == -1 {
 		return 0
 	}
+
+	// last := -1
+
+	// for i = len(line) - 1; i > first; i-- {
+	// 	c = line[i]
+	// 	if c >= '0' && c <= '9' {
+	// 		last = int(c - '0')
+	// 		break
+	// 	}
+	// 	next := line[i:]
+	// 	if i+5 < len(line) {
+	// 		next = line[i : i+5]
+	// 	}
+
+	// 	tmp = getStringValue(next)
+	// 	if tmp == -1 {
+	// 		continue
+	// 	}
+	// 	last = tmp
+	// 	break
+	// }
+	// if last == -1 {
+	// 	last = first
+	// }
 
 	return first*10 + last
 }
