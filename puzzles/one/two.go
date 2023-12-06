@@ -47,6 +47,7 @@ func getStringValue(input string) int {
 
 func getValueWithString(line string) int {
 	first := -1
+	firstIndex := -1
 	last := -1
 	var i, val int
 	var c byte
@@ -54,11 +55,10 @@ func getValueWithString(line string) int {
 	for i = 0; i < len(line); i++ {
 		c = line[i]
 		if c >= '0' && c <= '9' {
-			if first == -1 {
-				first = int(c - '0')
-			}
-			last = int(c - '0')
-			continue
+			firstIndex = i
+			first = int(c - '0')
+
+			break
 		}
 		next := line[i:]
 		if i+5 < len(line) {
@@ -69,14 +69,33 @@ func getValueWithString(line string) int {
 		if val == -1 {
 			continue
 		}
-		if first == -1 {
-			first = val
-		}
-		last = val
 
+		firstIndex = i
+		first = val
+		break
 	}
 	if first == -1 {
 		return 0
+	}
+
+	for i = len(line) - 1; i >= firstIndex; i-- {
+		c = line[i]
+		if c >= '0' && c <= '9' {
+
+			last = int(c - '0')
+			break
+		}
+		next := line[i:]
+		if i+5 < len(line) {
+			next = line[i : i+5]
+		}
+
+		val = getStringValue(next)
+		if val == -1 {
+			continue
+		}
+		last = val
+		break
 	}
 
 	// last := -1
