@@ -4,92 +4,86 @@ import (
 	"strings"
 )
 
-type gears map[coord][3]int
+const (
+	size = 140
+)
 
-func newGears() gears {
-	return make(gears, 372)
+type gears struct {
+	nearby [size][size][3]int
+
+	gears [size][size]bool
+
+	gearCoords [400]coord
+	gci        int
 }
 
-func (g gears) addGear(row, col int, c byte) {
+func newGears() gears {
+	return gears{}
+}
+
+func (g *gears) addGear(row, col int, c byte) {
 	if c != '*' {
 		return
 	}
-	g[coord{
-		row: row,
-		col: col,
-	}] = [3]int{}
-}
 
-func (g gears) addPart(row, col int, val int) {
-	c := coord{
+	g.gears[row][col] = true
+	g.gearCoords[g.gci] = coord{
 		row: row,
 		col: col,
 	}
-	data, ok := g[c]
-	if !ok {
+	g.gci++
+}
+
+func (g *gears) addPart(row, col int, val int) {
+	if val == 0 {
 		return
 	}
-	if data[0] == 0 {
-		data[0] = val
-	} else if data[1] == 0 {
-		data[1] = val
+
+	minCol := col - 2
+	if val > 99 {
+		minCol -= 2
+	} else if val > 9 {
+		minCol--
+	}
+	if minCol < 0 {
+		minCol = 0
+	}
+
+	if col == size {
+		col--
+	}
+
+	g.addPartValue(row, col, val)
+	g.addPartValue(row, minCol, val)
+
+	var tmpCol int
+
+	if row > 0 {
+		for tmpCol = col; tmpCol >= minCol; tmpCol-- {
+			g.addPartValue(row-1, tmpCol, val)
+		}
+	}
+
+	if row+1 < size {
+		for tmpCol = col; tmpCol >= minCol; tmpCol-- {
+			g.addPartValue(row+1, tmpCol, val)
+		}
+	}
+}
+
+func (g *gears) addPartValue(row, col int, val int) {
+	if !g.gears[row][col] {
+		return
+	}
+
+	if g.nearby[row][col][0] == 0 {
+		g.nearby[row][col][0] = val
+	} else if g.nearby[row][col][1] == 0 {
+		g.nearby[row][col][1] = val
 	} else {
-		data[2] = val // we don't expect more than two parts per symbol.
-	}
-	g[c] = data
-}
-
-func (s gears) addNearbyGears(
-	ng nearbyGears,
-	row, col int,
-) {
-	// check left, then below, then right, then above
-	tmp := coord{
-		row: row,
-		col: col - 1,
-	}
-	_, ok := s[tmp]
-	if ok {
-		ng[tmp] = struct{}{}
-	}
-	tmp.row--
-	_, ok = s[tmp]
-	if ok {
-		ng[tmp] = struct{}{}
-	}
-	tmp.col++
-	_, ok = s[tmp]
-	if ok {
-		ng[tmp] = struct{}{}
-	}
-	tmp.col++
-	_, ok = s[tmp]
-	if ok {
-		ng[tmp] = struct{}{}
-	}
-	tmp.row++
-	_, ok = s[tmp]
-	if ok {
-		ng[tmp] = struct{}{}
-	}
-	tmp.row++
-	_, ok = s[tmp]
-	if ok {
-		ng[tmp] = struct{}{}
-	}
-	tmp.col--
-	_, ok = s[tmp]
-	if ok {
-		ng[tmp] = struct{}{}
-	}
-	tmp.col--
-	_, ok = s[tmp]
-	if ok {
-		ng[tmp] = struct{}{}
+		g.nearby[row][col][2] = val // we don't expect more than two parts per symbol.
 	}
 }
-
-type nearbyGears map[coord]struct{}
 
 func Two(
 	fullInput string,
@@ -108,23 +102,17 @@ func Two(
 	}
 
 	curNum := 0
-	nearby := make(nearbyGears, 32)
-	var ng coord
 	row = 0
 	input = fullInput
 	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
-		for col = 0; col < nli; col++ {
+		for col = 0; col <= nli; col++ {
 			if input[col] < '0' || input[col] > '9' {
-				for ng = range nearby {
-					g.addPart(ng.row, ng.col, curNum)
-					delete(nearby, ng)
-				}
+				g.addPart(row, col, curNum)
 				curNum = 0
 				continue
 			}
 			curNum *= 10
 			curNum += int(input[col] - '0')
-			g.addNearbyGears(nearby, row, col)
 		}
 		input = input[nli+1:]
 		row++
@@ -132,7 +120,9 @@ func Two(
 
 	total := 0
 
-	for _, nums := range g {
+	var nums [3]int
+	for i := 0; i < g.gci; i++ {
+		nums = g.nearby[g.gearCoords[i].row][g.gearCoords[i].col]
 		if nums[2] != 0 {
 			continue
 		}
