@@ -10,28 +10,36 @@ func One(
 
 	sum := 0
 	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
-		sum += getValue([]byte(input[:nli]))
+		sum += getValue(input[:nli])
 		input = input[nli+1:]
 	}
 
 	return sum, nil
 }
 
-func getValue(line []byte) int {
-	first, last := -1, -1
+func getValue(line string) int {
+	first := -1
 
-	for _, c := range line {
+	var i int
+	var c byte
+	for i = 0; i < len(line); i++ {
+		c = line[i]
 		if c >= '0' && c <= '9' {
-			if first == -1 {
-				first = int(c - '0')
-			}
-			last = int(c - '0')
-			continue
+			first = int(c - '0')
+			break
 		}
-
 	}
 	if first == -1 {
 		return 0
+	}
+
+	last := first
+	for i = len(line) - 1; i >= 0; i-- {
+		c = line[i]
+		if c >= '0' && c <= '9' {
+			last = int(c - '0')
+			break
+		}
 	}
 
 	return first*10 + last
