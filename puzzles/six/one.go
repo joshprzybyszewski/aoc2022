@@ -24,19 +24,10 @@ var (
 func One(
 	input string,
 ) (int64, error) {
-	possiblites := [4]int{}
-
-	var hold, myDistance uint
+	possiblites := [4]uint{}
 
 	for i, r := range races {
-		for hold = 1; hold < r.duration; hold++ {
-			myDistance = hold * (r.duration - hold)
-			if myDistance > r.distance {
-				possiblites[i]++
-			} else if possiblites[i] > 0 {
-				break
-			}
-		}
+		possiblites[i] = getPossibilities(r)
 	}
 
 	mult := int64(1)
@@ -45,4 +36,19 @@ func One(
 	}
 
 	return mult, nil
+}
+
+func getPossibilities(r race) uint {
+	var hold, myDistance uint
+	possiblites := uint(0)
+
+	for hold = 1; hold < r.duration; hold++ {
+		myDistance = hold * (r.duration - hold)
+		if myDistance > r.distance {
+			possiblites++
+		} else if possiblites > 0 {
+			return possiblites
+		}
+	}
+	return 0
 }
