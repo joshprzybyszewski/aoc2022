@@ -130,7 +130,7 @@ type hand struct {
 	cards [5]card
 
 	handType handType
-	bid      uint
+	bid      uint16
 }
 
 func newHand(line string) hand {
@@ -141,10 +141,10 @@ func newHand(line string) hand {
 	h.cards[3] = newCard(line[3])
 	h.cards[4] = newCard(line[4])
 
-	h.bid = uint(line[6] - '0')
+	h.bid = uint16(line[6] - '0')
 	for i := 7; i < len(line); i++ {
 		h.bid *= 10
-		h.bid += uint(line[i] - '0')
+		h.bid += uint16(line[i] - '0')
 	}
 
 	h.handType = newHandType(line[:5])
