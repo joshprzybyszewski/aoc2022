@@ -6,6 +6,10 @@ import (
 	"strings"
 )
 
+const (
+	wildIndex = 0 // convertCardWildsToOrder('J')
+)
+
 func convertCardWildsToOrder(b byte) int {
 	if b >= '2' && b <= '9' {
 		return int(b - '1')
@@ -61,12 +65,14 @@ func newHandWildsType(cards string) handType {
 	index := [5]int{}
 	var i int
 	for i = 0; i < 5; i++ {
-		index[i] = convertCardToOrder(cards[i])
+		index[i] = convertCardWildsToOrder(cards[i])
 		countByCard[index[i]]++
 	}
 
-	wildIndex := convertCardToOrder('J')
 	numWilds := countByCard[wildIndex]
+	if numWilds >= 4 {
+		return 1 << 6 // 5 of a kind
+	}
 	numTwos := 0
 	seenThree := false
 
@@ -89,20 +95,22 @@ func newHandWildsType(cards string) handType {
 			}
 			seenThree = true
 		case 2:
-			if seenThree {
+			if seenThree || numWilds == 2 {
 				return 1 << 4 // full house
 			}
 			numTwos++
 		}
 	}
 
-	if numTwos == 4 && numWilds == 1 {
+	if numTwos == 4 && numWilds == 1 ||
+		seenThree && numWilds > 1 {
 		return 1 << 4 // full house
 	}
 
 	if seenThree ||
-		numWilds == 2 {
-		return 1 << 3
+		numWilds == 2 ||
+		numWilds == 1 && numTwos == 2 {
+		return 1 << 3 // 3 of a kind
 	}
 	if numTwos == 4 { // they get seen twice
 		return 1 << 2 // two pair
@@ -179,6 +187,5 @@ func Two(
 		total += (i + 1) * int(hands[i].bid)
 	}
 
-	// 254958389 is too high
 	return total, nil
 }
