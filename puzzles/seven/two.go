@@ -29,33 +29,27 @@ func convertCardWildsToOrder(b byte) int {
 	panic(`unsupported char: ` + string(b))
 }
 
-type cardWilds uint16
+type cardWilds uint8
 
 func newCardWilds(b byte) cardWilds {
-	return 1 << convertCardWildsToOrder(b)
+	return cardWilds(convertCardWildsToOrder(b))
 }
 
 func (c cardWilds) String() string {
 	switch c {
-	case 1 << 9:
-		return `T`
-	case 1 << 0:
+	case 0:
 		return `J`
-	case 1 << 10:
+	case 9:
+		return `T`
+	case 10:
 		return `Q`
-	case 1 << 11:
+	case 11:
 		return `K`
-	case 1 << 12:
+	case 12:
 		return `A`
 	}
-	b := '2'
-	c >>= 1
-	for c != 0 {
-		if c&1 == 1 {
-			return string(b)
-		}
-		c >>= 1
-		b++
+	if c >= 1 && c <= 8 {
+		return string('1' + c)
 	}
 	panic(`ahh`)
 }
@@ -71,7 +65,7 @@ func newHandWildsType(cards string) handType {
 
 	numWilds := countByCard[wildIndex]
 	if numWilds >= 4 {
-		return 1 << 6 // 5 of a kind
+		return kind5
 	}
 	numTwos := 0
 	seenThree := false
@@ -83,20 +77,20 @@ func newHandWildsType(cards string) handType {
 
 		switch countByCard[index[i]] + numWilds {
 		case 5:
-			return 1 << 6
+			return kind5
 		case 4:
-			return 1 << 5
+			return kind4
 		}
 
 		switch countByCard[index[i]] {
 		case 3:
 			if numTwos > 0 {
-				return 1 << 4 // full house
+				return fullHouse
 			}
 			seenThree = true
 		case 2:
 			if seenThree || numWilds == 2 {
-				return 1 << 4 // full house
+				return fullHouse
 			}
 			numTwos++
 		}
@@ -104,21 +98,21 @@ func newHandWildsType(cards string) handType {
 
 	if numTwos == 4 && numWilds == 1 ||
 		seenThree && numWilds > 1 {
-		return 1 << 4 // full house
+		return fullHouse
 	}
 
 	if seenThree ||
 		numWilds == 2 ||
 		numWilds == 1 && numTwos == 2 {
-		return 1 << 3 // 3 of a kind
+		return kind3
 	}
 	if numTwos == 4 { // they get seen twice
-		return 1 << 2 // two pair
+		return pair2
 	}
 	if numTwos == 2 || numWilds == 1 {
-		return 1 << 1 // one pair
+		return pair1
 	}
-	return 1
+	return highCard
 }
 
 type handWilds struct {

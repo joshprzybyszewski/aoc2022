@@ -26,37 +26,42 @@ func convertCardToOrder(b byte) int {
 	panic(`unsupported char: ` + string(b))
 }
 
-type card uint16
+type card uint8
 
 func newCard(b byte) card {
-	return 1 << convertCardToOrder(b)
+	return card(convertCardToOrder(b))
 }
 
 func (c card) String() string {
-	switch c {
-	case 1 << 8:
-		return `T`
-	case 1 << 9:
-		return `J`
-	case 1 << 10:
-		return `Q`
-	case 1 << 11:
-		return `K`
-	case 1 << 12:
-		return `A`
+	if c <= 7 {
+		return string('2' + c)
 	}
-	b := '2'
-	for c != 0 {
-		if c&1 == 1 {
-			return string(b)
-		}
-		c >>= 1
-		b++
+	switch c {
+	case 8:
+		return `T`
+	case 9:
+		return `J`
+	case 10:
+		return `Q`
+	case 11:
+		return `K`
+	case 12:
+		return `A`
 	}
 	panic(`ahh`)
 }
 
 type handType uint8
+
+const (
+	kind5     handType = 6
+	kind4     handType = 5
+	fullHouse handType = 4
+	kind3     handType = 3
+	pair2     handType = 2
+	pair1     handType = 1
+	highCard  handType = 0
+)
 
 func newHandType(cards string) handType {
 	countByCard := [16]uint8{}
@@ -73,52 +78,52 @@ func newHandType(cards string) handType {
 	for i = 0; i < 5; i++ {
 		switch countByCard[index[i]] {
 		case 5:
-			return 1 << 6
+			return kind5
 		case 4:
-			return 1 << 5
+			return kind4
 		case 3:
 			if numTwos > 0 {
-				return 1 << 4 // full house
+				return fullHouse
 			}
 			seenThree = true
 		case 2:
 			if seenThree {
-				return 1 << 4 // full house
+				return fullHouse
 			}
 			numTwos++
 		}
 	}
 
 	if seenThree {
-		return 1 << 3
+		return kind3
 	}
 	if numTwos == 4 { // they get seen twice
-		return 1 << 2
+		return pair2
 	}
 	if numTwos == 2 {
-		return 1 << 1
+		return pair1
 	}
-	return 1
+	return highCard
 }
 
 func (ht handType) String() string {
 	switch ht {
-	case 1 << 6:
+	case kind5:
 		return `5 of a kind`
-	case 1 << 5:
+	case kind4:
 		return `4 of a kind`
-	case 1 << 4:
+	case fullHouse:
 		return `full house`
-	case 1 << 3:
+	case kind3:
 		return `3 of a kind`
-	case 1 << 2:
+	case pair2:
 		return `two pair`
-	case 1 << 1:
+	case pair1:
 		return `one pair`
-	case 1:
+	case highCard:
 		return `high card`
 	}
-	return fmt.Sprintf("%b", ht)
+	return fmt.Sprintf("%d", ht)
 }
 
 type hand struct {
