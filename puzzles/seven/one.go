@@ -2,176 +2,192 @@ package seven
 
 import (
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 )
 
-const (
-	part1max    = 100000
-	rootDirName = `/`
-)
+func convertCardToOrder(b byte) int {
+	if b >= '2' && b <= '9' {
+		return int(b - '2')
+	}
+	switch b {
+	case 'T':
+		return 8
+	case 'J':
+		return 9
+	case 'Q':
+		return 10
+	case 'K':
+		return 11
+	case 'A':
+		return 12
+	}
+	panic(`unsupported char: ` + string(b))
+}
 
-type fileDir struct {
-	name string
-	size int
-	// if a directory, this is the index of the first file
-	lsIndex, lsEndIndex int
-	// if a file, this is -1
-	// if a directory, this is the index of its parent directory
-	parent int
+type card uint16
+
+func newCard(b byte) card {
+	return 1 << convertCardToOrder(b)
+}
+
+func (c card) String() string {
+	switch c {
+	case 1 << 8:
+		return `T`
+	case 1 << 9:
+		return `J`
+	case 1 << 10:
+		return `Q`
+	case 1 << 11:
+		return `K`
+	case 1 << 12:
+		return `A`
+	}
+	b := '2'
+	for c != 0 {
+		if c&1 == 1 {
+			return string(b)
+		}
+		c >>= 1
+		b++
+	}
+	panic(`ahh`)
+}
+
+type handType uint8
+
+func newHandType(cards string) handType {
+	countByCard := [16]uint8{}
+	index := [5]int{}
+	var i int
+	for i = 0; i < 5; i++ {
+		index[i] = convertCardToOrder(cards[i])
+		countByCard[index[i]]++
+	}
+
+	numTwos := 0
+	seenThree := false
+
+	for i = 0; i < 5; i++ {
+		switch countByCard[index[i]] {
+		case 5:
+			return 1 << 6
+		case 4:
+			return 1 << 5
+		case 3:
+			if numTwos > 0 {
+				return 1 << 4 // full house
+			}
+			seenThree = true
+		case 2:
+			if seenThree {
+				return 1 << 4 // full house
+			}
+			numTwos++
+		}
+	}
+
+	if seenThree {
+		return 1 << 3
+	}
+	if numTwos == 4 { // they get seen twice
+		return 1 << 2
+	}
+	if numTwos == 2 {
+		return 1 << 1
+	}
+	return 1
+}
+
+func (ht handType) String() string {
+	switch ht {
+	case 1 << 6:
+		return `5 of a kind`
+	case 1 << 5:
+		return `4 of a kind`
+	case 1 << 4:
+		return `full house`
+	case 1 << 3:
+		return `3 of a kind`
+	case 1 << 2:
+		return `two pair`
+	case 1 << 1:
+		return `one pair`
+	case 1:
+		return `high card`
+	}
+	return fmt.Sprintf("%b", ht)
+}
+
+type hand struct {
+	cards [5]card
+
+	handType handType
+	bid      uint
+}
+
+func newHand(line string) hand {
+	h := hand{}
+	h.cards[0] = newCard(line[0])
+	h.cards[1] = newCard(line[1])
+	h.cards[2] = newCard(line[2])
+	h.cards[3] = newCard(line[3])
+	h.cards[4] = newCard(line[4])
+
+	h.bid = uint(line[6] - '0')
+	for i := 7; i < len(line); i++ {
+		h.bid *= 10
+		h.bid += uint(line[i] - '0')
+	}
+
+	h.handType = newHandType(line[:5])
+
+	return h
+}
+
+func (h hand) String() string {
+	return h.cards[0].String() +
+		h.cards[1].String() +
+		h.cards[2].String() +
+		h.cards[3].String() +
+		h.cards[4].String() +
+		` ` + strconv.Itoa(int(h.bid)) +
+		` (` + h.handType.String() + `)`
 }
 
 func One(
 	input string,
 ) (int, error) {
-	_, ds, err := getDirectorySizes(input)
-	if err != nil {
-		return 0, err
-	}
 
-	total := 0
-	for _, size := range ds {
-		if size <= part1max {
-			total += size
-		}
-	}
+	hands := make([]hand, 0, 1000)
 
-	return total, nil
-}
-
-func getDirectorySizes(
-	input string,
-) (int, []int, error) {
-	data := make([]fileDir, 1, 457)
-	const rootDirIndex = 0
-	const rootName = `/`
-	data[rootDirIndex] = fileDir{
-		lsIndex:    -1, // unset
-		lsEndIndex: -1, // unset
-		size:       -1, // unset
-		name:       rootName,
-		parent:     -1,
-	}
-
-	curDirIndex := rootDirIndex
-
-	var tmp int
-	getNewIndexFromCD := func(line string) int {
-		tmp = strings.LastIndex(line, ` `) + 1
-		if line[tmp:] == rootName {
-			return rootDirIndex
-		}
-		if line[tmp:] == `..` {
-			return data[curDirIndex].parent
-		}
-
-		for i := data[curDirIndex].lsIndex; i < data[curDirIndex].lsEndIndex; i++ {
-			if data[i].parent != -1 && line[tmp:] == data[i].name {
-				// it's a directory with the desired name
-				return i
-			}
-		}
-
-		return -1
-	}
-
-	isLS := false
-	var size int
-	var err error
 	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
-		if nli == 0 {
-			input = input[1:]
-			continue
-		}
-		if input[0] == '$' {
-			if isLS {
-				data[curDirIndex].lsEndIndex = len(data)
-			}
-			isLS = false
-			if input[2] == 'c' { // line starts with: "$ cd "
-				curDirIndex = getNewIndexFromCD(input[:nli])
-				if curDirIndex == -1 {
-					return 0, nil, fmt.Errorf("invalid cd command: %q", input[:nli])
-				}
-			} else if input[2] == 'l' { // line starts with: "$ ls"
-				if data[curDirIndex].lsIndex >= 0 {
-					return 0, nil, fmt.Errorf("attempting to ls another time: %q", data[curDirIndex].name)
-				}
-				isLS = true
-				data[curDirIndex].lsIndex = len(data)
-			}
-			input = input[nli+1:]
-			continue
-		}
-		if !isLS {
-			input = input[nli+1:]
-			continue
-		}
+		hands = append(hands, newHand(input[:nli]))
 
-		if nli >= 4 && input[:4] == `dir ` {
-			// this assumes that there cannot be a file named "dir".
-			data = append(data, fileDir{
-				name:       input[4:nli], // line starts with "dir "
-				parent:     curDirIndex,
-				size:       -1, // unset
-				lsIndex:    -1, // unset
-				lsEndIndex: -1, // unset
-			})
-			input = input[nli+1:]
-			continue
-		}
-
-		size, err = strconv.Atoi(
-			input[:strings.Index(input, ` `)],
-		)
-		if err != nil {
-			return 0, nil, err
-		}
-
-		data = append(data, fileDir{
-			size: size, // file size
-			// name:   parts[1], // filename is unnecessary
-			parent: -1, // files don't need to know the parent
-		})
 		input = input[nli+1:]
 	}
 
-	if isLS {
-		data[curDirIndex].lsEndIndex = len(data)
+	sort.Slice(hands, func(i, j int) bool {
+		if hands[i].handType != hands[j].handType {
+			return hands[i].handType < hands[j].handType
+		}
+		for ci := range hands[i].cards {
+			if hands[i].cards[ci] == hands[j].cards[ci] {
+				continue
+			}
+			return hands[i].cards[ci] < hands[j].cards[ci]
+		}
+		panic(`ahh`)
+	})
+
+	total := 0
+	for i := range hands {
+		total += (i + 1) * int(hands[i].bid)
 	}
 
-	var getSize func(fdi int) (int, bool)
-	getSize = func(fdi int) (int, bool) {
-		if data[fdi].parent < 0 && fdi != rootDirIndex {
-			// not a child directory, and not the root => it's just a file
-			return data[fdi].size, false
-		}
-		if data[fdi].size >= 0 {
-			// size has been set already
-			return data[fdi].size, true
-		}
-
-		// `total` and `innerSize` need to be scoped inside this function because it's recursive
-		total := 0
-		var innerSize int
-		for i := data[fdi].lsIndex; i < data[fdi].lsEndIndex; i++ {
-			innerSize, _ = getSize(i)
-			total += innerSize
-		}
-		data[fdi].size = total
-		return total, true
-	}
-
-	rootSize, _ := getSize(rootDirIndex)
-	dirSizes := make([]int, 0, 187)
-	var ok bool
-	for i := range data {
-		size, ok = getSize(i)
-		if ok {
-			dirSizes = append(dirSizes, size)
-		}
-	}
-
-	return rootSize, dirSizes, nil
-
+	// 252785659 is too low
+	// 253603890
+	return total, nil
 }
