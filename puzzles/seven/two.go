@@ -1,7 +1,7 @@
 package seven
 
 import (
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -122,6 +122,17 @@ type handWilds struct {
 	bid      uint16
 }
 
+func (h handWilds) toInt() int {
+	// assumes we're running on 64bit architecture:#
+	return int(h.handType)<<56 |
+		int(h.cards[0])<<48 |
+		int(h.cards[1])<<40 |
+		int(h.cards[2])<<32 |
+		int(h.cards[3])<<24 |
+		int(h.cards[4])<<16 |
+		int(h.bid) // need 16 bits
+}
+
 func newHandWilds(line string) handWilds {
 	h := handWilds{}
 	h.cards[0] = newCardWilds(line[0])
@@ -155,30 +166,21 @@ func Two(
 	input string,
 ) (int, error) {
 
-	hands := make([]handWilds, 0, 1000)
+	hi := 0
+	handInts := make([]int, 1000)
 
 	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
-		hands = append(hands, newHandWilds(input[:nli]))
+		handInts[hi] = newHandWilds(input[:nli]).toInt()
+		hi++
 
 		input = input[nli+1:]
 	}
 
-	sort.Slice(hands, func(i, j int) bool {
-		if hands[i].handType != hands[j].handType {
-			return hands[i].handType < hands[j].handType
-		}
-		for ci := range hands[i].cards {
-			if hands[i].cards[ci] == hands[j].cards[ci] {
-				continue
-			}
-			return hands[i].cards[ci] < hands[j].cards[ci]
-		}
-		panic(`ahh`)
-	})
+	slices.Sort(handInts)
 
 	total := 0
-	for i := range hands {
-		total += (i + 1) * int(hands[i].bid)
+	for i := range handInts {
+		total += (i + 1) * getBidFromInt(handInts[i])
 	}
 
 	return total, nil

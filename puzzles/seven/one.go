@@ -1,8 +1,7 @@
 package seven
 
 import (
-	"fmt"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -123,7 +122,7 @@ func (ht handType) String() string {
 	case highCard:
 		return `high card`
 	}
-	return fmt.Sprintf("%d", ht)
+	return string('a' + ht)
 }
 
 type hand struct {
@@ -152,6 +151,21 @@ func newHand(line string) hand {
 	return h
 }
 
+func (h hand) toInt() int {
+	// assumes we're running on 64bit architecture:#
+	return int(h.handType)<<56 |
+		int(h.cards[0])<<48 |
+		int(h.cards[1])<<40 |
+		int(h.cards[2])<<32 |
+		int(h.cards[3])<<24 |
+		int(h.cards[4])<<16 |
+		int(h.bid) // need 16 bits
+}
+
+func getBidFromInt(i int) int {
+	return i & 0xFFFF
+}
+
 func (h hand) String() string {
 	return h.cards[0].String() +
 		h.cards[1].String() +
@@ -166,33 +180,21 @@ func One(
 	input string,
 ) (int, error) {
 
-	hands := make([]hand, 0, 1000)
+	hi := 0
+	handInts := make([]int, 1000)
 
 	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
-		hands = append(hands, newHand(input[:nli]))
+		handInts[hi] = newHand(input[:nli]).toInt()
+		hi++
 
 		input = input[nli+1:]
 	}
 
-	sort.Slice(hands, func(i, j int) bool {
-		if hands[i].handType != hands[j].handType {
-			return hands[i].handType < hands[j].handType
-		}
-		for ci := range hands[i].cards {
-			if hands[i].cards[ci] == hands[j].cards[ci] {
-				continue
-			}
-			return hands[i].cards[ci] < hands[j].cards[ci]
-		}
-		panic(`ahh`)
-	})
-
+	slices.Sort(handInts)
 	total := 0
-	for i := range hands {
-		total += (i + 1) * int(hands[i].bid)
+	for i := range handInts {
+		total += (i + 1) * getBidFromInt(handInts[i])
 	}
 
-	// 252785659 is too low
-	// 253603890
 	return total, nil
 }
