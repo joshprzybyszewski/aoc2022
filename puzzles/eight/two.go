@@ -96,14 +96,16 @@ func Two(
 		firstZs[ci] = getFirstZ(curIndexes[ci], nodes, lrs)
 	}
 
-	firstZs = reduce(firstZs)
+	var gcf int
+	firstZs, gcf = reduce(firstZs)
 
-	mult := uint64(1)
+	mult := uint64(gcf)
 	for _, v := range firstZs {
 		mult *= uint64(v)
 	}
 
 	// 17129231578253813679 is too high
+	// 13524038372771
 	// 48823243223 is too low
 	return mult, nil
 }
@@ -132,20 +134,21 @@ func getFirstZ(
 
 func reduce(
 	input []int,
-) []int {
+) ([]int, int) {
 
 	allDivisibleBy := func(d int) (bool, bool) {
 		for i := range input {
 			if d > input[i]/2 {
 				return false, false
 			}
-			
+
 			if input[i]%d != 0 {
 				return false, true
 			}
 		}
 		return true, true
 	}
+	gcf := 1
 
 	for d := 2; ; {
 		canDivide, canContinueUp := allDivisibleBy(d)
@@ -158,10 +161,12 @@ func reduce(
 			continue
 		}
 
+		gcf *= d
+
 		for i := range input {
 			input[i] = input[i] / d
 		}
 	}
 
-	return input
+	return input, gcf
 }
