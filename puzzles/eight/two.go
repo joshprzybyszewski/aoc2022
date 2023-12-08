@@ -53,7 +53,7 @@ func populateAllIndexNodes(
 
 func Two(
 	input string,
-) (uint64, error) {
+) (int, error) {
 
 	nli := strings.Index(input, "\n")
 	lrs := input[:nli]
@@ -71,9 +71,9 @@ func Two(
 	var gcf int
 	firstZs, gcf = reduce(firstZs)
 
-	mult := uint64(gcf)
+	mult := gcf
 	for _, v := range firstZs {
-		mult *= uint64(v)
+		mult *= v
 	}
 
 	return mult, nil
