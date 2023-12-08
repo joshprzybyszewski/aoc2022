@@ -1,7 +1,6 @@
 package eight
 
 import (
-	"slices"
 	"strings"
 )
 
@@ -38,7 +37,6 @@ func (ap allPositions) goLeft(nodes allIndexNodes) bool {
 			isAllZ = false
 		}
 	}
-	slices.Sort(ap)
 	return isAllZ
 }
 
@@ -50,13 +48,12 @@ func (ap allPositions) goRight(nodes allIndexNodes) bool {
 			isAllZ = false
 		}
 	}
-	slices.Sort(ap)
 	return isAllZ
 }
 
 func Two(
 	input string,
-) (int, error) {
+) (uint64, error) {
 
 	nli := strings.Index(input, "\n")
 	lrs := input[:nli]
@@ -94,27 +91,77 @@ func Two(
 	}
 	curIndexes = curIndexes[:ci]
 
-	numSteps := 0
+	firstZs := make([]int, len(curIndexes))
+	for ci = range curIndexes {
+		firstZs[ci] = getFirstZ(curIndexes[ci], nodes, lrs)
+	}
+
+	firstZs = reduce(firstZs)
+
+	mult := uint64(1)
+	for _, v := range firstZs {
+		mult *= uint64(v)
+	}
+
+	// 17129231578253813679 is too high
+	// 48823243223 is too low
+	return mult, nil
+}
+
+func getFirstZ(
+	index int,
+	nodes allIndexNodes,
+	lrs string,
+) int {
 	lri := 0
-	isAllZ := false
 	for {
-		numSteps++
-		if lrs[lri] == 'L' {
+		if lrs[lri%len(lrs)] == 'L' {
 			// go left
-			isAllZ = curIndexes.goLeft(nodes)
+			index = nodes[index].left
 		} else {
 			// go right
-			isAllZ = curIndexes.goRight(nodes)
+			index = nodes[index].right
 		}
-		if isAllZ {
-			return numSteps, nil
+		if nodes[index].isZ {
+			return lri + 1
 		}
 
 		lri++
-		if lri >= len(lrs) {
-			lri = 0
+	}
+}
+
+func reduce(
+	input []int,
+) []int {
+
+	allDivisibleBy := func(d int) (bool, bool) {
+		for i := range input {
+			if d > input[i]/2 {
+				return false, false
+			}
+			
+			if input[i]%d != 0 {
+				return false, true
+			}
+		}
+		return true, true
+	}
+
+	for d := 2; ; {
+		canDivide, canContinueUp := allDivisibleBy(d)
+		if !canContinueUp {
+			break
+		}
+
+		if !canDivide {
+			d++
+			continue
+		}
+
+		for i := range input {
+			input[i] = input[i] / d
 		}
 	}
 
-	return 0, nil
+	return input
 }
