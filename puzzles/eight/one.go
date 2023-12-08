@@ -6,11 +6,6 @@ import (
 	"strings"
 )
 
-const (
-	startingNode = `AAA`
-	targetNode   = `ZZZ`
-)
-
 type node struct {
 	name string
 
@@ -55,38 +50,25 @@ func One(
 
 	input = input[nli+2:]
 
-	ni := 0
-	nodes := make(allNodes, 750)
+	nodes := make(allIndexNodes, 752)
+	nodes = populateAllIndexNodes(nodes, input)
 
-	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
-		nodes[ni] = newNode(input[:nli])
-		ni++
-
-		input = input[nli+1:]
-	}
-	nodes = nodes[:ni]
-
-	nodes.sort()
-
-	numSteps := 0
 	lri := 0
-	ni = nodes.indexOf(startingNode)
+	ni := 0
+	zzzI := len(nodes) - 1
 	for {
-		numSteps++
-		if lrs[lri] == 'L' {
+		if lrs[lri%len(lrs)] == 'L' {
 			// go left
-			ni = nodes.indexOf(nodes[ni].left)
+			ni = nodes[ni].left
 		} else {
 			// go right
-			ni = nodes.indexOf(nodes[ni].right)
+			ni = nodes[ni].right
 		}
-		if nodes[ni].name == targetNode {
-			return numSteps, nil
+		lri++
+
+		if ni == zzzI {
+			return lri, nil
 		}
 
-		lri++
-		if lri >= len(lrs) {
-			lri = 0
-		}
 	}
 }

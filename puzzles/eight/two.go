@@ -13,42 +13,33 @@ type indexNode struct {
 
 type allIndexNodes []indexNode
 
-func (ain allIndexNodes) populate(an allNodes) {
+func populateAllIndexNodes(
+	nodes allIndexNodes,
+	input string,
+) allIndexNodes {
+	an := make(allNodes, len(nodes))
+
+	ni := 0
+	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
+		an[ni] = newNode(input[:nli])
+		ni++
+
+		input = input[nli+1:]
+	}
+	an = an[:ni]
 	//indexOf works "fastest" if an is sorted
 	an.sort()
-
 	for i, n := range an {
-		ain[i] = indexNode{
+		nodes[i] = indexNode{
 			left:  an.indexOf(n.left),
 			right: an.indexOf(n.right),
 			isA:   n.name[len(n.name)-1] == 'A',
 			isZ:   n.name[len(n.name)-1] == 'Z',
 		}
 	}
-}
 
-type allPositions []int
+	return nodes[:len(an)]
 
-func (ap allPositions) goLeft(nodes allIndexNodes) bool {
-	isAllZ := true
-	for i := range ap {
-		ap[i] = nodes[ap[i]].left
-		if isAllZ && !nodes[ap[i]].isZ {
-			isAllZ = false
-		}
-	}
-	return isAllZ
-}
-
-func (ap allPositions) goRight(nodes allIndexNodes) bool {
-	isAllZ := true
-	for i := range ap {
-		ap[i] = nodes[ap[i]].right
-		if isAllZ && !nodes[ap[i]].isZ {
-			isAllZ = false
-		}
-	}
-	return isAllZ
 }
 
 func Two(
@@ -60,25 +51,12 @@ func Two(
 
 	input = input[nli+2:]
 
-	ni := 0
 	nodes := make(allIndexNodes, 752)
-	{
-		an := make(allNodes, 750)
+	nodes = populateAllIndexNodes(nodes, input)
 
-		for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
-			an[ni] = newNode(input[:nli])
-			ni++
-
-			input = input[nli+1:]
-		}
-		an = an[:ni]
-
-		nodes.populate(an)
-		nodes = nodes[:len(an)]
-	}
-
-	curIndexes := make(allPositions, len(nodes))
+	curIndexes := make([]int, len(nodes))
 	ci := 0
+	ni := 0
 	for ni = 0; ni < len(nodes); ni++ {
 		if !nodes[ni].isA {
 			continue
