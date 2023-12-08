@@ -9,7 +9,6 @@ const numEndingInA = 6
 type indexNode struct {
 	left  int
 	right int
-	isA   bool
 	isZ   bool
 }
 
@@ -18,33 +17,38 @@ type allIndexNodes []indexNode
 func populateAllIndexNodes(
 	nodes allIndexNodes,
 	input string,
-) (int, int) {
+) (int, int, ghosts) {
 	an := make(allNodes, numNodes)
 
 	allIndexes := [26][26][26]int{}
+	var gs ghosts
+	gi := 0
 
 	ni := 0
 	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
 		an[ni] = newNode(input[:nli])
 		allIndexes[an[ni].name[0]-'A'][an[ni].name[1]-'A'][an[ni].name[2]-'A'] = ni
+		if an[ni].name[2] == 'A' {
+			gs[gi] = ni
+			gi++
+		}
 		ni++
 
 		input = input[nli+1:]
 	}
 	an = an[:ni]
-	if ni != numNodes {
-		panic(`mistake`)
-	}
+	// if ni != numNodes {
+	// 	panic(`mistake`)
+	// }
 	for i, n := range an {
 		nodes[i] = indexNode{
 			left:  allIndexes[n.left[0]-'A'][n.left[1]-'A'][n.left[2]-'A'],
 			right: allIndexes[n.right[0]-'A'][n.right[1]-'A'][n.right[2]-'A'],
-			isA:   n.name[len(n.name)-1] == 'A',
 			isZ:   n.name[len(n.name)-1] == 'Z',
 		}
 	}
 
-	return allIndexes[0][0][0], allIndexes[25][25][25]
+	return allIndexes[0][0][0], allIndexes[25][25][25], gs
 }
 
 func Two(
@@ -57,24 +61,10 @@ func Two(
 	input = input[nli+2:]
 
 	nodes := make(allIndexNodes, numNodes)
-	populateAllIndexNodes(nodes, input)
-
-	curIndexes := ghosts{}
-	ci := 0
-	ni := 0
-	for ni = 0; ni < len(nodes); ni++ {
-		if !nodes[ni].isA {
-			continue
-		}
-		curIndexes[ci] = ni
-		ci++
-		if ci == len(curIndexes) {
-			break
-		}
-	}
+	_, _, curIndexes := populateAllIndexNodes(nodes, input)
 
 	var firstZs ghosts
-	for ci = range curIndexes {
+	for ci := range curIndexes {
 		firstZs[ci] = getFirstZ(curIndexes[ci], nodes, lrs)
 	}
 
@@ -97,56 +87,66 @@ func getFirstZ(
 	lrs string,
 ) int {
 	lri := 0
+	steps := 0
 	for {
-		if lrs[lri%len(lrs)] == 'L' {
+		if lrs[lri] == 'L' {
 			// go left
 			index = nodes[index].left
 		} else {
 			// go right
 			index = nodes[index].right
 		}
-		lri++
+		steps++
 		if nodes[index].isZ {
-			return lri
+			return steps
+		}
+		lri++
+		if lri == len(lrs) {
+			lri = 0
 		}
 	}
 }
 
 func reduce(
-	input ghosts,
+	gs ghosts,
 ) (ghosts, int) {
 
-	allDivisibleBy := func(d int) (bool, bool) {
-		for i := range input {
-			if d > input[i]/2 {
-				return false, false
-			}
+	gi := 0
+	var cannotDivide bool
 
-			if input[i]%d != 0 {
-				return false, true
-			}
-		}
-		return true, true
-	}
 	gcf := 1
+	d := 2
+	d2 := d + d
 
-	for d := 2; ; {
-		canDivide, canContinueUp := allDivisibleBy(d)
-		if !canContinueUp {
-			break
+	for {
+		for gi = range gs {
+			if d2 > gs[gi] {
+				// If the divisor is greater than gs[gi] / 2, then we know we've
+				// hit our max divisor.
+				// TODO I think that we could use the sqrt of gs[gi] to infer a stop
+				// condition, but I'm not sure.
+				return gs, gcf
+			}
+
+			if gs[gi]%d != 0 {
+				cannotDivide = true
+				break
+			}
 		}
 
-		if !canDivide {
+		if cannotDivide {
+			cannotDivide = false
+			// Ideally, we'd be incrementing up to the next prime. But knowing primes is
+			// hard, so we're just going to increment one at a time.
 			d++
+			d2 += 2
 			continue
 		}
 
 		gcf *= d
 
-		for i := range input {
-			input[i] = input[i] / d
+		for gi = range gs {
+			gs[gi] = gs[gi] / d
 		}
 	}
-
-	return input, gcf
 }

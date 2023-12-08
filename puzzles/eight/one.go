@@ -32,22 +32,26 @@ func One(
 	input = input[nli+2:]
 
 	nodes := make(allIndexNodes, numNodes)
-	ni, zzzI := populateAllIndexNodes(nodes, input)
+	ni, zzzI, _ := populateAllIndexNodes(nodes, input)
 
 	lri := 0
+	steps := 0
 	for {
-		if lrs[lri%len(lrs)] == 'L' {
+		if lrs[lri] == 'L' {
 			// go left
 			ni = nodes[ni].left
 		} else {
 			// go right
 			ni = nodes[ni].right
 		}
-		lri++
-
+		steps++
 		if ni == zzzI {
-			return lri, nil
+			return steps, nil
 		}
 
+		lri++
+		if lri == len(lrs) {
+			lri = 0
+		}
 	}
 }
