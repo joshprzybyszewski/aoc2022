@@ -104,9 +104,6 @@ func Two(
 		mult *= uint64(v)
 	}
 
-	// 17129231578253813679 is too high
-	// 13524038372771
-	// 48823243223 is too low
 	return mult, nil
 }
 
