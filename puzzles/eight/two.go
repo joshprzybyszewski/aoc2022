@@ -4,6 +4,8 @@ import (
 	"strings"
 )
 
+const numEndingInA = 6
+
 type indexNode struct {
 	left  int
 	right int
@@ -16,30 +18,33 @@ type allIndexNodes []indexNode
 func populateAllIndexNodes(
 	nodes allIndexNodes,
 	input string,
-) allIndexNodes {
-	an := make(allNodes, len(nodes))
+) (int, int) {
+	an := make(allNodes, numNodes)
+
+	allIndexes := [26][26][26]int{}
 
 	ni := 0
 	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
 		an[ni] = newNode(input[:nli])
+		allIndexes[an[ni].name[0]-'A'][an[ni].name[1]-'A'][an[ni].name[2]-'A'] = ni
 		ni++
 
 		input = input[nli+1:]
 	}
 	an = an[:ni]
-	//indexOf works "fastest" if an is sorted
-	an.sort()
+	if ni != numNodes {
+		panic(`mistake`)
+	}
 	for i, n := range an {
 		nodes[i] = indexNode{
-			left:  an.indexOf(n.left),
-			right: an.indexOf(n.right),
+			left:  allIndexes[n.left[0]-'A'][n.left[1]-'A'][n.left[2]-'A'],
+			right: allIndexes[n.right[0]-'A'][n.right[1]-'A'][n.right[2]-'A'],
 			isA:   n.name[len(n.name)-1] == 'A',
 			isZ:   n.name[len(n.name)-1] == 'Z',
 		}
 	}
 
-	return nodes[:len(an)]
-
+	return allIndexes[0][0][0], allIndexes[25][25][25]
 }
 
 func Two(
@@ -51,10 +56,10 @@ func Two(
 
 	input = input[nli+2:]
 
-	nodes := make(allIndexNodes, 752)
-	nodes = populateAllIndexNodes(nodes, input)
+	nodes := make(allIndexNodes, numNodes)
+	populateAllIndexNodes(nodes, input)
 
-	curIndexes := make([]int, len(nodes))
+	curIndexes := ghosts{}
 	ci := 0
 	ni := 0
 	for ni = 0; ni < len(nodes); ni++ {
@@ -67,9 +72,8 @@ func Two(
 			break
 		}
 	}
-	curIndexes = curIndexes[:ci]
 
-	firstZs := make([]int, len(curIndexes))
+	var firstZs ghosts
 	for ci = range curIndexes {
 		firstZs[ci] = getFirstZ(curIndexes[ci], nodes, lrs)
 	}
@@ -85,6 +89,8 @@ func Two(
 	return mult, nil
 }
 
+type ghosts [numEndingInA]int
+
 func getFirstZ(
 	index int,
 	nodes allIndexNodes,
@@ -99,17 +105,16 @@ func getFirstZ(
 			// go right
 			index = nodes[index].right
 		}
-		if nodes[index].isZ {
-			return lri + 1
-		}
-
 		lri++
+		if nodes[index].isZ {
+			return lri
+		}
 	}
 }
 
 func reduce(
-	input []int,
-) ([]int, int) {
+	input ghosts,
+) (ghosts, int) {
 
 	allDivisibleBy := func(d int) (bool, bool) {
 		for i := range input {

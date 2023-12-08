@@ -1,10 +1,10 @@
 package eight
 
 import (
-	"slices"
-	"sort"
 	"strings"
 )
+
+const numNodes = 750
 
 type node struct {
 	name string
@@ -23,25 +23,6 @@ func newNode(line string) node {
 
 type allNodes []node
 
-func (an allNodes) sort() {
-	slices.SortFunc(an, func(a, b node) int {
-		return strings.Compare(a.name, b.name)
-	})
-}
-
-func (an allNodes) indexOf(name string) int {
-	i, found := sort.Find(len(an), func(i int) int {
-		if an[i].name == name {
-			return 0
-		}
-		return strings.Compare(name, an[i].name)
-	})
-	if !found {
-		panic(`couldn't find: ` + name)
-	}
-	return i
-}
-
 func One(
 	input string,
 ) (int, error) {
@@ -50,12 +31,10 @@ func One(
 
 	input = input[nli+2:]
 
-	nodes := make(allIndexNodes, 752)
-	nodes = populateAllIndexNodes(nodes, input)
+	nodes := make(allIndexNodes, numNodes)
+	ni, zzzI := populateAllIndexNodes(nodes, input)
 
 	lri := 0
-	ni := 0
-	zzzI := len(nodes) - 1
 	for {
 		if lrs[lri%len(lrs)] == 'L' {
 			// go left
