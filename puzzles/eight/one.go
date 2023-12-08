@@ -1,87 +1,92 @@
 package eight
 
 import (
+	"slices"
+	"sort"
 	"strings"
 )
+
+const (
+	startingNode = `AAA`
+	targetNode   = `ZZZ`
+)
+
+type node struct {
+	name string
+
+	left  string
+	right string
+}
+
+func newNode(line string) node {
+	return node{
+		name:  line[:3],
+		left:  line[7:10],
+		right: line[12:15],
+	}
+}
+
+type allNodes []node
+
+func (an allNodes) sort() {
+	slices.SortFunc(an, func(a, b node) int {
+		return strings.Compare(a.name, b.name)
+	})
+}
+
+func (an allNodes) indexOf(name string) int {
+	i, found := sort.Find(len(an), func(i int) int {
+		if an[i].name == name {
+			return 0
+		}
+		return strings.Compare(name, an[i].name)
+	})
+	if !found {
+		panic(`couldn't find: ` + name)
+	}
+	return i
+}
 
 func One(
 	input string,
 ) (int, error) {
-	lines := strings.Split(input, "\n")
-	g := toGrid(lines)
-	nv := numVisible(&g)
+	nli := strings.Index(input, "\n")
+	lrs := input[:nli]
 
-	return nv, nil
-}
+	input = input[nli+2:]
 
-func toGrid(
-	lines []string,
-) [99][99]int {
-	var output [99][99]int
-	for i := range output {
-		for j := range lines[i] {
-			output[i][j] = int(lines[i][j] - '0')
+	ni := 0
+	nodes := make(allNodes, 750)
+
+	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
+		nodes[ni] = newNode(input[:nli])
+		ni++
+
+		input = input[nli+1:]
+	}
+	nodes = nodes[:ni]
+
+	nodes.sort()
+
+	numSteps := 0
+	lri := 0
+	ni = nodes.indexOf(startingNode)
+	for {
+		numSteps++
+		if lrs[lri] == 'L' {
+			// go left
+			ni = nodes.indexOf(nodes[ni].left)
+		} else {
+			// go right
+			ni = nodes.indexOf(nodes[ni].right)
+		}
+		if nodes[ni].name == targetNode {
+			return numSteps, nil
+		}
+
+		lri++
+		if lri >= len(lrs) {
+			lri = 0
 		}
 	}
-	return output
-}
-
-// nolint:gocyclo yes i know
-func numVisible(
-	grid *[99][99]int,
-) int {
-	total := (4 * len(grid)) - 4
-
-	var visibles [99][99]bool
-
-	var l, r, u, d, e, j int
-
-	for i := 1; i < len(grid)-1; i++ {
-		l = grid[i][0]
-		r = grid[i][len(grid)-1]
-		u = grid[0][i]
-		d = grid[len(grid)-1][i]
-
-		for j = 1; j < len(grid)-1; j++ {
-			// iterate through the middle of the forest
-
-			// look from left
-			if e = grid[i][j]; e > l {
-				if !visibles[i][j] {
-					total++
-				}
-				visibles[i][j] = true
-				l = e
-			}
-
-			// look from right
-			if e = grid[i][len(grid)-1-j]; e > r {
-				if !visibles[i][len(grid)-1-j] {
-					total++
-				}
-				visibles[i][len(grid)-1-j] = true
-				r = e
-			}
-
-			// look from up
-			if e = grid[j][i]; e > u {
-				if !visibles[j][i] {
-					total++
-				}
-				visibles[j][i] = true
-				u = e
-			}
-
-			// look from down
-			if e = grid[len(grid)-1-j][i]; e > d {
-				if !visibles[len(grid)-1-j][i] {
-					total++
-				}
-				visibles[len(grid)-1-j][i] = true
-				d = e
-			}
-		}
-	}
-
-	return total
 }
