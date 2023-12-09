@@ -1,136 +1,96 @@
 package nine
 
 import (
-	"strconv"
+	"fmt"
 	"strings"
+
+	"github.com/joshprzybyszewski/aoc2022/util/itoa"
+)
+
+const (
+	newline = "\n"
+	space   = " "
 )
 
 func One(
 	input string,
 ) (int, error) {
-	var head, tail coord
-	var q, i int
-	var err error
+	iterations := [200][]int{}
 
-	/*
-		When we start at (0,0):
-			max: {x:52 y:166}
-			min: {x:-115 y:-115}
-	*/
-	head.x = 115
-	tail.x = 115
-	head.y = 115
-	tail.y = 115
-
-	/*
-		168 = 52-(-115) + 1
-		282 = 166-(-115)+1
-	*/
-	var seen [168][282]bool
-
-	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
+	var ii int
+	for nli := strings.Index(input, newline); nli >= 0; nli = strings.Index(input, newline) {
 		if nli == 0 {
-			input = input[1:]
+			input = input[nli+1:]
 			continue
 		}
-		q, err = strconv.Atoi(input[2:nli])
-		if err != nil {
-			return 0, err
-		}
 
-		for i = 0; i < q; i++ {
-			switch direction(input[0]) {
-			case right:
-				head.x++
-			case left:
-				head.x--
-			case up:
-				head.y++
-			case down:
-				head.y--
-			}
-
-			tail.moveToward(head)
-			seen[tail.x][tail.y] = true
-		}
+		iterations[ii] = getLineOfVals(input[:nli])
 		input = input[nli+1:]
+		ii++
 	}
 
 	total := 0
-	for i := range seen {
-		for j := range seen[i] {
-			if seen[i][j] {
-				total++
-			}
-		}
+
+	for i := range iterations {
+		fmt.Printf("iterations[%d]: %+v\n", i, iterations[i])
+		fmt.Printf("  next number is %d\n", getNextNumer(iterations[i]))
+		total += getNextNumer(iterations[i])
 	}
 
+	// 951548739 is too low
 	return total, nil
 }
 
-type coord struct {
-	x, y int16
+func getLineOfVals(
+	line string,
+) []int {
+	vals := make([]int, 0, 25)
+
+	for si := strings.Index(line, space); si >= 0; si = strings.Index(line, space) {
+		vals = append(vals, itoa.Int(line[:si]))
+		line = line[si+1:]
+	}
+
+	if line != `` {
+		vals = append(vals, itoa.Int(line))
+	}
+	return vals
 }
 
-type direction byte
+func getNextNumer(
+	input []int,
+) int {
+	var layers [][]int
+	layers = append(layers, input)
+	var isZeros bool
+	var nextLayer []int
 
-const (
-	right direction = 'R'
-	up    direction = 'U'
-	left  direction = 'L'
-	down  direction = 'D'
-)
-
-func (c *coord) moveToward(
-	goal coord,
-) {
-	if goal.x == c.x { // same column
-		// move up or down, or not at all
-		if goal.y > c.y+1 {
-			c.y++
-		} else if goal.y < c.y-1 {
-			c.y--
+	for {
+		nextLayer, isZeros = generateDiff(layers[len(layers)-1])
+		if isZeros {
+			break
 		}
-		return
+		layers = append(layers, nextLayer)
 	}
-	if goal.y == c.y { // same row
-		// move left or right, or not at all
-		if goal.x > c.x+1 {
-			c.x++
-		} else if goal.x < c.x-1 {
-			c.x--
-		}
-		return
-	}
+	fmt.Printf("    layers: %+v\n", layers)
 
-	// different row and different column: move diagonally, if at all
-	if goal.y > c.y+1 {
-		c.y++
-		if goal.x > c.x {
-			c.x++
-		} else {
-			c.x--
-		}
-	} else if goal.y < c.y-1 {
-		c.y--
-		if goal.x > c.x {
-			c.x++
-		} else {
-			c.x--
-		}
-	} else if goal.x > c.x+1 {
-		c.x++
-		if goal.y > c.y {
-			c.y++
-		} else {
-			c.y--
-		}
-	} else if goal.x < c.x-1 {
-		c.x--
-		if goal.y > c.y {
-			c.y++
-		} else {
-			c.y--
+	placeholder := 0
+	for li := len(layers) - 2; li >= 0; li-- {
+		placeholder += layers[li][len(layers[li])-1]
+	}
+	return placeholder
+}
+
+func generateDiff(
+	input []int,
+) ([]int, bool) {
+	output := make([]int, len(input)-1)
+	isZeros := true
+	for i := range output {
+		output[i] = input[i+1] - input[i]
+		if isZeros && output[i] != 0 {
+			isZeros = false
 		}
 	}
+	return output, isZeros
 }
