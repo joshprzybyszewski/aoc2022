@@ -6,27 +6,18 @@ func Two(
 	input string,
 ) (int, error) {
 
-	iterations := [200][]int{}
+	total := 0
 
-	var ii int
 	for nli := strings.Index(input, newline); nli >= 0; nli = strings.Index(input, newline) {
 		if nli == 0 {
 			input = input[nli+1:]
 			continue
 		}
 
-		iterations[ii] = getLineOfVals(input[:nli])
+		total += getFirstNumber(getLineOfVals(input[:nli]))
 		input = input[nli+1:]
-		ii++
 	}
 
-	total := 0
-
-	for i := range iterations {
-		total += getFirstNumber(iterations[i])
-	}
-
-	// 19577 is too high
 	return total, nil
 }
 

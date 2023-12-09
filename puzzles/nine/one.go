@@ -14,24 +14,16 @@ const (
 func One(
 	input string,
 ) (int, error) {
-	iterations := [200][]int{}
 
-	var ii int
+	total := 0
 	for nli := strings.Index(input, newline); nli >= 0; nli = strings.Index(input, newline) {
 		if nli == 0 {
 			input = input[nli+1:]
 			continue
 		}
 
-		iterations[ii] = getLineOfVals(input[:nli])
+		total += getNextNumber(getLineOfVals(input[:nli]))
 		input = input[nli+1:]
-		ii++
-	}
-
-	total := 0
-
-	for i := range iterations {
-		total += getNextNumber(iterations[i])
 	}
 
 	return total, nil
@@ -40,16 +32,17 @@ func One(
 func getLineOfVals(
 	line string,
 ) []int {
-	vals := make([]int, 0, 25)
+	vals := make([]int, 21)
+	vi := 0
 
 	for si := strings.Index(line, space); si >= 0; si = strings.Index(line, space) {
-		vals = append(vals, itoa.Int(line[:si]))
+		vals[vi] = itoa.Int(line[:si])
+		vi++
 		line = line[si+1:]
 	}
 
-	if line != `` {
-		vals = append(vals, itoa.Int(line))
-	}
+	vals[vi] = itoa.Int(line)
+
 	return vals
 }
 
