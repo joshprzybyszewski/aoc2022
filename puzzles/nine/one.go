@@ -49,21 +49,23 @@ func getLineOfVals(
 func getNextNumber(
 	input []int,
 ) int {
-	var layers [][]int
-	layers = append(layers, input)
+	layers := make([][]int, 20)
+	li := 0
+	layers[li] = input
 	var isZeros bool
 	var nextLayer []int
 
 	for {
-		nextLayer, isZeros = generateDiff(layers[len(layers)-1])
+		nextLayer, isZeros = generateDiff(layers[li])
 		if isZeros {
 			break
 		}
-		layers = append(layers, nextLayer)
+		li++
+		layers[li] = nextLayer
 	}
 
 	sum := 0
-	for li := len(layers) - 1; li >= 0; li-- {
+	for ; li >= 0; li-- {
 		sum += layers[li][len(layers[li])-1]
 	}
 	return sum
