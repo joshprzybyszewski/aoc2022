@@ -31,7 +31,7 @@ func One(
 	total := 0
 
 	for i := range iterations {
-		total += getNextNumer(iterations[i])
+		total += getNextNumber(iterations[i])
 	}
 
 	return total, nil
@@ -53,7 +53,7 @@ func getLineOfVals(
 	return vals
 }
 
-func getNextNumer(
+func getNextNumber(
 	input []int,
 ) int {
 	var layers [][]int
@@ -69,11 +69,11 @@ func getNextNumer(
 		layers = append(layers, nextLayer)
 	}
 
-	placeholder := 0
+	sum := 0
 	for li := len(layers) - 1; li >= 0; li-- {
-		placeholder += layers[li][len(layers[li])-1]
+		sum += layers[li][len(layers[li])-1]
 	}
-	return placeholder
+	return sum
 }
 
 func generateDiff(
