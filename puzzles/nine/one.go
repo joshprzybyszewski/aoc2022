@@ -1,7 +1,6 @@
 package nine
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/joshprzybyszewski/aoc2022/util/itoa"
@@ -32,12 +31,9 @@ func One(
 	total := 0
 
 	for i := range iterations {
-		fmt.Printf("iterations[%d]: %+v\n", i, iterations[i])
-		fmt.Printf("  next number is %d\n", getNextNumer(iterations[i]))
 		total += getNextNumer(iterations[i])
 	}
 
-	// 951548739 is too low
 	return total, nil
 }
 
@@ -72,10 +68,9 @@ func getNextNumer(
 		}
 		layers = append(layers, nextLayer)
 	}
-	fmt.Printf("    layers: %+v\n", layers)
 
 	placeholder := 0
-	for li := len(layers) - 2; li >= 0; li-- {
+	for li := len(layers) - 1; li >= 0; li-- {
 		placeholder += layers[li][len(layers[li])-1]
 	}
 	return placeholder
