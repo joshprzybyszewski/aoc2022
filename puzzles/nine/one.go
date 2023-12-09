@@ -11,9 +11,64 @@ const (
 	space   = " "
 )
 
+type puzzle struct {
+	numbers [22][22]int
+
+	layerZeroMaxIndex int
+	maxLayer          int
+}
+
+func newPuzzle(line string) puzzle {
+	p := puzzle{}
+	i := 1
+
+	for si := strings.Index(line, space); si >= 0; si = strings.Index(line, space) {
+		p.numbers[0][i] = itoa.Int(line[:si])
+		i++
+		line = line[si+1:]
+	}
+
+	p.layerZeroMaxIndex = i - 1
+
+	p.populate()
+
+	return p
+}
+
+func (p *puzzle) populate() {
+	hasNums := true
+	var i int
+	li, pi := 1, 0
+
+	for hasNums {
+		hasNums = false
+		for i = 1; i <= p.layerZeroMaxIndex-li; i++ {
+			p.numbers[li][i] = p.numbers[pi][i+1] - p.numbers[pi][i]
+			if !hasNums && p.numbers[li][i] != 0 {
+				hasNums = true
+			}
+		}
+
+		if !hasNums {
+			break
+		}
+
+		pi++
+		li++
+	}
+	p.maxLayer = pi
+
+}
+
+func (p *puzzle) getNext() int {
+	return 0
+}
+
 func One(
 	input string,
 ) (int, error) {
+
+	var p puzzle
 
 	total := 0
 	for nli := strings.Index(input, newline); nli >= 0; nli = strings.Index(input, newline) {
@@ -22,7 +77,9 @@ func One(
 			continue
 		}
 
-		total += getNextNumber(getLineOfVals(input[:nli]))
+		p = newPuzzle(input[:nli])
+		total += p.getNext()
+
 		input = input[nli+1:]
 	}
 
