@@ -23,8 +23,9 @@ const (
 	isNorthIn pipe = 1 << 4 /* will also be one or both of: east | west */
 	isEastIn  pipe = 1 << 5 /* will also be one or both of: north | south */
 
-	start  pipe = 1 << 6    /* will also be any two: north | east | south | west */
-	inside pipe = isNorthIn /* will not be any of: north | east | south | west */
+	start   pipe = 1 << 6    /* will also be any two: north | east | south | west */
+	inside  pipe = isNorthIn /* will not be any of: north | east | south | west */
+	outside pipe = isEastIn  /* will not be any of: north | east | south | west */
 
 	allDirections pipe = north | east | south | west
 
@@ -60,22 +61,6 @@ func newPipe(b byte) pipe {
 	panic(`surprise`)
 }
 
-func (p pipe) isBelowInside() bool {
-	return p == inside || ((p|ew) == ew && (p|isNorthIn) == 0)
-}
-
-func (p pipe) isAboveInside() bool {
-	return p == inside || ((p|ew) == ew && (p|isNorthIn) == isNorthIn)
-}
-
-func (p pipe) isLeftInside() bool {
-	return p == inside || ((p|ns) == ns && (p|isEastIn) == 0)
-}
-
-func (p pipe) isRightInside() bool {
-	return p == inside || ((p|ns) == ns && (p|isEastIn) == isEastIn)
-}
-
 func (p pipe) String() string {
 	return fmt.Sprintf("%08b", p)
 }
@@ -97,14 +82,13 @@ func (p pipe) stringForMap() byte {
 		return '-'
 	case ns:
 		return '|'
-	}
-
-	if (p & inside) == inside {
+	case inside:
 		return 'I'
+	case outside:
+		return 'O'
 	}
 
-	// return '.'
-	return 'O'
+	return '.'
 }
 
 type pipeMap struct {
@@ -117,10 +101,10 @@ func (pm *pipeMap) String() string {
 	var output strings.Builder
 	for r := 0; r < len(pm.tiles); r++ {
 		for c := 0; c < len(pm.tiles[r]); c++ {
-			if pm.start.row == r && pm.start.col == c {
-				output.WriteByte('S')
-				continue
-			}
+			// if pm.start.row == r && pm.start.col == c {
+			// 	output.WriteByte('S')
+			// 	continue
+			// }
 			output.WriteByte(pm.tiles[r][c].stringForMap())
 		}
 		output.WriteByte('\n')
