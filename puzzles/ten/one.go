@@ -20,14 +20,7 @@ const (
 	west  pipe = 1 << 2
 	south pipe = 1 << 3
 
-	isNorthIn pipe = 1 << 4 /* will also be one or both of: east | west */
-	isEastIn  pipe = 1 << 5 /* will also be one or both of: north | south */
-
-	start   pipe = 1 << 6    /* will also be any two: north | east | south | west */
-	inside  pipe = isNorthIn /* will not be any of: north | east | south | west */
-	outside pipe = isEastIn  /* will not be any of: north | east | south | west */
-
-	allDirections pipe = north | east | south | west
+	start pipe = 1 << 4 /* will also be any two: north | east | south | west */
 
 	ne pipe = north | east
 	se      = south | east
@@ -82,10 +75,6 @@ func (p pipe) stringForMap() byte {
 		return '-'
 	case ns:
 		return '|'
-	case inside:
-		return 'I'
-	case outside:
-		return 'O'
 	}
 
 	return '.'
@@ -101,10 +90,6 @@ func (pm *pipeMap) String() string {
 	var output strings.Builder
 	for r := 0; r < len(pm.tiles); r++ {
 		for c := 0; c < len(pm.tiles[r]); c++ {
-			// if pm.start.row == r && pm.start.col == c {
-			// 	output.WriteByte('S')
-			// 	continue
-			// }
 			output.WriteByte(pm.tiles[r][c].stringForMap())
 		}
 		output.WriteByte('\n')

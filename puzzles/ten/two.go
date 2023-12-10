@@ -8,10 +8,11 @@ func Two(
 
 	numInside := 0
 	crossings := 0
+	var c int
 
 	for r := 1; r < len(pm.tiles); r++ {
 		crossings = 0
-		for c := 0; c < len(pm.tiles[r]); c++ {
+		for c = 0; c < len(pm.tiles[r]); c++ {
 			if (cpy.tiles[r][c] & north) == north {
 				crossings++
 				continue
