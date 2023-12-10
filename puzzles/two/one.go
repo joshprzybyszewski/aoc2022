@@ -7,8 +7,9 @@ import (
 )
 
 const (
-	newline = "\n"
-	comma   = ","
+	newline   = "\n"
+	semicolon = ";"
+	comma     = ","
 )
 
 func One(
@@ -22,18 +23,29 @@ func One(
 
 	i := 0
 	sum := 0
-	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
-		handfuls := strings.Split(
-			input[strings.Index(input, `:`)+1:nli],
-			";",
-		)
-		hasImpossible := false
-		for _, handfulStr := range handfuls {
-			handful := interpretSeen(handfulStr)
+	var hi int
+	var line string
+	var hasImpossible bool
+	for nli := strings.Index(input, newline); nli >= 0; nli = strings.Index(input, newline) {
+		line = input[strings.Index(input, `:`)+1 : nli]
+		hasImpossible = false
+		for {
+			hi = strings.Index(line, semicolon)
+			if hi == -1 {
+				hi = len(line)
+			}
+
+			handful := interpretSeen(line[:hi])
 			if !isPossible(handful, max) {
 				hasImpossible = true
 				break
 			}
+			if hi == len(line) {
+				break
+			}
+
+			line = line[hi+1:]
+
 		}
 
 		if !hasImpossible {
