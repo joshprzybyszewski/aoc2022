@@ -6,6 +6,8 @@ func Two(
 	input string,
 ) (int, error) {
 
+	var p puzzle
+
 	total := 0
 
 	for nli := strings.Index(input, newline); nli >= 0; nli = strings.Index(input, newline) {
@@ -14,32 +16,19 @@ func Two(
 			continue
 		}
 
-		total += getFirstNumber(getLineOfVals(input[:nli]))
+		p = newPuzzle(input[:nli])
+		total += p.getPrev()
+
 		input = input[nli+1:]
 	}
 
 	return total, nil
 }
 
-func getFirstNumber(
-	input []int,
-) int {
-	var layers [][]int
-	layers = append(layers, input)
-	var isZeros bool
-	var nextLayer []int
-
-	for {
-		nextLayer, isZeros = generateDiff(layers[len(layers)-1])
-		if isZeros {
-			break
-		}
-		layers = append(layers, nextLayer)
-	}
-
+func (p *puzzle) getPrev() int {
 	cur := 0
-	for li := len(layers) - 1; li >= 0; li-- {
-		cur = layers[li][0] - cur
+	for li := p.maxLayer; li >= 0; li-- {
+		cur = p.numbers[li][0] - cur
 	}
 	return cur
 }
