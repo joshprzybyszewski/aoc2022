@@ -15,7 +15,7 @@ type puzzle struct {
 	numbers [21][21]int
 
 	layerZeroMaxIndex int
-	maxLayer          int
+	allZerosLayer     int
 }
 
 func newPuzzle(line string) puzzle {
@@ -54,13 +54,15 @@ func (p *puzzle) populate() {
 		pi++
 		li++
 	}
-	p.maxLayer = pi
+	p.allZerosLayer = li
 }
 
 func (p *puzzle) getNext() int {
 	sum := 0
-	for li := p.maxLayer; li >= 0; li-- {
-		sum += p.numbers[li][p.layerZeroMaxIndex-li]
+	i := p.layerZeroMaxIndex
+	for li := 0; li < p.allZerosLayer; li++ {
+		sum += p.numbers[li][i]
+		i--
 	}
 	return sum
 }

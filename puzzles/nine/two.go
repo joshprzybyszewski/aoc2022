@@ -27,8 +27,12 @@ func Two(
 
 func (p *puzzle) getPrev() int {
 	cur := 0
-	for li := p.maxLayer; li >= 0; li-- {
-		cur = p.numbers[li][0] - cur
+	var li int
+	for li = 0; li < p.allZerosLayer; li += 2 {
+		cur += p.numbers[li][0]
+	}
+	for li = 1; li < p.allZerosLayer; li += 2 {
+		cur -= p.numbers[li][0]
 	}
 	return cur
 }
