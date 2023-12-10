@@ -3,7 +3,7 @@ package nine
 import (
 	"strings"
 
-	"github.com/joshprzybyszewski/aoc2022/util/itoa"
+	"github.com/joshprzybyszewski/aoc2022/util/strutil"
 )
 
 const (
@@ -23,11 +23,11 @@ func newPuzzle(line string) puzzle {
 	i := 0
 
 	for si := strings.Index(line, space); si >= 0; si = strings.Index(line, space) {
-		p.numbers[0][i] = itoa.Int(line[:si])
+		p.numbers[0][i] = strutil.Int(line[:si])
 		i++
 		line = line[si+1:]
 	}
-	p.numbers[0][i] = itoa.Int(line)
+	p.numbers[0][i] = strutil.Int(line)
 
 	p.layerZeroMaxIndex = i
 

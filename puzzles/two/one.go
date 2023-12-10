@@ -1,8 +1,14 @@
 package two
 
 import (
-	"strconv"
 	"strings"
+
+	"github.com/joshprzybyszewski/aoc2022/util/strutil"
+)
+
+const (
+	newline = "\n"
+	comma   = ","
 )
 
 func One(
@@ -40,45 +46,46 @@ func One(
 	return sum, nil
 }
 
-func interpretSeen(handfulString string) handful {
-	values := strings.Split(
-		strings.TrimSpace(handfulString),
-		",",
-	)
+func interpretSeen(
+	input string,
+) handful {
 
 	output := handful{}
-	for _, value := range values {
-		infos := strings.Split(strings.TrimSpace(value), " ")
-		if len(infos) != 2 {
-			panic(`ahhh: ` + value)
+	var val, valEndIndex, ci int
+	for {
+		input = strutil.TrimSpaces(input)
+		ci = strings.Index(input, comma)
+		if ci == -1 {
+			ci = len(input)
 		}
-		val, err := strconv.Atoi(infos[0])
-		if err != nil {
-			panic(err)
-		}
-		switch infos[1] {
-		case `red`:
+
+		val, valEndIndex = strutil.IntBeforeSpace(input[:ci])
+		valEndIndex++
+
+		if input[valEndIndex:ci] == `red` {
 			if output.red != 0 {
 				panic(`already red set`)
 			}
 			output.red = val
-		case `green`:
-			if output.green != 0 {
-				panic(`already green set`)
-			}
-
-			output.green = val
-		case `blue`:
+		} else if input[valEndIndex:ci] == `blue` {
 			if output.blue != 0 {
 				panic(`already blue set`)
 			}
-
 			output.blue = val
-		default:
-			panic(`unknown color`)
+		} else if input[valEndIndex:ci] == `green` {
+			if output.green != 0 {
+				panic(`already green set`)
+			}
+			output.green = val
+		} else {
+			panic(`unknown line: ` + input[:ci])
 		}
+		if ci == len(input) {
+			return output
+		}
+		input = input[ci+1:]
 	}
-	return output
+
 }
 
 type handful struct {
