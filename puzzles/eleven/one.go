@@ -51,7 +51,7 @@ func (u *universe) shortestPath(
 ) int {
 	start := u.universes[i]
 	end := u.universes[j]
-	if end.row < start.row {
+	if end.row < start.row { // TODO This will never be true
 		end.row, start.row = start.row, end.row
 	}
 	if end.col < start.col {
