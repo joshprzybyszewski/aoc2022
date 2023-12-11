@@ -2,6 +2,10 @@ package eleven
 
 import "strings"
 
+const (
+	double = 1
+)
+
 type coord struct {
 	row int
 	col int
@@ -48,12 +52,10 @@ func newUniverse(
 
 func (u *universe) shortestPath(
 	i, j int,
+	expansionRate int,
 ) int {
 	start := u.universes[i]
 	end := u.universes[j]
-	if end.row < start.row { // TODO This will never be true
-		end.row, start.row = start.row, end.row
-	}
 	if end.col < start.col {
 		end.col, start.col = start.col, end.col
 	}
@@ -62,14 +64,15 @@ func (u *universe) shortestPath(
 	tmp := 0
 	for tmp = start.row + 1; tmp < end.row; tmp++ {
 		if !u.rowsWith[tmp] {
-			numExpanded++
+			numExpanded += expansionRate
 		}
 	}
 	end.row += numExpanded
 	numExpanded = 0
+
 	for tmp = start.col + 1; tmp < end.col; tmp++ {
 		if !u.colsWith[tmp] {
-			numExpanded++
+			numExpanded += expansionRate
 		}
 	}
 	end.col += numExpanded
@@ -80,14 +83,23 @@ func (u *universe) shortestPath(
 func One(
 	input string,
 ) (int, error) {
+	answer := solveForExpansion(input, double)
+	return answer, nil
+}
+
+func solveForExpansion(
+	input string,
+	expansion int,
+) int {
 	u := newUniverse(input)
 
 	total := 0
 
+	var j int
 	for i := 0; i < len(u.universes); i++ {
-		for j := i + 1; j < len(u.universes); j++ {
-			total += u.shortestPath(i, j)
+		for j = i + 1; j < len(u.universes); j++ {
+			total += u.shortestPath(i, j, expansion)
 		}
 	}
-	return total, nil
+	return total
 }
