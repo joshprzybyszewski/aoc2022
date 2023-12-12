@@ -1,6 +1,8 @@
 package twelve
 
-import "strings"
+import (
+	"strings"
+)
 
 type part uint8
 
@@ -10,8 +12,28 @@ const (
 	unknown part = 2
 )
 
+func (p part) toString() byte {
+	switch p {
+	case safe:
+		return '.'
+	case broken:
+		return '#'
+	case unknown:
+		return '?'
+	}
+	return 'X'
+}
+
 type row struct {
 	parts [20]part
+}
+
+func (r row) String() string {
+	var sb strings.Builder
+	for i := range r.parts {
+		sb.WriteByte(r.parts[i].toString())
+	}
+	return sb.String()
 }
 
 func (r row) isSolution(indexes []int) bool {
@@ -28,11 +50,21 @@ func (r row) isSolution(indexes []int) bool {
 			cur = 0
 		}
 	}
-	return true
+	if ii < len(indexes) {
+		if cur != indexes[ii] {
+			return false
+		}
+		cur = 0
+		ii++
+	}
+	return ii == len(indexes) && cur == 0
 }
 
 func (r row) getPossibilities(indexes []int) int {
-	return solveNext(r, 0, indexes)
+	// fmt.Printf("-- %s %v\n", r, indexes)
+	total := solveNext(r, 0, indexes)
+	// fmt.Printf("   %d\n", total)
+	return total
 }
 
 func solveNext(
@@ -46,6 +78,7 @@ func solveNext(
 
 	if i >= len(r.parts) {
 		if r.isSolution(indexes) {
+			// fmt.Printf("   %s\n", r)
 			return 1
 		}
 		return 0
@@ -99,6 +132,5 @@ func One(
 		total += getNumConfigurations(input[:nli])
 		input = input[nli+1:]
 	}
-	// 25771 is too high
 	return total, nil
 }
