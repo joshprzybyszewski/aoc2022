@@ -1,137 +1,104 @@
 package twelve
 
+import "strings"
+
+type part uint8
+
 const (
-	numRows = uint8(41)
-	numCols = uint8(161)
+	safe    part = 0
+	broken  part = 1
+	unknown part = 2
 )
 
-type coord struct {
-	row, col uint8
+type row struct {
+	parts [20]part
 }
 
-// [row][col]
-type grid [numRows][numCols]uint8
-
-func newGrid(input string) (grid, coord, coord) {
-	var s, e coord
-	var g grid
-	var i int
-	var b byte
-	for r := uint8(0); r < numRows; r++ {
-		for c := uint8(0); c < numCols; c++ {
-			b = input[i]
-			if b == 'E' {
-				e = coord{
-					row: r,
-					col: c,
-				}
-				g[r][c] = 25
-			} else if b == 'S' {
-				s = coord{
-					row: r,
-					col: c,
-				}
-				g[r][c] = 0
-			} else {
-				g[r][c] = b - 'a'
+func (r row) isSolution(indexes []int) bool {
+	ii := 0
+	cur := 0
+	for i := 0; i < len(r.parts); i++ {
+		if r.parts[i] == broken {
+			cur++
+		} else if cur > 0 {
+			if ii >= len(indexes) || cur != indexes[ii] {
+				return false
 			}
-			i++
+			ii++
+			cur = 0
 		}
-		// skip the newline char
+	}
+	return true
+}
+
+func (r row) getPossibilities(indexes []int) int {
+	return solveNext(r, 0, indexes)
+}
+
+func solveNext(
+	r row,
+	i int,
+	indexes []int,
+) int {
+	for i < len(r.parts) && r.parts[i] != unknown {
 		i++
 	}
-	return g, s, e
+
+	if i >= len(r.parts) {
+		if r.isSolution(indexes) {
+			return 1
+		}
+		return 0
+	}
+
+	r1 := r
+	r1.parts[i] = broken
+	r.parts[i] = safe
+	i++
+
+	return solveNext(r1, i, indexes) + solveNext(r, i, indexes)
+}
+
+func getNumConfigurations(line string) int {
+	var r row
+	var i int
+	for i = 0; i < len(line); i++ {
+		if line[i] == ' ' {
+			i++
+			break
+		}
+		switch line[i] {
+		case '?':
+			r.parts[i] = unknown
+		case '#':
+			r.parts[i] = broken
+		}
+	}
+
+	curNum := 0
+	var indexes []int
+	for ; i < len(line); i++ {
+		if line[i] == ',' {
+			indexes = append(indexes, curNum)
+			curNum = 0
+			continue
+		}
+		curNum *= 10
+		curNum += int(line[i] - '0')
+	}
+	indexes = append(indexes, curNum)
+
+	return r.getPossibilities(indexes)
 }
 
 func One(
 	input string,
 ) (int, error) {
-	g, s, e := newGrid(input)
-	steps := paint(&g, e, s)
-	return steps[s.row][s.col], nil
-}
-
-func paint(
-	g *grid,
-	zero coord,
-	target coord,
-) [41][161]int {
-	max := len(g) * len(g[0])
-	var output [41][161]int
-	for i := range output {
-		for j := range output[i] {
-			output[i][j] = max
-		}
+	total := 0
+	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
+		total += getNumConfigurations(input[:nli])
+		input = input[nli+1:]
 	}
-	output[zero.row][zero.col] = 0
-
-	pending := make([]coord, 0, 8196)
-	pending = append(pending, zero)
-
-	var dest, s coord
-	var dv int
-	var msv, t uint8
-	for len(pending) > 0 {
-		dest = pending[0]
-		if dest == target {
-			break
-		}
-
-		dv = output[dest.row][dest.col] + 1
-
-		msv = g[dest.row][dest.col] - 1
-		if dest.row > 0 {
-			s = coord{
-				row: dest.row - 1,
-				col: dest.col,
-			}
-			if g[s.row][dest.col] >= msv &&
-				output[s.row][dest.col] > dv {
-
-				output[s.row][s.col] = dv
-				pending = append(pending, s)
-			}
-		}
-
-		if t = dest.row + 1; t < numRows &&
-			g[t][dest.col] >= msv &&
-			output[t][dest.col] > dv {
-
-			s = coord{
-				row: t,
-				col: dest.col,
-			}
-			output[s.row][s.col] = dv
-			pending = append(pending, s)
-		}
-
-		if dest.col > 0 {
-			s = coord{
-				row: dest.row,
-				col: dest.col - 1,
-			}
-			if g[s.row][s.col] >= msv &&
-				output[s.row][s.col] > dv {
-
-				output[s.row][s.col] = dv
-				pending = append(pending, s)
-			}
-		}
-
-		if t = dest.col + 1; t < numCols &&
-			g[dest.row][t] >= msv &&
-			output[dest.row][t] > dv {
-
-			s = coord{
-				row: dest.row,
-				col: t,
-			}
-			output[s.row][s.col] = dv
-			pending = append(pending, s)
-		}
-
-		pending = pending[1:]
-	}
-
-	return output
+	// 25771 is too high
+	return total, nil
 }
