@@ -1,6 +1,7 @@
 package twelve
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -25,12 +26,13 @@ func (p part) toString() byte {
 }
 
 type row struct {
-	parts [20]part
+	parts    [20]part
+	numParts int
 }
 
 func (r row) String() string {
 	var sb strings.Builder
-	for i := range r.parts {
+	for i := 0; i < r.numParts; i++ {
 		sb.WriteByte(r.parts[i].toString())
 	}
 	return sb.String()
@@ -61,9 +63,9 @@ func (r row) isSolution(indexes []int) bool {
 }
 
 func (r row) getPossibilities(indexes []int) int {
-	// fmt.Printf("-- %s %v\n", r, indexes)
+	fmt.Printf("-- %s %v\n", r, indexes)
 	total := solveNext(r, 0, indexes)
-	// fmt.Printf("   %d\n", total)
+	fmt.Printf("   %d\n", total)
 	return total
 }
 
@@ -97,6 +99,7 @@ func getNumConfigurations(line string) int {
 	var i int
 	for i = 0; i < len(line); i++ {
 		if line[i] == ' ' {
+			r.numParts = i
 			i++
 			break
 		}
