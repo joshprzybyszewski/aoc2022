@@ -213,6 +213,51 @@ func (r unfoldedRow) getPossibilitiesV2_recursive(
 		return 1
 	}
 
+	numberOfUnknown := 0
+	for i := minUncheckedIndex; i < r.numParts && r.parts[i] == unknown; i++ {
+		numberOfUnknown++
+	}
+	if minUncheckedIndex+numberOfUnknown < r.numParts && r.parts[minUncheckedIndex+numberOfUnknown] == broken {
+		// not gonna figure out how to merg into this.
+		numberOfUnknown--
+	}
+
+	// TODO
+	// ???   [1,1] -> ??
+	// ????  [1,1] -> ??
+	// ???   [1,2] -> ???
+	// ????  [1,2] -> ??
+	// ????? [1,2] -> ??
+	// ???   [2,1] -> ???
+	// ????  [2,1] -> ??
+	// ????? [2,1] -> ??
+
+	// for i := 1; i < len(remainingBusted); i++ {
+	// 	if numberOfUnknown - remainingBusted[i] -1
+	// }
+
+	// TODO we _shouldn't_ take this branch until I figure out the above.
+	if numberOfUnknown > remainingBusted[0] {
+		numPossible := r.getPossibilitiesV2_recursive(
+			minUncheckedIndex,
+			numberOfUnknown-remainingBusted[0],
+			remainingBusted,
+		)
+
+		mult := numberOfUnknown - remainingBusted[0] + 1
+		// ?    [1] -> 1
+		// ??   [1] -> 2
+		// ???  [1] -> 3
+		// ???? [1] -> 4
+		// ??   [2] -> 1
+		// ???  [2] -> 2
+		// ???? [2] -> 3
+		// ???  [3] -> 1
+		// ???? [3] -> 2
+
+		return numPossible * mult
+	}
+
 	numPossible := 0
 	maxToSkip := r.numParts - minUncheckedIndex - len(remainingBusted) + 1
 	for bi := range remainingBusted {
