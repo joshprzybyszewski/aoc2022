@@ -1,7 +1,6 @@
 package twelve
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -63,9 +62,9 @@ func (r row) isSolution(indexes []int) bool {
 }
 
 func (r row) getPossibilities(indexes []int) int {
-	fmt.Printf("-- %s %v\n", r, indexes)
+	// fmt.Printf("-- %s %v\n", r, indexes)
 	total := solveNext(r, 0, indexes)
-	fmt.Printf("   %d\n", total)
+	// fmt.Printf("   %d\n", total)
 	return total
 }
 
@@ -124,7 +123,7 @@ func getNumConfigurations(line string) int {
 	}
 	indexes = append(indexes, curNum)
 
-	return r.getPossibilities(indexes)
+	return r.getPossibilitiesV2(indexes)
 }
 
 func One(
@@ -136,4 +135,129 @@ func One(
 		input = input[nli+1:]
 	}
 	return total, nil
+}
+
+func (r row) isSkipPossibleV2(
+	skip int,
+) bool {
+
+	var i int
+	for i = 0; i < skip; i++ {
+		if r.parts[i] == broken {
+			return false
+		}
+	}
+
+	return true
+}
+
+func (r row) isPossibleV2(
+	skip int,
+	busted []int,
+	between []int,
+	maxBI int,
+) bool {
+
+	var i int
+	for i = 0; i < skip; i++ {
+		if r.parts[i] == broken {
+			return false
+		}
+	}
+
+	var n int
+	for bi := 0; bi < maxBI && bi < len(between); bi++ {
+		for n = 0; n < busted[bi] && i < r.numParts; n++ {
+			if r.parts[i] == safe {
+				return false
+			}
+			i++
+		}
+		for n = 0; n < between[bi] && i < r.numParts; n++ {
+			if r.parts[i] == broken {
+				return false
+			}
+			i++
+		}
+		if i >= r.numParts {
+			return false
+		}
+	}
+
+	if maxBI < len(busted) {
+		return true
+	}
+
+	for n = 0; n < busted[len(busted)-1]; n++ {
+		if i >= r.numParts {
+			return false
+		}
+
+		if r.parts[i] == safe {
+			return false
+		}
+		i++
+	}
+
+	for ; i < r.numParts; i++ {
+		if r.parts[i] == broken {
+			return false
+		}
+	}
+	return i == r.numParts
+}
+
+func (r row) getPossibilitiesV2(
+	busted []int,
+) int {
+	between := make([]int, len(busted)-1)
+	maxSkip := r.numParts - len(between)
+	for _, b := range busted {
+		maxSkip -= b
+	}
+
+	numPossible := 0
+	for skip := 0; skip <= maxSkip; skip++ {
+		if !r.isSkipPossibleV2(skip) {
+			continue
+		}
+
+		numPossible += r.getPossibilitiesV2_between(skip, maxSkip, busted, between, 0)
+	}
+
+	return numPossible
+}
+
+func (r row) getPossibilitiesV2_between(
+	skip, maxSkip int,
+	busted, between []int,
+	bi int,
+) int {
+	if bi >= len(between) {
+		if r.isPossibleV2(skip, busted, between, len(busted)) {
+			return 1
+		}
+		return 0
+	}
+
+	if !r.isPossibleV2(skip, busted, between, bi) {
+		return 0
+	}
+
+	myBetween := make([]int, len(between))
+	copy(myBetween, between)
+
+	numPossible := 0
+	for v := 1; v <= maxSkip; v++ {
+		myBetween[bi] = v
+
+		numPossible += r.getPossibilitiesV2_between(
+			skip,
+			maxSkip,
+			busted,
+			myBetween,
+			bi+1,
+		)
+	}
+	return numPossible
 }
