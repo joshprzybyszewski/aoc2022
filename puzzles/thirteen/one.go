@@ -53,7 +53,7 @@ func (r rect) getNumBeforeReflection() int {
 
 	for ci := 0; ci < r.numCols; ci++ {
 		if r.isReflection(ci, false) {
-			return (ci + 1)
+			return ci + 1
 		}
 	}
 	panic(`dev error`)
