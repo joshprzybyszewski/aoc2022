@@ -137,127 +137,87 @@ func One(
 	return total, nil
 }
 
-func (r row) isSkipPossibleV2(
-	skip int,
-) bool {
+func (r row) getPossibilitiesV2(
+	busted []int,
+) int {
 
-	var i int
-	for i = 0; i < skip; i++ {
-		if r.parts[i] == broken {
-			return false
-		}
+	maxToSkip := r.numParts + 1 - len(busted)
+	for bi := range busted {
+		maxToSkip -= busted[bi]
 	}
 
-	return true
+	total := 0
+
+	for toSkip := 0; toSkip <= maxToSkip; toSkip++ {
+		total += r.getPossibilitiesV2_recursive(0, toSkip, busted)
+	}
+
+	return total
+}
+
+func (r row) getPossibilitiesV2_recursive(
+	minUncheckedIndex int,
+	toSkip int,
+	remainingBusted []int,
+) int {
+	if !r.isPossibleV2(minUncheckedIndex, toSkip, remainingBusted) {
+		return 0
+	}
+
+	minUncheckedIndex += toSkip + remainingBusted[0]
+	remainingBusted = remainingBusted[1:]
+
+	if len(remainingBusted) == 0 {
+		for ; minUncheckedIndex < r.numParts; minUncheckedIndex++ {
+			if r.parts[minUncheckedIndex] == broken {
+				return 0
+			}
+		}
+		return 1
+	}
+
+	numPossible := 0
+	maxToSkip := r.numParts - minUncheckedIndex - len(remainingBusted)
+	for toSkip = 1; toSkip <= maxToSkip; toSkip++ {
+		numPossible += r.getPossibilitiesV2_recursive(
+			minUncheckedIndex,
+			toSkip,
+			remainingBusted,
+		)
+	}
+	return numPossible
 }
 
 func (r row) isPossibleV2(
-	skip int,
-	busted []int,
-	between []int,
-	maxBI int,
+	minUncheckedIndex int,
+	toSkip int,
+	remainingBusted []int,
 ) bool {
 
-	var i int
-	for i = 0; i < skip; i++ {
+	var n int
+
+	i := minUncheckedIndex
+
+	if i+toSkip+remainingBusted[0] > r.numParts {
+		return false
+	}
+	for n = 0; n < toSkip; n++ {
 		if r.parts[i] == broken {
 			return false
 		}
+		i++
 	}
 
-	var n int
-	for bi := 0; bi < maxBI && bi < len(between); bi++ {
-		for n = 0; n < busted[bi] && i < r.numParts; n++ {
-			if r.parts[i] == safe {
-				return false
-			}
-			i++
-		}
-		for n = 0; n < between[bi] && i < r.numParts; n++ {
-			if r.parts[i] == broken {
-				return false
-			}
-			i++
-		}
-		if i >= r.numParts {
-			return false
-		}
-	}
-
-	if maxBI < len(busted) {
-		return true
-	}
-
-	for n = 0; n < busted[len(busted)-1]; n++ {
-		if i >= r.numParts {
-			return false
-		}
-
+	for n = 0; n < remainingBusted[0]; n++ {
 		if r.parts[i] == safe {
 			return false
 		}
 		i++
 	}
 
-	for ; i < r.numParts; i++ {
-		if r.parts[i] == broken {
-			return false
-		}
-	}
-	return i == r.numParts
-}
-
-func (r row) getPossibilitiesV2(
-	busted []int,
-) int {
-	between := make([]int, len(busted)-1)
-	maxSkip := r.numParts - len(between)
-	for _, b := range busted {
-		maxSkip -= b
+	for n = 1; n < len(remainingBusted); n++ {
+		i += 1 + remainingBusted[n]
 	}
 
-	numPossible := 0
-	for skip := 0; skip <= maxSkip; skip++ {
-		if !r.isSkipPossibleV2(skip) {
-			continue
-		}
-
-		numPossible += r.getPossibilitiesV2_between(skip, maxSkip, busted, between, 0)
-	}
-
-	return numPossible
-}
-
-func (r row) getPossibilitiesV2_between(
-	skip, maxSkip int,
-	busted, between []int,
-	bi int,
-) int {
-	if bi >= len(between) {
-		if r.isPossibleV2(skip, busted, between, len(busted)) {
-			return 1
-		}
-		return 0
-	}
-
-	if !r.isPossibleV2(skip, busted, between, bi) {
-		return 0
-	}
-
-	myBetween := make([]int, len(between))
-	copy(myBetween, between)
-
-	numPossible := 0
-	for v := 1; v <= maxSkip; v++ {
-		myBetween[bi] = v
-
-		numPossible += r.getPossibilitiesV2_between(
-			skip,
-			maxSkip,
-			busted,
-			myBetween,
-			bi+1,
-		)
-	}
-	return numPossible
+	return i <= r.numParts
 }
