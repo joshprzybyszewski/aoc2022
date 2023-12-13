@@ -3,6 +3,7 @@ package twelve
 import (
 	"fmt"
 	"strings"
+	"time"
 )
 
 type unfoldedRow struct {
@@ -121,10 +122,11 @@ func solveNextUnfolded(
 func Two(
 	input string,
 ) (int, error) {
-	return -42069, nil
 	total := 0
 	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
+		t0 := time.Now()
 		total += getNumUnfoldedConfigurations(input[:nli])
+		fmt.Printf("Took: %s\n\n", time.Since(t0))
 		input = input[nli+1:]
 	}
 	return total, nil
@@ -167,6 +169,96 @@ func getNumUnfoldedConfigurations(line string) int {
 	}
 
 	ur := newUnfoldedRow(r)
+	fmt.Printf("r: %s %v\n", ur, unfoldedIndexes)
 
-	return ur.getPossibilities(unfoldedIndexes)
+	return ur.getPossibilitiesV2(unfoldedIndexes)
+}
+
+func (r unfoldedRow) getPossibilitiesV2(
+	busted []int,
+) int {
+
+	maxToSkip := r.numParts + 1 - len(busted)
+	for bi := range busted {
+		maxToSkip -= busted[bi]
+	}
+
+	total := 0
+
+	for toSkip := 0; toSkip <= maxToSkip; toSkip++ {
+		total += r.getPossibilitiesV2_recursive(0, toSkip, busted)
+	}
+
+	return total
+}
+
+func (r unfoldedRow) getPossibilitiesV2_recursive(
+	minUncheckedIndex int,
+	toSkip int,
+	remainingBusted []int,
+) int {
+	if !r.isPossibleV2(minUncheckedIndex, toSkip, remainingBusted) {
+		return 0
+	}
+
+	minUncheckedIndex += toSkip + remainingBusted[0]
+	remainingBusted = remainingBusted[1:]
+
+	if len(remainingBusted) == 0 {
+		for ; minUncheckedIndex < r.numParts; minUncheckedIndex++ {
+			if r.parts[minUncheckedIndex] == broken {
+				return 0
+			}
+		}
+		return 1
+	}
+
+	numPossible := 0
+	maxToSkip := r.numParts - minUncheckedIndex - len(remainingBusted) + 1
+	for bi := range remainingBusted {
+		maxToSkip -= remainingBusted[bi]
+	}
+
+	for toSkip = 1; toSkip <= maxToSkip; toSkip++ {
+		numPossible += r.getPossibilitiesV2_recursive(
+			minUncheckedIndex,
+			toSkip,
+			remainingBusted,
+		)
+	}
+	return numPossible
+}
+
+func (r unfoldedRow) isPossibleV2(
+	minUncheckedIndex int,
+	toSkip int,
+	remainingBusted []int,
+) bool {
+
+	var n int
+
+	i := minUncheckedIndex
+
+	if i+toSkip+remainingBusted[0] > r.numParts {
+		return false
+	}
+	for n = 0; n < toSkip; n++ {
+		if r.parts[i] == broken {
+			return false
+		}
+		i++
+	}
+
+	for n = 0; n < remainingBusted[0]; n++ {
+		if r.parts[i] == safe {
+			return false
+		}
+		i++
+	}
+
+	for n = 1; n < len(remainingBusted); n++ {
+		i += 1 + remainingBusted[n]
+	}
+
+	return i <= r.numParts
 }
