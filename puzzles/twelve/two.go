@@ -122,6 +122,7 @@ func solveNextUnfolded(
 func Two(
 	input string,
 ) (int, error) {
+	return -42069, nil
 	total := 0
 	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
 		t0 := time.Now()
