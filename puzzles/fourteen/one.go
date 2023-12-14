@@ -5,7 +5,7 @@ import (
 )
 
 const (
-	size = 100
+	size = 10
 )
 
 type tile uint8
@@ -64,9 +64,7 @@ func (p platform) String() string {
 	return sb.String()
 }
 
-func (p *platform) rollNorth() int {
-
-	totalLoad := 0
+func (p *platform) rollNorth() {
 
 	nextEmptySpotForCol := [size]int{}
 
@@ -79,14 +77,21 @@ func (p *platform) rollNorth() int {
 				if nextEmptySpotForCol[ci] != ri {
 					p.tiles[nextEmptySpotForCol[ci]][ci] = rock
 					p.tiles[ri][ci] = empty
-
-					totalLoad += size - nextEmptySpotForCol[ci]
-
 					nextEmptySpotForCol[ci] += 1
 				} else {
 					nextEmptySpotForCol[ci] = ri + 1
-					totalLoad += size - ri
 				}
+			}
+		}
+	}
+}
+
+func (p *platform) totalLoad() int {
+	totalLoad := 0
+	for ri := 0; ri < size; ri++ {
+		for ci := 0; ci < size; ci++ {
+			if p.tiles[ri][ci] == rock {
+				totalLoad += size - ri
 			}
 		}
 	}
@@ -98,6 +103,7 @@ func One(
 	input string,
 ) (int, error) {
 	p := newPlatform(input)
+	p.rollNorth()
 
-	return p.rollNorth(), nil
+	return p.totalLoad(), nil
 }
