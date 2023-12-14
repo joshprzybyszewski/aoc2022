@@ -15,68 +15,63 @@ func Two(
 	return p.totalLoad(), nil
 }
 
+type cycleDetector struct {
+	seen [numLookBack]platform
+
+	numSeen int
+}
+
+func newCycleDetector() cycleDetector {
+	return cycleDetector{}
+}
+
+func (d *cycleDetector) see(p platform) int {
+	d.seen[d.numSeen] = p
+	d.numSeen++
+
+	i := d.numSeen - 2
+	i2 := d.numSeen - 3
+	for i2 > 0 {
+		if d.seen[i] == p && d.seen[i] == d.seen[i2] {
+			return i - i2
+		}
+		i--
+		i2 -= 2
+	}
+
+	return -1
+}
+
 func cycle(
 	p *platform,
 	n uint,
 ) {
 
-	previouslySeen := [numLookBack]platform{}
-	psi := 0
-	numSeen := 0
-	lookBack := func(p platform) int {
-		maxN := numSeen
-		if maxN > len(previouslySeen) {
-			maxN = len(previouslySeen)
-		}
-		maxN /= 2
-		i := psi
-		for n := 1; n < maxN; n++ {
-			if previouslySeen[i] == p {
-				i2 := i + 1 - n
-				if i2 < 0 {
-					panic(`unsupported`)
-				}
-				if previouslySeen[i2] == p {
-					return i - i2
-				}
-			}
-
-			i--
-			if i < 0 {
-				i += len(previouslySeen)
-			}
-		}
-
-		previouslySeen[psi] = p
-		psi++
-		numSeen++
-		if numSeen >= len(previouslySeen) {
-			panic(`unhandled`)
-		}
-		return -1
-	}
+	cd := newCycleDetector()
 
 	var i uint
-	for ; i < n; i++ {
+	var cycleLength int
+	for i < n {
 		p.rollNorth()
 		p.rollWest()
 		p.rollSouth()
 		p.rollEast()
-		cycleLength := lookBack(*p)
+		i++
+
+		cycleLength = cd.see(*p)
 		if cycleLength > 0 {
-			i++
-			for i+uint(cycleLength) < n {
-				i += uint(cycleLength)
-			}
+			// skip ahead through all the remaining cycles
+			i += ((n - i) / uint(cycleLength)) * uint(cycleLength)
 			break
 		}
 	}
 
-	for ; i < n; i++ {
+	for i < n {
 		p.rollNorth()
 		p.rollWest()
 		p.rollSouth()
 		p.rollEast()
+		i++
 	}
 
 }
