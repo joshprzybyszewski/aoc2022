@@ -1,25 +1,90 @@
 package fourteen
 
+import "fmt"
+
 func Two(
 	input string,
 ) (int, error) {
 	p := newPlatform(input)
 
-	p.cycle(3)
+	cycle(p, 1000000000)
+
+	// 104589 is too high
+	// 105455 is too high
 
 	return p.totalLoad(), nil
 }
 
-func (p *platform) cycle(
+func cycle(
+	p platform,
 	n uint,
 ) {
 
-	for i := uint(0); i < n; i++ {
+	previouslySeen := [10000]platform{}
+	psi := 0
+	numSeen := 0
+	lookBack := func(p platform) int {
+		maxN := numSeen
+		if maxN > len(previouslySeen) {
+			maxN = len(previouslySeen)
+		}
+		i := psi
+		for n := 1; n < maxN; n++ {
+			if previouslySeen[i] == p {
+				fmt.Printf("%s\n^ Saw %d iterations ago\n", previouslySeen[i], n)
+
+				return n
+			}
+
+			i--
+			if i < 0 {
+				i += len(previouslySeen)
+			}
+		}
+
+		previouslySeen[psi] = p
+		psi++
+		numSeen++
+		if numSeen >= len(previouslySeen) {
+			panic(`unhandled`)
+		}
+		return -1
+	}
+
+	var i uint
+	for ; i < n; i++ {
+		p.rollNorth()
+		p.rollWest()
+		p.rollSouth()
+		p.rollEast()
+		sinceLastSeen := lookBack(p)
+		if sinceLastSeen > 0 {
+			fmt.Printf("%s\n^ %d iterations\n", p, i)
+			fmt.Printf("Saw this configuration %d times ago.\n", sinceLastSeen)
+			for i+uint(sinceLastSeen) < n {
+				i += uint(sinceLastSeen)
+			}
+			// remaining := n - i
+			// numSkips := remaining / uint(sinceLastSeen)
+			// fmt.Printf("Skipping ahead %d cycles.\n", numSkips)
+			// i += (numSkips * uint(sinceLastSeen))
+			break
+		}
+
+		if i%10000 == 0 {
+			fmt.Printf("%s\n^ %d iterations\n", p, i)
+		}
+	}
+
+	fmt.Printf("%s\n^ %d iterations (after all the skips)\n", p, i)
+
+	for ; i < n; i++ {
 		p.rollNorth()
 		p.rollWest()
 		p.rollSouth()
 		p.rollEast()
 	}
+	fmt.Printf("%s\n^ %d iterations\n", p, i)
 }
 
 func (p *platform) rollSouth() {

@@ -5,7 +5,7 @@ import (
 )
 
 const (
-	size = 10
+	size = 100
 )
 
 type tile uint8
