@@ -68,8 +68,9 @@ func (p *platform) rollNorth() {
 
 	nextEmptySpotForCol := [size]int{}
 
+	var ci int
 	for ri := 0; ri < size; ri++ {
-		for ci := 0; ci < size; ci++ {
+		for ci = 0; ci < size; ci++ {
 			switch p.tiles[ri][ci] {
 			case block:
 				nextEmptySpotForCol[ci] = ri + 1

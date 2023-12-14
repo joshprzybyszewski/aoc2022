@@ -82,8 +82,9 @@ func (p *platform) rollSouth() {
 		nextEmptySpotForCol[i] = size - 1
 	}
 
+	var ci int
 	for ri := size - 1; ri >= 0; ri-- {
-		for ci := 0; ci < size; ci++ {
+		for ci = 0; ci < size; ci++ {
 			switch p.tiles[ri][ci] {
 			case block:
 				nextEmptySpotForCol[ci] = ri - 1
@@ -103,8 +104,9 @@ func (p *platform) rollSouth() {
 func (p *platform) rollWest() {
 	nextEmptySpotForRow := [size]int{}
 
+	var ri int
 	for ci := 0; ci < size; ci++ {
-		for ri := 0; ri < size; ri++ {
+		for ri = 0; ri < size; ri++ {
 			switch p.tiles[ri][ci] {
 			case block:
 				nextEmptySpotForRow[ri] = ci + 1
@@ -128,8 +130,9 @@ func (p *platform) rollEast() {
 		nextEmptySpotForRow[i] = size - 1
 	}
 
+	var ri int
 	for ci := size - 1; ci >= 0; ci-- {
-		for ri := 0; ri < size; ri++ {
+		for ri = 0; ri < size; ri++ {
 			switch p.tiles[ri][ci] {
 			case block:
 				nextEmptySpotForRow[ri] = ci - 1
