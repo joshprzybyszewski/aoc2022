@@ -10,9 +10,7 @@ func Two(
 ) (int, error) {
 	p := newPlatform(input)
 
-	cycle(&p, numCycles)
-
-	return p.totalLoad(), nil
+	return cycle(&p, numCycles), nil
 }
 
 type cycleDetector struct {
@@ -29,23 +27,23 @@ func (d *cycleDetector) see(p platform) int {
 	d.seen[d.numSeen] = p
 	d.numSeen++
 
-	i := d.numSeen - 2
-	i2 := d.numSeen - 3
-	for i2 > 0 {
-		if d.seen[i] == p && d.seen[i] == d.seen[i2] {
-			return i - i2
+	for i := d.numSeen - 2; i >= 0; i-- {
+		if d.seen[i] == p {
+			return d.numSeen - 1 - i
 		}
-		i--
-		i2 -= 2
 	}
 
 	return -1
 }
 
+func (d *cycleDetector) getNAgo(n int) platform {
+	return d.seen[d.numSeen-1-n]
+}
+
 func cycle(
 	p *platform,
 	n uint,
-) {
+) int {
 
 	cd := newCycleDetector()
 
@@ -61,19 +59,12 @@ func cycle(
 		cycleLength = cd.see(*p)
 		if cycleLength > 0 {
 			// skip ahead through all the remaining cycles
-			i += ((n - i) / uint(cycleLength)) * uint(cycleLength)
-			break
+			final := cd.getNAgo(cycleLength - (int(n-i) % cycleLength))
+			return final.totalLoad()
 		}
 	}
 
-	for i < n {
-		p.rollNorth()
-		p.rollWest()
-		p.rollSouth()
-		p.rollEast()
-		i++
-	}
-
+	return -1
 }
 
 func (p *platform) rollSouth() {
