@@ -1,6 +1,10 @@
 package fifteen
 
-import "slices"
+import (
+	"fmt"
+	"slices"
+	"strings"
+)
 
 type lens struct {
 	label string
@@ -8,6 +12,17 @@ type lens struct {
 }
 
 type boxes [256][]lens
+
+func (b *boxes) String() string {
+	var sb strings.Builder
+	for i := range b {
+		if len(b[i]) == 0 {
+			continue
+		}
+		sb.WriteString(fmt.Sprintf("Box %d: %v\n", i+1, b[i]))
+	}
+	return sb.String()
+}
 
 func (b *boxes) remove(
 	hash uint8,
@@ -18,7 +33,7 @@ func (b *boxes) remove(
 		// not found
 		return
 	}
-	slices.Delete(b[hash], i, i+1)
+	b[hash] = slices.Delete(b[hash], i, i+1)
 }
 
 func (b *boxes) add(
@@ -26,10 +41,15 @@ func (b *boxes) add(
 	label string,
 	val int,
 ) {
-	b[hash] = append(b[hash], lens{
-		label: label,
-		value: val,
-	})
+	i := slices.IndexFunc(b[hash], func(l lens) bool { return l.label == label })
+	if i < 0 {
+		b[hash] = append(b[hash], lens{
+			label: label,
+			value: val,
+		})
+	} else {
+		b[hash][i].value = val
+	}
 }
 
 func (b *boxes) total() int {
@@ -58,6 +78,7 @@ func Two(
 		switch input[0] {
 		case ',':
 			cur = 0
+			label = ``
 			// labelLen = 0
 			// label = input[1:]
 		case '=':
