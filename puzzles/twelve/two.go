@@ -1,5 +1,7 @@
 package twelve
 
+import "fmt"
+
 func unfold(
 	r *row,
 	groups []int,
@@ -37,7 +39,7 @@ func Two(
 				groups = append(groups, cur)
 				// fmt.Printf("  %-105s %v\n", r, groups)
 				groups = unfold(&r, groups)
-				// fmt.Printf("  %-105s %v\n", r, groups)
+				fmt.Printf("  %-105s %v\n", r, groups)
 				num := getNum(
 					r,
 					0,

@@ -1,7 +1,6 @@
 package twelve
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -118,23 +117,11 @@ func getNum(
 	total := 0
 	maxI := r.numParts
 	{ // limit the max starting point
-		// maxI -= remainingRequired
-		if len(groups) > 0 {
-			maxI -= (len(groups) - 1)
-		}
-		for _, g := range groups {
-			maxI -= g
-		}
+		maxI -= remainingRequired
 	}
 
-	var can bool
-	var nextI int
 	for i := start; i <= maxI; i++ {
-		can, nextI = canPlace(r, i, groups)
-		if can {
-			if nextI == 1000 {
-				fmt.Printf("nextI:%d\n", nextI)
-			}
+		if canPlace(r, i, groups) {
 			// r := markGroup(r, i, groups[0])
 			total += getNum(r, i+groups[0]+1, groups[1:], remainingRequired-groups[0]-1)
 		}
@@ -150,34 +137,32 @@ func canPlace(
 	r row,
 	start int,
 	groups []int,
-) (bool, int) {
+) bool {
 	maxI := start + groups[0]
 	if maxI > r.numParts {
-		// return false, r.numParts
-		return false, start + 1
+		return false
+
 	}
 	for i := start; i < maxI; i++ {
 		if r.parts[i] == safe {
-			// for i < r.numParts && r.parts[i] == safe {
-			// 	i++
-			// }
-			// return false, i + 1
-			return false, start + 1
+			for i < r.numParts && r.parts[i] == safe {
+				i++
+			}
+			return false
 		}
 	}
 	if len(groups) == 1 {
 		for i := maxI; i < r.numParts; i++ {
 			if r.parts[i] == broken {
-				// return false, r.numParts
-				return false, start + 1
+				return false
 			}
 		}
 	}
 	if maxI == r.numParts {
-		return true, start + 1
+		return true
 	}
 
-	return r.parts[maxI] != broken, start + 1
+	return r.parts[maxI] != broken
 
 }
 
