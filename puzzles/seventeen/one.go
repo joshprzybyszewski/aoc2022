@@ -19,6 +19,7 @@ func One(
 	dijkstraHeatLossToTarget(&c)
 	// fmt.Printf("city:\n%s\n", c)
 	// 1356 is too high
+	// 1290 is too high
 	return getMinimalHeatLoss(c), nil
 }
 
@@ -212,7 +213,7 @@ func getMinimalHeatLoss(
 	for !pending.isEmpty() {
 		pending.sort()
 		pos = pending.pop()
-		fmt.Printf("Processing: %s\n", pos)
+		// fmt.Printf("Processing: %s\n", pos)
 
 		left, straight, right = getNext(c, pos)
 		if left != nil {
@@ -343,8 +344,8 @@ func getNext(
 type pending struct {
 	city *city
 
-	all       []position
-	needsSort bool
+	all         []position
+	yetToInsert []position
 
 	bestByBlock [citySize][citySize][maxStraightLine + 1]*position
 
@@ -366,7 +367,7 @@ func (p *pending) pop() position {
 }
 
 func (p *pending) isEmpty() bool {
-	return len(p.all) == 0
+	return len(p.all) == 0 && len(p.yetToInsert) == 0
 }
 
 func (p *pending) checkSolution(
@@ -387,6 +388,9 @@ func (p *pending) checkSolution(
 	}
 }
 func (p *pending) filter() {
+	if len(p.yetToInsert) != 0 {
+		panic(`dev error`)
+	}
 	filtered := make([]position, 0, len(p.all))
 	for _, pos := range p.all {
 		if p.best.totalHeatLoss < pos.totalHeatLoss+p.city.minHeatLossToTarget[pos.row][pos.col] {
@@ -415,19 +419,31 @@ func (p *pending) insert(
 
 	p.bestByBlock[pos.row][pos.col][pos.numInDirection] = &pos
 
-	p.needsSort = true
-	p.all = append(p.all, pos)
+	p.yetToInsert = append(p.yetToInsert, pos)
 }
 
 func (p *pending) sort() {
-	if p.needsSort {
-		slices.SortFunc(p.all, comparePositions)
-		p.needsSort = false
+	if len(p.yetToInsert) == 0 {
+		return
 	}
+	for _, e := range p.yetToInsert {
+		ei := slices.IndexFunc(p.all, func(a position) bool {
+			return p.comparePositions(a, e) > 0
+		})
+		if ei == -1 {
+			p.all = append(p.all, e)
+			continue
+		}
+		after := p.all[ei:]
+		p.all = p.all[:ei]              // trim to before
+		p.all = append(p.all, e)        // insert the new element
+		p.all = append(p.all, after...) // add the after ones.
+	}
+	p.yetToInsert = p.yetToInsert[:0]
 }
 
 // returns negative when a < b
-func comparePositions(
+func (p *pending) comparePositions(
 	a, b position,
 ) int {
 	adist := a.row + a.col
