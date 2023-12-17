@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	citySize = 13
+	citySize = 141
 
 	maxStraightLine = 3
 )
@@ -163,6 +163,8 @@ const (
 	north = 1 << 3
 
 	southeast = south | east
+
+	maxHeading = north + 1
 )
 
 type position struct {
@@ -346,7 +348,7 @@ type pending struct {
 	all         []position
 	yetToInsert []position
 
-	bestByBlock [citySize][citySize][maxStraightLine + 1]*position
+	bestByBlock [citySize][citySize][maxStraightLine + 1][maxHeading]*position
 
 	best *position
 }
@@ -396,7 +398,7 @@ func (p *pending) filter() {
 		if p.best.totalHeatLoss < pos.totalHeatLoss+p.city.minHeatLossToTarget[pos.row][pos.col] {
 			continue
 		}
-		if p.bestByBlock[pos.row][pos.col][pos.numInDirection].totalHeatLoss < pos.totalHeatLoss {
+		if p.bestByBlock[pos.row][pos.col][pos.numInDirection][pos.lastHeading].totalHeatLoss < pos.totalHeatLoss {
 			continue
 		}
 		filtered = append(filtered, pos)
@@ -412,12 +414,12 @@ func (p *pending) insert(
 		return
 	}
 
-	if blockBest := p.bestByBlock[pos.row][pos.col][pos.numInDirection]; blockBest != nil &&
+	if blockBest := p.bestByBlock[pos.row][pos.col][pos.numInDirection][pos.lastHeading]; blockBest != nil &&
 		blockBest.totalHeatLoss < pos.totalHeatLoss {
 		return
 	}
 
-	p.bestByBlock[pos.row][pos.col][pos.numInDirection] = &pos
+	p.bestByBlock[pos.row][pos.col][pos.numInDirection][pos.lastHeading] = &pos
 
 	p.yetToInsert = append(p.yetToInsert, pos)
 }
@@ -434,7 +436,8 @@ func (p *pending) sort() {
 			p.all = append(p.all, e)
 			continue
 		}
-		after := p.all[ei:]
+		after := make([]position, len(p.all)-ei)
+		copy(after, p.all[ei:])
 		p.all = p.all[:ei]              // trim to before
 		p.all = append(p.all, e)        // insert the new element
 		p.all = append(p.all, after...) // add the after ones.
