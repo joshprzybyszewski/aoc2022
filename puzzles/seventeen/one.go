@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	citySize = 141
+	citySize = 13
 
 	maxStraightLine = 3
 )
@@ -211,7 +211,6 @@ func getMinimalHeatLoss(
 	var left, straight, right *position
 
 	for !pending.isEmpty() {
-		pending.sort()
 		pos = pending.pop()
 		// fmt.Printf("Processing: %s\n", pos)
 
@@ -360,6 +359,7 @@ func newPending(city *city) *pending {
 }
 
 func (p *pending) pop() position {
+	p.sort()
 	pos := p.all[0]
 	p.checkSolution(pos)
 	p.all = p.all[1:]
@@ -381,7 +381,7 @@ func (p *pending) checkSolution(
 		fmt.Printf("Found Solution:\n%s\nFIRST: %4d (%d pending)\n\n", drawPath(&pos, p.city), pos.totalHeatLoss, len(p.all))
 		p.best = &pos
 		p.filter()
-	} else if p.best.totalHeatLoss > pos.totalHeatLoss {
+	} else if pos.totalHeatLoss < p.best.totalHeatLoss {
 		fmt.Printf("Found New Best:\n%s\nNEW BEST: %4d (%d pending)\n\n", drawPath(&pos, p.city), pos.totalHeatLoss, len(p.all))
 		p.best = &pos
 		p.filter()
