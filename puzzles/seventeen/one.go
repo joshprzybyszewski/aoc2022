@@ -1,309 +1,219 @@
 package seventeen
 
 import (
-	"strings"
+	"slices"
 )
 
 const (
-	numRocksPart1 = 2022
+	citySize = 141
 
-	// needs to be at least numRocksPart1*3 + (3 + 4)
-	maxChamberHeight = 8192 // 0b10000000000000 = 1 << 13
+	maxStraightLine = 3
 )
-
-type rock [4]uint8
-
-func (r *rock) isFarLeft() bool {
-	return (r[3]|r[2]|r[1]|r[0])&leftwall != 0
-}
-
-func (r *rock) isFarRight() bool {
-	return (r[3]|r[2]|r[1]|r[0])&rightwall != 0
-}
-
-const (
-	leftwall  uint8 = 0b01000000
-	rightwall uint8 = 0b00000001
-	fullrow   uint8 = 0b01111111
-
-	dashIndex   uint8 = 0
-	plusIndex   uint8 = 1
-	cornerIndex uint8 = 2
-	towerIndex  uint8 = 3
-	squareIndex uint8 = 4
-)
-
-var (
-	// ####
-	dash = rock{
-		0b00011110, // ?0011110
-		0,          // ?0000000
-		0,          // ?0000000
-		0,          // ?0000000
-	}
-
-	// .#.
-	// ###
-	// .#.
-	plus = rock{
-		0b00001000, // ?0001000
-		0b00011100, // ?0011100
-		0b00001000, // ?0001000
-		0,          // ?0000000
-	}
-
-	// ..#
-	// ..#
-	// ###
-	corner = rock{
-		0b00011100, // ?0011100
-		0b00000100, // ?0000100
-		0b00000100, // ?0000100
-		0,          // ?0000000
-	}
-
-	// #
-	// #
-	// #
-	// #
-	tower = rock{
-		0b00010000, // ?0010000
-		0b00010000, // ?0010000
-		0b00010000, // ?0010000
-		0b00010000, // ?0010000
-	}
-
-	// ##
-	// ##
-	square = rock{
-		0b00011000, // ?0011000
-		0b00011000, // ?0011000
-		0,          // ?0000000
-		0,          // ?0000000
-	}
-)
-
-type fallingRock struct {
-	rock   rock
-	bottom int
-}
-
-type chamber struct {
-	settled     [maxChamberHeight]uint8
-	minEmptyRow int
-
-	pending      fallingRock
-	pendingIndex uint8
-}
-
-func newChamber() chamber {
-	c := chamber{}
-
-	c.addPendingRock()
-
-	return c
-}
-
-func (c *chamber) String() string {
-	var sb strings.Builder
-	for r := c.minEmptyRow + 7; r >= 0; r-- {
-		if r > c.minEmptyRow &&
-			r > c.pending.bottom && (r >= c.pending.bottom+len(c.pending.rock) ||
-			c.pending.rock[r-c.pending.bottom] == 0) {
-			continue
-		}
-
-		sb.WriteString("|")
-		for col := 6; col >= 0; col-- {
-			if c.settled[r]&(1<<col) != 0 {
-				sb.WriteByte('#')
-			} else if r >= c.pending.bottom &&
-				r < c.pending.bottom+len(c.pending.rock) &&
-				(c.pending.rock[r-c.pending.bottom]&(1<<col) != 0) {
-				sb.WriteByte('@')
-			} else {
-				sb.WriteByte('.')
-			}
-		}
-		sb.WriteString("|\n")
-	}
-	sb.WriteString("+-------+\n")
-
-	return sb.String()
-}
-
-func (c *chamber) pushLeft() {
-	if !c.canPushLeft() {
-		return
-	}
-	// push each of the rows of the rock to the left
-	for i := range c.pending.rock {
-		c.pending.rock[i] = c.pending.rock[i] << 1
-	}
-}
-
-func (c *chamber) canPushLeft() bool {
-	if c.pending.rock.isFarLeft() {
-		return false
-	}
-
-	if c.settled[c.pending.bottom]&(c.pending.rock[0]<<1) != 0 {
-		return false
-	}
-	if c.settled[c.pending.bottom+1]&(c.pending.rock[1]<<1) != 0 {
-		return false
-	}
-	if c.settled[c.pending.bottom+2]&(c.pending.rock[2]<<1) != 0 {
-		return false
-	}
-
-	return c.settled[c.pending.bottom+3]&(c.pending.rock[3]<<1) == 0
-}
-
-func (c *chamber) pushRight() {
-	if !c.canPushRight() {
-		return
-	}
-	// push each of the rows of the rock to the right
-	for i := range c.pending.rock {
-		c.pending.rock[i] = c.pending.rock[i] >> 1
-	}
-}
-
-func (c *chamber) canPushRight() bool {
-	if c.pending.rock.isFarRight() {
-		return false
-	}
-
-	if c.settled[c.pending.bottom]&(c.pending.rock[0]>>1) != 0 {
-		return false
-	}
-	if c.settled[c.pending.bottom+1]&(c.pending.rock[1]>>1) != 0 {
-		return false
-	}
-	if c.settled[c.pending.bottom+2]&(c.pending.rock[2]>>1) != 0 {
-		return false
-	}
-
-	return c.settled[c.pending.bottom+3]&(c.pending.rock[3]>>1) == 0
-}
-
-func (c *chamber) fall() bool {
-	if c.canFall() {
-		c.pending.bottom--
-		return true
-	}
-
-	// move pending to settled
-	c.settled[c.pending.bottom] |= c.pending.rock[0]
-	c.settled[c.pending.bottom+1] |= c.pending.rock[1]
-	c.settled[c.pending.bottom+2] |= c.pending.rock[2]
-	c.settled[c.pending.bottom+3] |= c.pending.rock[3]
-	// keep track of the lowest row of empty rock
-	for c.settled[c.minEmptyRow] != 0 {
-		c.minEmptyRow++
-	}
-	// add a new pending
-	c.addPendingRock()
-	return false
-}
-
-func (c *chamber) canFall() bool {
-	if c.pending.bottom == 0 {
-		return false
-	}
-	return (c.settled[c.pending.bottom-1]&c.pending.rock[0])|
-		(c.settled[c.pending.bottom]&c.pending.rock[1])|
-		(c.settled[c.pending.bottom+1]&c.pending.rock[2])|
-		(c.settled[c.pending.bottom+2]&c.pending.rock[3]) == 0
-}
-
-func (c *chamber) addPendingRock() {
-	switch c.pendingIndex {
-	case dashIndex:
-		c.pending.rock = dash
-		c.pendingIndex = plusIndex
-	case plusIndex:
-		c.pending.rock = plus
-		c.pendingIndex = cornerIndex
-	case cornerIndex:
-		c.pending.rock = corner
-		c.pendingIndex = towerIndex
-	case towerIndex:
-		c.pending.rock = tower
-		c.pendingIndex = squareIndex
-	case squareIndex:
-		c.pending.rock = square
-		c.pendingIndex = dashIndex
-	}
-	c.pending.bottom = c.minEmptyRow + 3
-}
-
-func (c *chamber) reduce() int {
-	r := c.getHighestFullRow()
-	if r < 0 {
-		// no full rows
-		return 0
-	}
-	numRows := r + 1
-
-	// move the rows above the full row down to the bottom
-	var b int
-	for t := numRows; t < c.minEmptyRow; {
-		c.settled[b] = c.settled[t]
-		b++
-		t++
-	}
-	// clear out rows above the top of the rocks
-	for ; b < c.minEmptyRow; b++ {
-		c.settled[b] = 0
-	}
-	// lower the "min empty row"
-	c.minEmptyRow -= numRows
-	// lower the pending rock's bottom index
-	c.pending.bottom -= numRows
-
-	// return how many rows this was reduced
-	return numRows
-}
-
-func (c *chamber) getHighestFullRow() int {
-	var r int
-	for r = c.minEmptyRow - 1; r >= 0; r-- {
-		if c.settled[r] == fullrow {
-			return r
-		}
-	}
-	return r
-}
 
 func One(
 	input string,
 ) (int, error) {
-	c := newChamber()
-	jetIndex := 0
+	c := newCity(input)
+	return 0, nil
+}
 
-	for nr := 0; nr < numRocksPart1; nr++ {
-		for {
-			switch input[jetIndex] {
-			case '<':
-				c.pushLeft()
-			case '>':
-				c.pushRight()
-			default:
-				panic(input[jetIndex])
-			}
+type city struct {
+	blocks [citySize][citySize]int
+}
 
-			jetIndex++
-			if jetIndex == len(input)-1 {
-				jetIndex = 0
-			}
+func newCity(input string) city {
+	ri, ci := 0, 0
+	c := city{}
+	for len(input) > 0 {
+		if input[0] == '\n' {
+			ri++
+			ci = -1
+		} else {
+			c.blocks[ri][ci] = int(input[0] - '0')
+		}
+		ci++
+		input = input[1:]
+	}
 
-			if !c.fall() {
-				break
+	return c
+}
+
+type heading uint8
+
+const (
+	east  = 1 << 0
+	south = 1 << 1
+	west  = 1 << 2
+	north = 1 << 3
+
+	southeast = south | east
+)
+
+type position struct {
+	row int // uint8
+	col int // uint8
+
+	lastHeading    heading
+	numInDirection int
+
+	totalHeatLoss int
+}
+
+func getMinimalHeatLoss(
+	c city,
+) int {
+
+	pending := newPending()
+	pending.insert(
+		position{
+			row:            1,
+			col:            0,
+			lastHeading:    south,
+			numInDirection: 1,
+			totalHeatLoss:  c.blocks[1][0],
+		},
+	)
+	pending.insert(
+		position{
+			row:            0,
+			col:            1,
+			lastHeading:    east,
+			numInDirection: 1,
+			totalHeatLoss:  c.blocks[0][1],
+		},
+	)
+
+	var pos position
+	var left, straight, right *position
+
+	for !pending.isEmpty() {
+		pending.sort()
+		pos = pending.pop()
+
+		left, straight, right = getNext(c, pos)
+		if left != nil {
+			pending.insert(*left)
+		}
+		if straight != nil {
+			pending.insert(*straight)
+		}
+		if right != nil {
+			pending.insert(*right)
+		}
+
+	}
+
+	return 0
+}
+
+func getNext(
+	c city,
+	pos position,
+) (left, straight, right *position) {
+	if pos.numInDirection < maxStraightLine {
+		s := pos
+		straight = &s
+		s.numInDirection++
+
+		switch s.lastHeading {
+		case east:
+			s.col++
+			if s.col >= citySize {
+				straight = nil
 			}
+		case south:
+			s.row++
+			if s.row >= citySize {
+				straight = nil
+			}
+		case west:
+			s.col--
+			if s.col < 0 {
+				straight = nil
+			}
+		case north:
+			s.row--
+			if s.row < 0 {
+				straight = nil
+			}
+		}
+
+		straight = &s
+	}
+
+	// TODO populate left and right
+
+	return nil, straight, nil
+}
+
+type pending struct {
+	all []position
+}
+
+func newPending() *pending {
+	return &pending{
+		all: make([]position, 0, 128),
+	}
+}
+func (p *pending) isEmpty() bool {
+	return len(p.all) == 0
+}
+
+func (p *pending) insert(
+	pos position,
+) {
+	p.all = append(p.all, pos)
+}
+
+func (p *pending) sort() {
+	slices.SortFunc(p.all, comparePositions)
+}
+
+// returns negative when a < b
+func comparePositions(
+	a, b position,
+) int {
+	// adist := (citySize - 1 - a.row) + (citySize - 1 - a.col)
+	// bdist := (citySize - 1 - b.row) + (citySize - 1 - b.col)
+	// adist := 2*citySize - 2 - a.row - a.col
+	// bdist := 2*citySize - 2 - b.row - b.col
+	adist := a.row + a.col
+	bdist := b.row + b.col
+	if adist != bdist {
+		// return the one closest to the target, the bottom right, which means
+		// the sum of the row and col will be largest
+		return bdist - adist
+	}
+
+	if a.totalHeatLoss != b.totalHeatLoss {
+		// if the position at a has a lower total heat loss,
+		// that one should be first
+		return a.totalHeatLoss - b.totalHeatLoss
+	}
+
+	if a.lastHeading != b.lastHeading {
+		aGood := (a.lastHeading & southeast) == a.lastHeading
+		bGood := (b.lastHeading & southeast) == b.lastHeading
+		if aGood != bGood {
+			if aGood {
+				// a is headed southeast, b is not
+				return -1
+			}
+			// b is headed southeast, a is not
+			return 1
 		}
 	}
 
-	return c.minEmptyRow, nil
+	if a.numInDirection != b.numInDirection {
+		// if a has gone fewer in a given direction,
+		// then that one should be first
+		return a.numInDirection - b.numInDirection
+	}
+	return 0 // no distinguishable difference
+}
+
+func (p *pending) pop() position {
+	pos := p.all[0]
+	p.all = p.all[1:]
+	return pos
 }

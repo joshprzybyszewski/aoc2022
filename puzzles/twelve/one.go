@@ -175,6 +175,10 @@ func getNum(
 		maxI = r.nextBroken[start]
 	}
 
+	// TODO start at maxI.
+	// if can place,
+	//   then find how many placements exist for this group between start and i
+	//   continue, but force the next group to be placed before `i+groups[0]+1`
 	for i := start; i <= maxI; i++ {
 		if canPlace(r, i, groups) {
 			// r := markGroup(r, i, groups[0])
