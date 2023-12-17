@@ -41,18 +41,21 @@ func One(
 	input string,
 ) (int, error) {
 	total := 0
-	var i int
+	var i, cur int
 	var r row
 	var addGroup bool
 	groups := make([]int, 0, 8)
 	for len(input) > 0 {
 		if input[0] == '\n' {
 			if r.numParts > 0 {
+				groups = append(groups, cur)
+				// fmt.Printf("  %20s %v\n", r, groups)
 				num := getNum(r, 0, groups)
-				// fmt.Printf("%20s %v := %d\n", r, groups, num)
+				// fmt.Printf("ANSWER: %d\n\n\n", num)
 				total += num
 			}
 			i = 0
+			cur = 0
 			r = row{}
 			addGroup = false
 			groups = groups[:0]
@@ -60,8 +63,11 @@ func One(
 			switch input[0] {
 			case ',':
 				// iterate past.
+				groups = append(groups, cur)
+				cur = 0
 			default:
-				groups = append(groups, int(input[0]-'0'))
+				cur *= 10
+				cur += int(input[0] - '0')
 			}
 		} else {
 			switch input[0] {
@@ -87,38 +93,36 @@ func getNum(
 ) int {
 	// fmt.Printf("  %20s %v\tstart = %2d\n", r, groups, start)
 	if len(groups) == 0 {
-		panic(`unexpected`)
+		// fmt.Printf("  %20s %v\tstart = %2d\n", r, groups, start)
+		return 1
 	}
 
 	total := 0
 	maxI := r.numParts
-	if len(groups) > 0 {
-		maxI -= (len(groups) - 1)
+	{ // limit the max starting point
+		if len(groups) > 0 {
+			maxI -= (len(groups) - 1)
+		}
+		for _, g := range groups {
+			maxI -= g
+		}
 	}
-	for _, g := range groups {
-		maxI -= g
-	}
+
 	for i := start; i <= maxI; i++ {
-		if i > 0 && r.parts[i-1] == broken {
-			// TODO this can be faster
-			break
-		}
-		if !canPlace(r, i, groups[0]) {
-			continue
-		}
-		if len(groups) == 1 {
-			if hasBroken(r, i+groups[0]+1) {
-				break
-			}
-			total++
-			// fmt.Printf("   works!\n")
-		} else {
+		if canPlace(r, i, groups) {
 			rCpy := r
 			for j := i; j < i+groups[0]; j++ {
 				rCpy.parts[j] = broken
 			}
-			rCpy.parts[i+groups[0]] = safe
+			if i+groups[0] < r.numParts {
+				rCpy.parts[i+groups[0]] = safe
+			}
 			total += getNum(rCpy, i+groups[0]+1, groups[1:])
+
+		}
+		if r.parts[i] == broken {
+			// TODO this can be faster
+			break
 		}
 	}
 
@@ -128,15 +132,22 @@ func getNum(
 func canPlace(
 	r row,
 	start int,
-	group int,
+	groups []int,
 ) bool {
-	maxI := start + group
+	maxI := start + groups[0]
 	if maxI > r.numParts {
 		return false
 	}
 	for i := start; i < maxI; i++ {
 		if r.parts[i] == safe {
 			return false
+		}
+	}
+	if len(groups) == 1 {
+		for i := maxI; i < r.numParts; i++ {
+			if r.parts[i] == broken {
+				return false
+			}
 		}
 	}
 	return maxI == r.numParts || r.parts[maxI] != broken
