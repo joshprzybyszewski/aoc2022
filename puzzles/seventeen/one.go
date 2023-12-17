@@ -212,7 +212,6 @@ func getMinimalHeatLoss(
 	for !pending.isEmpty() {
 		pending.sort()
 		pos = pending.pop()
-
 		fmt.Printf("Processing: %s\n", pos)
 
 		left, straight, right = getNext(c, pos)
@@ -347,6 +346,8 @@ type pending struct {
 	all       []position
 	needsSort bool
 
+	bestByBlock [citySize][citySize][maxStraightLine + 1]*position
+
 	best *position
 }
 
@@ -375,21 +376,28 @@ func (p *pending) checkSolution(
 		return
 	}
 
-	// fmt.Printf("Found Solution:\n%s\n\n", drawPath(&pos, p.city))
 	if p.best == nil {
+		fmt.Printf("Found Solution:\n%s\nFIRST: %4d (%d pending)\n\n", drawPath(&pos, p.city), pos.totalHeatLoss, len(p.all))
 		p.best = &pos
-		filtered := make([]position, 0, len(p.all))
-		for _, pos := range p.all {
-			if p.best.totalHeatLoss < pos.totalHeatLoss+p.city.minHeatLossToTarget[pos.row][pos.col] {
-				continue
-			}
-			filtered = append(filtered, pos)
-		}
-		// TODO filter out anything in the pending slice
-		p.all = filtered
+		p.filter()
 	} else if p.best.totalHeatLoss > pos.totalHeatLoss {
+		fmt.Printf("Found New Best:\n%s\nNEW BEST: %4d (%d pending)\n\n", drawPath(&pos, p.city), pos.totalHeatLoss, len(p.all))
 		p.best = &pos
+		p.filter()
 	}
+}
+func (p *pending) filter() {
+	filtered := make([]position, 0, len(p.all))
+	for _, pos := range p.all {
+		if p.best.totalHeatLoss < pos.totalHeatLoss+p.city.minHeatLossToTarget[pos.row][pos.col] {
+			continue
+		}
+		if p.bestByBlock[pos.row][pos.col][pos.numInDirection].totalHeatLoss < pos.totalHeatLoss {
+			continue
+		}
+		filtered = append(filtered, pos)
+	}
+	p.all = filtered
 }
 
 func (p *pending) insert(
@@ -400,6 +408,13 @@ func (p *pending) insert(
 		return
 	}
 
+	if blockBest := p.bestByBlock[pos.row][pos.col][pos.numInDirection]; blockBest != nil &&
+		blockBest.totalHeatLoss < pos.totalHeatLoss {
+		return
+	}
+
+	p.bestByBlock[pos.row][pos.col][pos.numInDirection] = &pos
+
 	p.needsSort = true
 	p.all = append(p.all, pos)
 }
@@ -407,6 +422,7 @@ func (p *pending) insert(
 func (p *pending) sort() {
 	if p.needsSort {
 		slices.SortFunc(p.all, comparePositions)
+		p.needsSort = false
 	}
 }
 
@@ -446,5 +462,6 @@ func comparePositions(
 		// then that one should be first
 		return a.numInDirection - b.numInDirection
 	}
+
 	return 0 // no distinguishable difference
 }
