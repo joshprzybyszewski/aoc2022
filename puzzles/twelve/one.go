@@ -4,6 +4,10 @@ import (
 	"strings"
 )
 
+const (
+	maxGroup = 16
+)
+
 type part uint8
 
 const (
@@ -24,9 +28,47 @@ func (p part) toString() byte {
 	return 'X'
 }
 
+func populateAllowed(
+	r *row,
+	groups []int,
+) {
+	if maxInSlice(groups) > maxGroup {
+		panic(`ahh`)
+	}
+	for i := r.numParts - 1; i >= 0; i-- {
+		if r.parts[i] == safe {
+			continue
+		}
+		for n := 0; n < maxGroup; n++ {
+			if i+n >= r.numParts || r.parts[i+n] == safe {
+				// must stop when this one is safe
+				break
+			}
+			if i+n+1 == r.numParts || r.parts[i+n+1] != broken {
+				r.allowed[i][n] = true
+			}
+		}
+	}
+}
+
+func maxInSlice(groups []int) int {
+	max := groups[0]
+	for _, g := range groups {
+		if g > max {
+			max = g
+		}
+	}
+	return max
+}
+
 type row struct {
 	parts    [105]part
+	allowed  [105][maxGroup]bool
 	numParts int
+}
+
+func (r row) canPlace(group, index int) bool {
+	return r.allowed[index][group-1]
 }
 
 func (r row) String() string {
@@ -49,6 +91,7 @@ func One(
 		if input[0] == '\n' {
 			if r.numParts > 0 {
 				groups = append(groups, cur)
+				populateAllowed(&r, groups)
 				// fmt.Printf("  %-105s %v\n", r, groups)
 				num := getNum(
 					r,
@@ -138,18 +181,13 @@ func canPlace(
 	start int,
 	groups []int,
 ) bool {
+	if !r.canPlace(groups[0], start) {
+		return false
+	}
+
 	maxI := start + groups[0]
 	if maxI > r.numParts {
 		return false
-
-	}
-	for i := start; i < maxI; i++ {
-		if r.parts[i] == safe {
-			for i < r.numParts && r.parts[i] == safe {
-				i++
-			}
-			return false
-		}
 	}
 	if len(groups) == 1 {
 		for i := maxI; i < r.numParts; i++ {
@@ -158,12 +196,7 @@ func canPlace(
 			}
 		}
 	}
-	if maxI == r.numParts {
-		return true
-	}
-
-	return r.parts[maxI] != broken
-
+	return true
 }
 
 func markGroup(

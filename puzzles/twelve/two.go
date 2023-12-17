@@ -39,6 +39,7 @@ func Two(
 				groups = append(groups, cur)
 				// fmt.Printf("  %-105s %v\n", r, groups)
 				groups = unfold(&r, groups)
+				populateAllowed(&r, groups)
 				fmt.Printf("  %-105s %v\n", r, groups)
 				num := getNum(
 					r,
