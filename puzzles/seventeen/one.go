@@ -17,7 +17,7 @@ func One(
 ) (int, error) {
 	c := newCity(input)
 	dijkstraHeatLossToTarget(&c)
-	fmt.Printf("city:\n%s\n", c)
+	// fmt.Printf("city:\n%s\n", c)
 	// 1356 is too high
 	return getMinimalHeatLoss(c), nil
 }
@@ -47,10 +47,48 @@ func newCity(input string) city {
 
 func (c city) String() string {
 	var sb strings.Builder
+	sb.WriteString("        ")
+	for ci := 0; ci < citySize; ci++ {
+		sb.WriteString(fmt.Sprintf("%4d ", ci))
+	}
+	sb.WriteByte('\n')
+	for ri := 0; ri < citySize; ri++ {
+		sb.WriteString(fmt.Sprintf("Row %3d:", ri))
+		for ci := 0; ci < citySize; ci++ {
+			sb.WriteString(fmt.Sprintf("%4d ", c.minHeatLossToTarget[ri][ci]))
+		}
+		sb.WriteByte('\n')
+	}
+	return sb.String()
+}
+
+func drawPath(p *position, c *city) string {
+	var output [citySize][citySize]byte
 	for ri := 0; ri < citySize; ri++ {
 		for ci := 0; ci < citySize; ci++ {
-			sb.WriteString(fmt.Sprintf("%4d ", c.blocks[ri][ci]))
+			output[ri][ci] = '0' + byte(c.blocks[ri][ci])
 		}
+	}
+
+	for p != nil {
+		switch p.lastHeading {
+		case east:
+			output[p.row][p.col] = '>'
+		case south:
+			output[p.row][p.col] = 'v'
+		case west:
+			output[p.row][p.col] = '<'
+		case north:
+			output[p.row][p.col] = '^'
+		default:
+			panic(`ahh`)
+		}
+		p = p.prev
+	}
+
+	var sb strings.Builder
+	for ri := 0; ri < citySize; ri++ {
+		sb.WriteString(string(output[ri][:]))
 		sb.WriteByte('\n')
 	}
 	return sb.String()
@@ -74,7 +112,11 @@ func dijkstraHeatLossToTarget(c *city) {
 
 	for len(pending) > 0 {
 		pos := pending[0]
-		if pos.row < 0 || pos.col < 0 {
+		if pos.row < 0 ||
+			pos.col < 0 ||
+			pos.row >= citySize ||
+			pos.col >= citySize ||
+			(pos.row == citySize-1 && pos.col == citySize-1) {
 			pending = pending[1:]
 			continue
 		}
@@ -92,6 +134,16 @@ func dijkstraHeatLossToTarget(c *city) {
 				position{
 					row:           pos.row,
 					col:           pos.col - 1,
+					totalHeatLoss: pos.totalHeatLoss + c.blocks[pos.row][pos.col],
+				},
+				position{
+					row:           pos.row + 1,
+					col:           pos.col,
+					totalHeatLoss: pos.totalHeatLoss + c.blocks[pos.row][pos.col],
+				},
+				position{
+					row:           pos.row,
+					col:           pos.col + 1,
 					totalHeatLoss: pos.totalHeatLoss + c.blocks[pos.row][pos.col],
 				},
 			)
@@ -120,6 +172,8 @@ type position struct {
 	numInDirection int
 
 	totalHeatLoss int
+
+	prev *position
 }
 
 func (p position) String() string {
@@ -130,7 +184,7 @@ func getMinimalHeatLoss(
 	c city,
 ) int {
 
-	pending := newPending()
+	pending := newPending(&c)
 	pending.insert(
 		position{
 			row:            1,
@@ -138,6 +192,7 @@ func getMinimalHeatLoss(
 			lastHeading:    south,
 			numInDirection: 1,
 			totalHeatLoss:  c.blocks[1][0],
+			prev:           nil,
 		},
 	)
 	pending.insert(
@@ -147,6 +202,7 @@ func getMinimalHeatLoss(
 			lastHeading:    east,
 			numInDirection: 1,
 			totalHeatLoss:  c.blocks[0][1],
+			prev:           nil,
 		},
 	)
 
@@ -158,10 +214,6 @@ func getMinimalHeatLoss(
 		pos = pending.pop()
 
 		fmt.Printf("Processing: %s\n", pos)
-
-		if pending.checkSolution(pos) {
-			break
-		}
 
 		left, straight, right = getNext(c, pos)
 		if left != nil {
@@ -186,6 +238,7 @@ func getNext(
 		s := pos
 		straight = &s
 		s.numInDirection++
+		s.prev = &pos
 
 		switch s.lastHeading {
 		case east:
@@ -213,7 +266,8 @@ func getNext(
 
 	l := pos
 	left = &l
-	l.numInDirection = 0
+	l.numInDirection = 1
+	l.prev = &pos
 
 	switch l.lastHeading {
 	case south:
@@ -244,7 +298,8 @@ func getNext(
 
 	r := pos
 	right = &r
-	r.numInDirection = 0
+	r.numInDirection = 1
+	r.prev = &pos
 
 	switch r.lastHeading {
 	case north:
@@ -287,15 +342,26 @@ func getNext(
 }
 
 type pending struct {
-	all []position
+	city *city
 
-	best position
+	all       []position
+	needsSort bool
+
+	best *position
 }
 
-func newPending() *pending {
+func newPending(city *city) *pending {
 	return &pending{
-		all: make([]position, 0, 128),
+		city: city,
+		all:  make([]position, 0, 128),
 	}
+}
+
+func (p *pending) pop() position {
+	pos := p.all[0]
+	p.checkSolution(pos)
+	p.all = p.all[1:]
+	return pos
 }
 
 func (p *pending) isEmpty() bool {
@@ -304,26 +370,44 @@ func (p *pending) isEmpty() bool {
 
 func (p *pending) checkSolution(
 	pos position,
-) bool {
+) {
 	if pos.row != citySize-1 || pos.col != citySize-1 {
-		return false
+		return
 	}
 
-	// TODO check if pos.heatLoss < p.best.heatLoss
-	p.best = pos
-
-	// TODO filter out
-	return true
+	// fmt.Printf("Found Solution:\n%s\n\n", drawPath(&pos, p.city))
+	if p.best == nil {
+		p.best = &pos
+		filtered := make([]position, 0, len(p.all))
+		for _, pos := range p.all {
+			if p.best.totalHeatLoss < pos.totalHeatLoss+p.city.minHeatLossToTarget[pos.row][pos.col] {
+				continue
+			}
+			filtered = append(filtered, pos)
+		}
+		// TODO filter out anything in the pending slice
+		p.all = filtered
+	} else if p.best.totalHeatLoss > pos.totalHeatLoss {
+		p.best = &pos
+	}
 }
 
 func (p *pending) insert(
 	pos position,
 ) {
+	if p.best != nil &&
+		p.best.totalHeatLoss < pos.totalHeatLoss+p.city.minHeatLossToTarget[pos.row][pos.col] {
+		return
+	}
+
+	p.needsSort = true
 	p.all = append(p.all, pos)
 }
 
 func (p *pending) sort() {
-	slices.SortFunc(p.all, comparePositions)
+	if p.needsSort {
+		slices.SortFunc(p.all, comparePositions)
+	}
 }
 
 // returns negative when a < b
@@ -363,10 +447,4 @@ func comparePositions(
 		return a.numInDirection - b.numInDirection
 	}
 	return 0 // no distinguishable difference
-}
-
-func (p *pending) pop() position {
-	pos := p.all[0]
-	p.all = p.all[1:]
-	return pos
 }
