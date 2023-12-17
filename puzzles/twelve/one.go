@@ -1,6 +1,7 @@
 package twelve
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -25,7 +26,7 @@ func (p part) toString() byte {
 }
 
 type row struct {
-	parts    [20]part
+	parts    [105]part
 	numParts int
 }
 
@@ -49,8 +50,13 @@ func One(
 		if input[0] == '\n' {
 			if r.numParts > 0 {
 				groups = append(groups, cur)
-				// fmt.Printf("  %20s %v\n", r, groups)
-				num := getNum(r, 0, groups)
+				// fmt.Printf("  %-105s %v\n", r, groups)
+				num := getNum(
+					r,
+					0,
+					groups,
+					getRemainingRequired(groups),
+				)
 				// fmt.Printf("ANSWER: %d\n\n\n", num)
 				total += num
 			}
@@ -86,20 +92,33 @@ func One(
 	return total, nil
 }
 
+func getRemainingRequired(groups []int) int {
+	total := 0
+	if len(groups) > 0 {
+		total += (len(groups) - 1)
+	}
+	for _, g := range groups {
+		total += g
+	}
+	return total
+}
+
 func getNum(
 	r row,
 	start int,
 	groups []int,
+	remainingRequired int,
 ) int {
-	// fmt.Printf("  %20s %v\tstart = %2d\n", r, groups, start)
+	// fmt.Printf("  %-105s %v\tstart = %2d\n", r, groups, start)
 	if len(groups) == 0 {
-		// fmt.Printf("  %20s %v\tstart = %2d\n", r, groups, start)
+		// fmt.Printf("  %-105s %v\tstart = %2d\n", r, groups, start)
 		return 1
 	}
 
 	total := 0
 	maxI := r.numParts
 	{ // limit the max starting point
+		// maxI -= remainingRequired
 		if len(groups) > 0 {
 			maxI -= (len(groups) - 1)
 		}
@@ -108,20 +127,18 @@ func getNum(
 		}
 	}
 
+	var can bool
+	var nextI int
 	for i := start; i <= maxI; i++ {
-		if canPlace(r, i, groups) {
-			rCpy := r
-			for j := i; j < i+groups[0]; j++ {
-				rCpy.parts[j] = broken
+		can, nextI = canPlace(r, i, groups)
+		if can {
+			if nextI == 1000 {
+				fmt.Printf("nextI:%d\n", nextI)
 			}
-			if i+groups[0] < r.numParts {
-				rCpy.parts[i+groups[0]] = safe
-			}
-			total += getNum(rCpy, i+groups[0]+1, groups[1:])
-
+			// r := markGroup(r, i, groups[0])
+			total += getNum(r, i+groups[0]+1, groups[1:], remainingRequired-groups[0]-1)
 		}
 		if r.parts[i] == broken {
-			// TODO this can be faster
 			break
 		}
 	}
@@ -133,34 +150,47 @@ func canPlace(
 	r row,
 	start int,
 	groups []int,
-) bool {
+) (bool, int) {
 	maxI := start + groups[0]
 	if maxI > r.numParts {
-		return false
+		// return false, r.numParts
+		return false, start + 1
 	}
 	for i := start; i < maxI; i++ {
 		if r.parts[i] == safe {
-			return false
+			// for i < r.numParts && r.parts[i] == safe {
+			// 	i++
+			// }
+			// return false, i + 1
+			return false, start + 1
 		}
 	}
 	if len(groups) == 1 {
 		for i := maxI; i < r.numParts; i++ {
 			if r.parts[i] == broken {
-				return false
+				// return false, r.numParts
+				return false, start + 1
 			}
 		}
 	}
-	return maxI == r.numParts || r.parts[maxI] != broken
+	if maxI == r.numParts {
+		return true, start + 1
+	}
+
+	return r.parts[maxI] != broken, start + 1
+
 }
 
-func hasBroken(
+func markGroup(
 	r row,
 	start int,
-) bool {
-	for i := start; i < r.numParts; i++ {
-		if r.parts[i] == broken {
-			return true
-		}
+	group int,
+) row {
+	for j := start; j < start+group; j++ {
+		r.parts[j] = broken
 	}
-	return false
+	if start+group < r.numParts {
+		r.parts[start+group] = safe
+	}
+	return r
 }
