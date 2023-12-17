@@ -49,6 +49,14 @@ func populateAllowed(
 			}
 		}
 	}
+
+	lastBroken := r.numParts
+	for i := r.numParts - 1; i >= 0; i-- {
+		if r.parts[i] == broken {
+			lastBroken = i
+		}
+		r.nextBroken[i] = lastBroken
+	}
 }
 
 func maxInSlice(groups []int) int {
@@ -62,9 +70,10 @@ func maxInSlice(groups []int) int {
 }
 
 type row struct {
-	parts    [105]part
-	allowed  [105][maxGroup]bool
-	numParts int
+	parts      [105]part
+	allowed    [105][maxGroup]bool
+	nextBroken [105]int
+	numParts   int
 }
 
 func (r row) canPlace(group, index int) bool {
@@ -162,14 +171,14 @@ func getNum(
 	{ // limit the max starting point
 		maxI -= remainingRequired
 	}
+	if r.nextBroken[start] < maxI {
+		maxI = r.nextBroken[start]
+	}
 
 	for i := start; i <= maxI; i++ {
 		if canPlace(r, i, groups) {
 			// r := markGroup(r, i, groups[0])
 			total += getNum(r, i+groups[0]+1, groups[1:], remainingRequired-groups[0]-1)
-		}
-		if r.parts[i] == broken {
-			break
 		}
 	}
 
