@@ -164,8 +164,6 @@ const (
 	north = 1 << 3
 
 	southeast = south | east
-
-	maxHeading = 1 << 4
 )
 
 type position struct {
@@ -377,7 +375,7 @@ type pending struct {
 	all         []position
 	yetToInsert []position
 
-	bestByBlock [citySize][citySize][maxHeading]*position
+	bestByCanOutgoing [citySize][citySize][4]*position
 
 	best *position
 }
@@ -418,10 +416,7 @@ func (p *pending) cannotBeBest(pos position) bool {
 		p.best.totalHeatLoss < pos.totalHeatLoss+p.city.minHeatLossToTarget[pos.row][pos.col] {
 		return true
 	}
-	if blockBest := p.bestByBlock[pos.row][pos.col][pos.canGo()]; blockBest != nil &&
-		blockBest.totalHeatLoss < pos.totalHeatLoss {
-		return false
-	}
+
 	return false
 }
 
@@ -447,11 +442,36 @@ func (p *pending) checkSolution(
 func (p *pending) insert(
 	pos position,
 ) {
-	if p.cannotBeBest(pos) {
+	hasOptions := false
+	// TODO incorporate "how far" it can go in each direction
+	myCanGo := pos.canGo()
+	if myCanGo&east == east &&
+		(p.bestByCanOutgoing[pos.row][pos.col][0] == nil ||
+			p.bestByCanOutgoing[pos.row][pos.col][0].totalHeatLoss > pos.totalHeatLoss) {
+		p.bestByCanOutgoing[pos.row][pos.col][0] = &pos
+		hasOptions = true
+	}
+	if myCanGo&south == south &&
+		(p.bestByCanOutgoing[pos.row][pos.col][1] == nil ||
+			p.bestByCanOutgoing[pos.row][pos.col][1].totalHeatLoss > pos.totalHeatLoss) {
+		p.bestByCanOutgoing[pos.row][pos.col][1] = &pos
+		hasOptions = true
+	}
+	if myCanGo&north == north &&
+		(p.bestByCanOutgoing[pos.row][pos.col][2] == nil ||
+			p.bestByCanOutgoing[pos.row][pos.col][2].totalHeatLoss > pos.totalHeatLoss) {
+		p.bestByCanOutgoing[pos.row][pos.col][2] = &pos
+		hasOptions = true
+	}
+	if myCanGo&west == west &&
+		(p.bestByCanOutgoing[pos.row][pos.col][3] == nil ||
+			p.bestByCanOutgoing[pos.row][pos.col][3].totalHeatLoss > pos.totalHeatLoss) {
+		p.bestByCanOutgoing[pos.row][pos.col][3] = &pos
+		hasOptions = true
+	}
+	if !hasOptions {
 		return
 	}
-
-	p.bestByBlock[pos.row][pos.col][pos.canGo()] = &pos
 
 	p.yetToInsert = append(p.yetToInsert, pos)
 }
