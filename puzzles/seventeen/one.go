@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	citySize = 141
+	citySize = 13
 
 	maxStraightLine = 3
 )
@@ -25,17 +25,14 @@ func One(
 			}
 		}
 	}
-	// fmt.Printf("city:\n%s\n", c)
-	// 1356 is too high
-	// 1290 is too high
-	// 1270 is too high
+
 	return min, nil
 }
 
 type city struct {
 	blocks [citySize][citySize]int
 
-	minHeatLossToTarget [citySize][citySize][maxHeading][maxStraightLine]int
+	minHeatLossToTarget [citySize][citySize][maxHeading][maxUltraStraightLine]int
 }
 
 func newCity(input string) city {
