@@ -20,6 +20,7 @@ func One(
 	// fmt.Printf("city:\n%s\n", c)
 	// 1356 is too high
 	// 1290 is too high
+	// 1270 is too high
 	return getMinimalHeatLoss(c), nil
 }
 
@@ -176,6 +177,8 @@ type position struct {
 
 	totalHeatLoss int
 
+	depth int
+
 	prev *position
 }
 
@@ -195,6 +198,7 @@ func getMinimalHeatLoss(
 			lastHeading:    south,
 			numInDirection: 1,
 			totalHeatLoss:  c.blocks[1][0],
+			depth:          1,
 			prev:           nil,
 		},
 	)
@@ -205,6 +209,7 @@ func getMinimalHeatLoss(
 			lastHeading:    east,
 			numInDirection: 1,
 			totalHeatLoss:  c.blocks[0][1],
+			depth:          1,
 			prev:           nil,
 		},
 	)
@@ -215,6 +220,8 @@ func getMinimalHeatLoss(
 	for !pending.isEmpty() {
 		pos = pending.pop()
 		// fmt.Printf("Processing: %s\n", pos)
+		// fmt.Printf("Processing:\n%s\n", drawPath(&pos, pending.city))
+		// time.Sleep(time.Millisecond * 16)
 
 		left, straight, right = getNext(c, pos)
 		if left != nil {
@@ -235,6 +242,7 @@ func getNext(
 	c city,
 	pos position,
 ) (left, straight, right *position) {
+	pos.depth++
 	if pos.numInDirection < maxStraightLine {
 		s := pos
 		straight = &s
@@ -356,8 +364,11 @@ type pending struct {
 func newPending(city *city) *pending {
 	return &pending{
 		city: city,
-		all:  make([]position, 0, 128),
 	}
+}
+
+func (p *pending) isEmpty() bool {
+	return len(p.all) == 0 && len(p.yetToInsert) == 0
 }
 
 func (p *pending) pop() position {
@@ -368,8 +379,29 @@ func (p *pending) pop() position {
 	return pos
 }
 
-func (p *pending) isEmpty() bool {
-	return len(p.all) == 0 && len(p.yetToInsert) == 0
+func (p *pending) filter() {
+	for i := 0; i < len(p.all); {
+		if p.cannotBeBest(p.all[i]) {
+			if i < len(p.all)-1 {
+				p.all[i] = p.all[len(p.all)-1]
+			}
+			p.all = p.all[:len(p.all)-1]
+		} else {
+			i++
+		}
+	}
+}
+
+func (p *pending) cannotBeBest(pos position) bool {
+	if p.best != nil &&
+		p.best.totalHeatLoss < pos.totalHeatLoss+p.city.minHeatLossToTarget[pos.row][pos.col] {
+		return true
+	}
+	if blockBest := p.bestByBlock[pos.row][pos.col][pos.numInDirection][pos.lastHeading]; blockBest != nil &&
+		blockBest.totalHeatLoss < pos.totalHeatLoss {
+		return false
+	}
+	return false
 }
 
 func (p *pending) checkSolution(
@@ -380,7 +412,7 @@ func (p *pending) checkSolution(
 	}
 
 	if p.best == nil {
-		fmt.Printf("Found Solution:\n%s\nFIRST: %4d (%d pending)\n\n", drawPath(&pos, p.city), pos.totalHeatLoss, len(p.all))
+		// fmt.Printf("Found Solution:\n%s\nFIRST: %4d (%d pending)\n\n", drawPath(&pos, p.city), pos.totalHeatLoss, len(p.all))
 		p.best = &pos
 		p.filter()
 	} else if pos.totalHeatLoss < p.best.totalHeatLoss {
@@ -389,33 +421,11 @@ func (p *pending) checkSolution(
 		p.filter()
 	}
 }
-func (p *pending) filter() {
-	if len(p.yetToInsert) != 0 {
-		panic(`dev error`)
-	}
-	filtered := make([]position, 0, len(p.all))
-	for _, pos := range p.all {
-		if p.best.totalHeatLoss < pos.totalHeatLoss+p.city.minHeatLossToTarget[pos.row][pos.col] {
-			continue
-		}
-		if p.bestByBlock[pos.row][pos.col][pos.numInDirection][pos.lastHeading].totalHeatLoss < pos.totalHeatLoss {
-			continue
-		}
-		filtered = append(filtered, pos)
-	}
-	p.all = filtered
-}
 
 func (p *pending) insert(
 	pos position,
 ) {
-	if p.best != nil &&
-		p.best.totalHeatLoss < pos.totalHeatLoss+p.city.minHeatLossToTarget[pos.row][pos.col] {
-		return
-	}
-
-	if blockBest := p.bestByBlock[pos.row][pos.col][pos.numInDirection][pos.lastHeading]; blockBest != nil &&
-		blockBest.totalHeatLoss < pos.totalHeatLoss {
+	if p.cannotBeBest(pos) {
 		return
 	}
 
@@ -436,6 +446,8 @@ func (p *pending) sort() {
 			p.all = append(p.all, e)
 			continue
 		}
+		// Using slices.Insert doesn't seem to work.
+		// slices.Insert(p.all, ei, e)
 		after := make([]position, len(p.all)-ei)
 		copy(after, p.all[ei:])
 		p.all = p.all[:ei]              // trim to before
@@ -449,8 +461,18 @@ func (p *pending) sort() {
 func (p *pending) comparePositions(
 	a, b position,
 ) int {
+
 	adist := a.row + a.col
 	bdist := b.row + b.col
+
+	// aLossPerStep := a.totalHeatLoss / adist
+	// bLossPerStep := b.totalHeatLoss / bdist
+	// // aLossPerStep := a.totalHeatLoss / a.depth
+	// // bLossPerStep := b.totalHeatLoss / b.depth
+	// if aLossPerStep != bLossPerStep {
+	// 	return aLossPerStep - bLossPerStep
+	// }
+
 	if adist != bdist {
 		// return the one closest to the target, the bottom right, which means
 		// the sum of the row and col will be largest
@@ -477,10 +499,15 @@ func (p *pending) comparePositions(
 	}
 
 	if a.numInDirection != b.numInDirection {
-		// if a has gone fewer in a given direction,
+		// if a has gone more in a given direction,
 		// then that one should be first
-		return a.numInDirection - b.numInDirection
+		return b.numInDirection - a.numInDirection
 	}
 
+	aheatdelta := p.city.blocks[a.row][a.col]
+	bheatdelta := p.city.blocks[b.row][b.col]
+	if aheatdelta != bheatdelta {
+		return aheatdelta - bheatdelta
+	}
 	return 0 // no distinguishable difference
 }
