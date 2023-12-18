@@ -73,7 +73,7 @@ func drawPath(p *position, c *city) string {
 	}
 
 	for p != nil {
-		switch p.lastHeading {
+		switch p.heading {
 		case east:
 			output[p.row][p.col] = '>'
 		case south:
@@ -172,7 +172,7 @@ type position struct {
 	row int // uint8
 	col int // uint8
 
-	lastHeading    heading
+	heading    heading
 	numInDirection int
 
 	totalHeatLoss int
@@ -195,7 +195,7 @@ func getMinimalHeatLoss(
 		position{
 			row:            1,
 			col:            0,
-			lastHeading:    south,
+			heading:    south,
 			numInDirection: 1,
 			totalHeatLoss:  c.blocks[1][0],
 			depth:          1,
@@ -206,7 +206,7 @@ func getMinimalHeatLoss(
 		position{
 			row:            0,
 			col:            1,
-			lastHeading:    east,
+			heading:    east,
 			numInDirection: 1,
 			totalHeatLoss:  c.blocks[0][1],
 			depth:          1,
@@ -249,7 +249,7 @@ func getNext(
 		s.numInDirection++
 		s.prev = &pos
 
-		switch s.lastHeading {
+		switch s.heading {
 		case east:
 			s.col++
 			if s.col >= citySize {
@@ -278,27 +278,27 @@ func getNext(
 	l.numInDirection = 1
 	l.prev = &pos
 
-	switch l.lastHeading {
+	switch l.heading {
 	case south:
-		l.lastHeading = east
+		l.heading = east
 		l.col++
 		if l.col >= citySize {
 			left = nil
 		}
 	case west:
-		l.lastHeading = south
+		l.heading = south
 		l.row++
 		if l.row >= citySize {
 			left = nil
 		}
 	case north:
-		l.lastHeading = west
+		l.heading = west
 		l.col--
 		if l.col < 0 {
 			left = nil
 		}
 	case east:
-		l.lastHeading = north
+		l.heading = north
 		l.row--
 		if l.row < 0 {
 			left = nil
@@ -310,27 +310,27 @@ func getNext(
 	r.numInDirection = 1
 	r.prev = &pos
 
-	switch r.lastHeading {
+	switch r.heading {
 	case north:
-		r.lastHeading = east
+		r.heading = east
 		r.col++
 		if r.col >= citySize {
 			right = nil
 		}
 	case east:
-		r.lastHeading = south
+		r.heading = south
 		r.row++
 		if r.row >= citySize {
 			right = nil
 		}
 	case south:
-		r.lastHeading = west
+		r.heading = west
 		r.col--
 		if r.col < 0 {
 			right = nil
 		}
 	case west:
-		r.lastHeading = north
+		r.heading = north
 		r.row--
 		if r.row < 0 {
 			right = nil
@@ -397,7 +397,7 @@ func (p *pending) cannotBeBest(pos position) bool {
 		p.best.totalHeatLoss < pos.totalHeatLoss+p.city.minHeatLossToTarget[pos.row][pos.col] {
 		return true
 	}
-	if blockBest := p.bestByBlock[pos.row][pos.col][pos.numInDirection][pos.lastHeading]; blockBest != nil &&
+	if blockBest := p.bestByBlock[pos.row][pos.col][pos.numInDirection][pos.heading]; blockBest != nil &&
 		blockBest.totalHeatLoss < pos.totalHeatLoss {
 		return false
 	}
@@ -412,7 +412,7 @@ func (p *pending) checkSolution(
 	}
 
 	if p.best == nil {
-		// fmt.Printf("Found Solution:\n%s\nFIRST: %4d (%d pending)\n\n", drawPath(&pos, p.city), pos.totalHeatLoss, len(p.all))
+		fmt.Printf("Found Solution:\n%s\nFIRST: %4d (%d pending)\n\n", drawPath(&pos, p.city), pos.totalHeatLoss, len(p.all))
 		p.best = &pos
 		p.filter()
 	} else if pos.totalHeatLoss < p.best.totalHeatLoss {
@@ -429,7 +429,7 @@ func (p *pending) insert(
 		return
 	}
 
-	p.bestByBlock[pos.row][pos.col][pos.numInDirection][pos.lastHeading] = &pos
+	p.bestByBlock[pos.row][pos.col][pos.numInDirection][pos.heading] = &pos
 
 	p.yetToInsert = append(p.yetToInsert, pos)
 }
@@ -465,13 +465,15 @@ func (p *pending) comparePositions(
 	adist := a.row + a.col
 	bdist := b.row + b.col
 
-	// aLossPerStep := a.totalHeatLoss / adist
-	// bLossPerStep := b.totalHeatLoss / bdist
-	// // aLossPerStep := a.totalHeatLoss / a.depth
-	// // bLossPerStep := b.totalHeatLoss / b.depth
-	// if aLossPerStep != bLossPerStep {
-	// 	return aLossPerStep - bLossPerStep
-	// }
+	if p.best != nil {
+		// aLossPerStep := a.totalHeatLoss / adist
+		// bLossPerStep := b.totalHeatLoss / bdist
+		aLossPerStep := a.totalHeatLoss / a.depth
+		bLossPerStep := b.totalHeatLoss / b.depth
+		if aLossPerStep != bLossPerStep {
+			return aLossPerStep - bLossPerStep
+		}
+	}
 
 	if adist != bdist {
 		// return the one closest to the target, the bottom right, which means
@@ -485,9 +487,9 @@ func (p *pending) comparePositions(
 		return a.totalHeatLoss - b.totalHeatLoss
 	}
 
-	if a.lastHeading != b.lastHeading {
-		aGood := (a.lastHeading & southeast) == a.lastHeading
-		bGood := (b.lastHeading & southeast) == b.lastHeading
+	if a.heading != b.heading {
+		aGood := (a.heading & southeast) == a.heading
+		bGood := (b.heading & southeast) == b.heading
 		if aGood != bGood {
 			if aGood {
 				// a is headed southeast, b is not
