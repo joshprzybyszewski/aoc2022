@@ -21,7 +21,10 @@ func One(
 	min := -1
 	for _, vals := range c.minHeatLossToTarget[0][0] {
 		for _, v := range vals {
-			if min == -1 && v != 0 {
+			if v == 0 {
+				continue
+			}
+			if min == -1 || v < min {
 				min = v
 			}
 		}
@@ -66,12 +69,15 @@ func (c city) String() string {
 			v := -1
 			for _, vals := range c.minHeatLossToTarget[ri][ci] {
 				for _, tot := range vals {
-					if tot != 0 && (tot < v || v == -1) {
+					if tot == 0 {
+						continue
+					}
+					if tot < v || v == -1 {
 						v = tot
 					}
 				}
 			}
-			sb.WriteString(fmt.Sprintf("%4d ", v)) // c.minHeatLossToTarget[ri][ci]
+			sb.WriteString(fmt.Sprintf("%4d ", v))
 		}
 		sb.WriteByte('\n')
 	}

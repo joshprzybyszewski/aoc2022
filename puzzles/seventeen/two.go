@@ -19,11 +19,17 @@ func Two(
 	min := -1
 	for _, vals := range c.minHeatLossToTarget[0][0] {
 		for _, v := range vals {
-			if min == -1 && v != 0 {
+			if v == 0 {
+				continue
+			}
+			if min == -1 || v < min {
 				min = v
 			}
 		}
 	}
+
+	// 1294 is too high "and it's the right answer for somebody else"
+	// 1269 is too high
 
 	return min, nil
 }
