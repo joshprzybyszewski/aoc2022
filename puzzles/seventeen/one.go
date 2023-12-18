@@ -165,14 +165,14 @@ const (
 
 	southeast = south | east
 
-	maxHeading = north + 1
+	maxHeading = 1 << 4
 )
 
 type position struct {
 	row int // uint8
 	col int // uint8
 
-	heading    heading
+	heading        heading
 	numInDirection int
 
 	totalHeatLoss int
@@ -180,6 +180,27 @@ type position struct {
 	depth int
 
 	prev *position
+}
+
+func (p position) canGo() heading {
+	var out heading
+
+	switch p.heading {
+	case south:
+		out = east | west
+	case west:
+		out = south | north
+	case north:
+		out = west | east
+	case east:
+		out = north | south
+	}
+
+	if p.numInDirection < maxStraightLine {
+		out |= p.heading
+	}
+
+	return out
 }
 
 func (p position) String() string {
@@ -195,7 +216,7 @@ func getMinimalHeatLoss(
 		position{
 			row:            1,
 			col:            0,
-			heading:    south,
+			heading:        south,
 			numInDirection: 1,
 			totalHeatLoss:  c.blocks[1][0],
 			depth:          1,
@@ -206,7 +227,7 @@ func getMinimalHeatLoss(
 		position{
 			row:            0,
 			col:            1,
-			heading:    east,
+			heading:        east,
 			numInDirection: 1,
 			totalHeatLoss:  c.blocks[0][1],
 			depth:          1,
@@ -356,7 +377,7 @@ type pending struct {
 	all         []position
 	yetToInsert []position
 
-	bestByBlock [citySize][citySize][maxStraightLine + 1][maxHeading]*position
+	bestByBlock [citySize][citySize][maxHeading]*position
 
 	best *position
 }
@@ -397,7 +418,7 @@ func (p *pending) cannotBeBest(pos position) bool {
 		p.best.totalHeatLoss < pos.totalHeatLoss+p.city.minHeatLossToTarget[pos.row][pos.col] {
 		return true
 	}
-	if blockBest := p.bestByBlock[pos.row][pos.col][pos.numInDirection][pos.heading]; blockBest != nil &&
+	if blockBest := p.bestByBlock[pos.row][pos.col][pos.canGo()]; blockBest != nil &&
 		blockBest.totalHeatLoss < pos.totalHeatLoss {
 		return false
 	}
@@ -415,6 +436,7 @@ func (p *pending) checkSolution(
 		fmt.Printf("Found Solution:\n%s\nFIRST: %4d (%d pending)\n\n", drawPath(&pos, p.city), pos.totalHeatLoss, len(p.all))
 		p.best = &pos
 		p.filter()
+		slices.SortFunc(p.all, p.comparePositions)
 	} else if pos.totalHeatLoss < p.best.totalHeatLoss {
 		fmt.Printf("Found New Best:\n%s\nNEW BEST: %4d (%d pending)\n\n", drawPath(&pos, p.city), pos.totalHeatLoss, len(p.all))
 		p.best = &pos
@@ -429,7 +451,7 @@ func (p *pending) insert(
 		return
 	}
 
-	p.bestByBlock[pos.row][pos.col][pos.numInDirection][pos.heading] = &pos
+	p.bestByBlock[pos.row][pos.col][pos.canGo()] = &pos
 
 	p.yetToInsert = append(p.yetToInsert, pos)
 }
@@ -462,18 +484,28 @@ func (p *pending) comparePositions(
 	a, b position,
 ) int {
 
+	// if p.best != nil {
+	// 	aProjection := a.totalHeatLoss + p.city.minHeatLossToTarget[a.row][a.col]
+	// 	bProjection := b.totalHeatLoss + p.city.minHeatLossToTarget[b.row][b.col]
+	// 	if aProjection != bProjection {
+	// 		// if the position at a has a lower projected heat loss,
+	// 		// that one should be first
+	// 		return aProjection - bProjection
+	// 	}
+	// }
+
 	adist := a.row + a.col
 	bdist := b.row + b.col
 
-	if p.best != nil {
-		// aLossPerStep := a.totalHeatLoss / adist
-		// bLossPerStep := b.totalHeatLoss / bdist
-		aLossPerStep := a.totalHeatLoss / a.depth
-		bLossPerStep := b.totalHeatLoss / b.depth
-		if aLossPerStep != bLossPerStep {
-			return aLossPerStep - bLossPerStep
-		}
-	}
+	// if p.best != nil {
+	// 	// aLossPerStep := a.totalHeatLoss / adist
+	// 	// bLossPerStep := b.totalHeatLoss / bdist
+	// 	aLossPerStep := a.totalHeatLoss / a.depth
+	// 	bLossPerStep := b.totalHeatLoss / b.depth
+	// 	if aLossPerStep != bLossPerStep {
+	// 		return aLossPerStep - bLossPerStep
+	// 	}
+	// }
 
 	if adist != bdist {
 		// return the one closest to the target, the bottom right, which means
