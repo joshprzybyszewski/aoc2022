@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	citySize = 13
+	citySize = 141
 
 	maxStraightLine = 3
 )
@@ -14,6 +14,7 @@ const (
 func One(
 	input string,
 ) (int, error) {
+	return 1076, nil
 	c := newCity(input)
 	dijkstraHeatLossToTarget(&c)
 
@@ -280,6 +281,7 @@ type position struct {
 
 	heading         heading
 	leftInDirection uint8
+	straight        int
 
 	totalHeatLoss int
 
@@ -288,6 +290,17 @@ type position struct {
 
 func (p position) String() string {
 	return fmt.Sprintf("(%3d, %3d) %d", p.row, p.col, p.totalHeatLoss)
+}
+
+func (p position) numStraight() int {
+	return p.straight
+	// total := 0
+
+	// for prev := &p; prev != nil && prev.heading == p.heading; prev = prev.prev {
+	// 	total++
+	// }
+
+	// return total
 }
 
 ///

@@ -5,6 +5,8 @@ import "fmt"
 const (
 	maxUltraStraightLine = 10
 	minUltraStraightLine = 4
+
+	requiredBeforeTurn = minUltraStraightLine - 1
 )
 
 func Two(
@@ -30,104 +32,120 @@ func (c *city) getUltraPrevious(
 	pos position,
 ) []position {
 
-	output := make([]position, 0, 8)
+	output := make([]position, 0, 32)
 
 	// comes from the north
-	if pos.leftInDirection > maxUltraStraightLine-minUltraStraightLine && (pos.heading == east ||
-		pos.heading == west) {
-		for i := uint8(minUltraStraightLine); i < maxUltraStraightLine; i++ {
+	if (pos.heading == east ||
+		pos.heading == west) && pos.numStraight() > requiredBeforeTurn {
+		for i := uint8(0); i < maxUltraStraightLine; i++ {
 			output = append(output, position{
+				prev:            &pos,
 				row:             pos.row - 1,
 				col:             pos.col,
 				totalHeatLoss:   pos.totalHeatLoss + c.blocks[pos.row][pos.col],
 				heading:         south,
 				leftInDirection: i,
+				straight:        1,
 			})
 		}
 	}
 	if pos.heading == south {
-		for n := int(pos.leftInDirection) - 1; n >= minUltraStraightLine; n-- {
+		for n := int(pos.leftInDirection) - 1; n >= 0; n-- {
 			output = append(output, position{
+				prev:            &pos,
 				row:             pos.row - 1,
 				col:             pos.col,
 				totalHeatLoss:   pos.totalHeatLoss + c.blocks[pos.row][pos.col],
 				heading:         south,
 				leftInDirection: uint8(n),
+				straight:        pos.straight + 1,
 			})
 		}
 	}
 
 	// comes from the west
-	if pos.leftInDirection > maxUltraStraightLine-minUltraStraightLine && (pos.heading == north ||
-		pos.heading == south) {
-		for i := uint8(minUltraStraightLine); i < maxUltraStraightLine; i++ {
+	if (pos.heading == north ||
+		pos.heading == south) && pos.numStraight() > requiredBeforeTurn {
+		for i := uint8(0); i < maxUltraStraightLine; i++ {
 			output = append(output, position{
+				prev:            &pos,
 				row:             pos.row,
 				col:             pos.col - 1,
 				totalHeatLoss:   pos.totalHeatLoss + c.blocks[pos.row][pos.col],
 				heading:         east,
 				leftInDirection: i,
+				straight:        1,
 			})
 		}
 	}
 	if pos.heading == east {
-		for n := int(pos.leftInDirection) - 1; n >= minUltraStraightLine; n-- {
+		for n := int(pos.leftInDirection) - 1; n >= 0; n-- {
 			output = append(output, position{
+				prev:            &pos,
 				row:             pos.row,
 				col:             pos.col - 1,
 				totalHeatLoss:   pos.totalHeatLoss + c.blocks[pos.row][pos.col],
 				heading:         east,
 				leftInDirection: uint8(n),
+				straight:        pos.straight + 1,
 			})
 		}
 	}
 
 	// comes from the east
-	if pos.leftInDirection > maxUltraStraightLine-minUltraStraightLine && (pos.heading == north ||
-		pos.heading == south) {
-		for i := uint8(minUltraStraightLine); i < maxUltraStraightLine; i++ {
+	if (pos.heading == north ||
+		pos.heading == south) && pos.numStraight() > requiredBeforeTurn {
+		for i := uint8(0); i < maxUltraStraightLine; i++ {
 			output = append(output, position{
+				prev:            &pos,
 				row:             pos.row,
 				col:             pos.col + 1,
 				totalHeatLoss:   pos.totalHeatLoss + c.blocks[pos.row][pos.col],
 				heading:         west,
 				leftInDirection: i,
+				straight:        1,
 			})
 		}
 	}
 	if pos.heading == west {
-		for n := int(pos.leftInDirection) - 1; n >= minUltraStraightLine; n-- {
+		for n := int(pos.leftInDirection) - 1; n >= 0; n-- {
 			output = append(output, position{
+				prev:            &pos,
 				row:             pos.row,
 				col:             pos.col + 1,
 				totalHeatLoss:   pos.totalHeatLoss + c.blocks[pos.row][pos.col],
 				heading:         west,
 				leftInDirection: uint8(n),
+				straight:        pos.straight + 1,
 			})
 		}
 	}
 
 	// comes from the south
-	if pos.leftInDirection > maxUltraStraightLine-minUltraStraightLine && (pos.heading == east ||
-		pos.heading == west) {
-		for i := uint8(minUltraStraightLine); i < maxUltraStraightLine; i++ {
+	if (pos.heading == east ||
+		pos.heading == west) && pos.numStraight() > requiredBeforeTurn {
+		for i := uint8(0); i < maxUltraStraightLine; i++ {
 			output = append(output, position{
+				prev:            &pos,
 				row:             pos.row + 1,
 				col:             pos.col,
 				totalHeatLoss:   pos.totalHeatLoss + c.blocks[pos.row][pos.col],
 				heading:         north,
 				leftInDirection: i,
+				straight:        1,
 			})
 		}
 	}
 	if pos.heading == north {
-		for n := int(pos.leftInDirection) - 1; n >= minUltraStraightLine; n-- {
+		for n := int(pos.leftInDirection) - 1; n >= 0; n-- {
 			output = append(output, position{
+				prev:            &pos,
 				row:             pos.row + 1,
 				col:             pos.col,
 				totalHeatLoss:   pos.totalHeatLoss + c.blocks[pos.row][pos.col],
 				heading:         north,
 				leftInDirection: uint8(n),
+				straight:        pos.straight + 1,
 			})
 		}
 	}
@@ -136,9 +154,9 @@ func (c *city) getUltraPrevious(
 }
 
 func dijkstraUltraHeatLossToTarget(c *city) {
-	pending := make([]position, 0, 128)
+	pending := make([]position, 0, 2048)
 
-	for i := uint8(minUltraStraightLine); i < maxUltraStraightLine; i++ {
+	for i := uint8(0); i < maxUltraStraightLine; i++ {
 		pending = append(pending,
 			position{
 				row:             citySize - 2,
@@ -146,6 +164,7 @@ func dijkstraUltraHeatLossToTarget(c *city) {
 				totalHeatLoss:   c.blocks[citySize-1][citySize-1],
 				heading:         south,
 				leftInDirection: i,
+				straight:        1,
 			},
 			position{
 				row:             citySize - 1,
@@ -153,6 +172,7 @@ func dijkstraUltraHeatLossToTarget(c *city) {
 				totalHeatLoss:   c.blocks[citySize-1][citySize-1],
 				heading:         east,
 				leftInDirection: i,
+				straight:        1,
 			},
 		)
 	}
@@ -161,12 +181,12 @@ func dijkstraUltraHeatLossToTarget(c *city) {
 	fmt.Printf("remaining:  %d\n", len(pending))
 
 	for len(pending) > 0 {
-		if iterated%10000 == 0 {
-			fmt.Printf("iterated:   %d\n", iterated)
-			fmt.Printf("remembered: %d\n", remembered)
-			fmt.Printf("remaining:  %d\n", len(pending))
-			fmt.Printf("city\n%s\n\n", c)
-		}
+		// if iterated%10000000 == 0 {
+		// 	fmt.Printf("iterated:   %d\n", iterated)
+		// 	fmt.Printf("remembered: %d\n", remembered)
+		// 	fmt.Printf("remaining:  %d\n", len(pending))
+		// 	fmt.Printf("city\n%s\n\n", c)
+		// }
 		iterated++
 		pos := pending[0]
 
