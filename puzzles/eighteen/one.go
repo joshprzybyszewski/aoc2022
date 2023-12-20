@@ -23,7 +23,10 @@ func One(
 
 	l.dig()
 
+	fmt.Printf("l\n%s\n", l.String())
+
 	// 49114 is too high
+	// 47798 is too high
 	return l.numDug(), nil
 }
 
@@ -119,10 +122,11 @@ func (l *lagoon) dig() {
 
 func (l *lagoon) calcHoles() {
 
-	for r := l.min.row; r <= l.max.row; r++ {
+	for r := l.min.row - 1; r <= l.max.row; r++ {
 		n := 0
-		for c := l.min.col; c <= l.max.col; c++ {
-			if l.holes[r][c] {
+		for c := l.min.col - 1; c <= l.max.col; c++ {
+			if !l.holes[r][c] && l.holes[r][c-1] {
+				// TODO add detection better
 				n++
 			}
 			l.paths[r][c] = n
@@ -175,7 +179,6 @@ func newEdge(input string) (edge, string) {
 
 	e.color = input[:7]
 	input = input[8:]
-	fmt.Printf("edge: %+v\n", e)
 
 	return e, input
 }
