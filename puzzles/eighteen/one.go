@@ -1,11 +1,12 @@
 package eighteen
 
 import (
+	"fmt"
 	"strings"
 )
 
 const (
-	maxRowCol = 700
+	maxRowCol = 10000
 )
 
 func One(
@@ -133,6 +134,7 @@ func (l *lagoon) calcHoles() {
 			} else if l.holes[r+1][c] {
 				fromBelow = true
 			} else {
+				fmt.Printf("lagoon:\n%s\n", l.String())
 				panic(`ahh`)
 			}
 
@@ -150,6 +152,7 @@ func (l *lagoon) calcHoles() {
 					n++
 				}
 			} else {
+				fmt.Printf("lagoon:\n%s\n", l.String())
 				panic(`ahh`)
 			}
 
