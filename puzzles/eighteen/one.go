@@ -1,7 +1,6 @@
 package eighteen
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -23,10 +22,6 @@ func One(
 
 	l.dig()
 
-	fmt.Printf("l\n%s\n", l.String())
-
-	// 49114 is too high
-	// 47798 is too high
 	return l.numDug(), nil
 }
 
@@ -47,11 +42,11 @@ type lagoon struct {
 
 func (l *lagoon) String() string {
 	var sb strings.Builder
-	for r := 0; r < len(l.holes); r++ {
+	for r := l.min.row; r <= l.max.row; r++ {
 		if l.holes[r] == [maxRowCol]bool{} {
 			continue
 		}
-		for c := 0; c < len(l.holes[r]); c++ {
+		for c := l.min.col; c <= l.max.col; c++ {
 			if l.holes[r][c] {
 				sb.WriteByte('#')
 			} else if l.paths[r][c]&1 == 1 {
@@ -124,12 +119,43 @@ func (l *lagoon) calcHoles() {
 
 	for r := l.min.row - 1; r <= l.max.row; r++ {
 		n := 0
+		fromAbove := false
+		fromBelow := false
+
 		for c := l.min.col - 1; c <= l.max.col; c++ {
-			if !l.holes[r][c] && l.holes[r][c-1] {
-				// TODO add detection better
-				n++
+			if !l.holes[r][c] {
+				l.paths[r][c] = n
+				continue
 			}
+
+			if l.holes[r-1][c] {
+				fromAbove = true
+			} else if l.holes[r+1][c] {
+				fromBelow = true
+			} else {
+				panic(`ahh`)
+			}
+
+			for l.holes[r][c] {
+				l.paths[r][c] = n
+				c++
+			}
+
+			if fromBelow {
+				if l.holes[r-1][c-1] {
+					n++
+				}
+			} else if fromAbove {
+				if l.holes[r+1][c-1] {
+					n++
+				}
+			} else {
+				panic(`ahh`)
+			}
+
 			l.paths[r][c] = n
+			fromAbove = false
+			fromBelow = false
 		}
 	}
 }
