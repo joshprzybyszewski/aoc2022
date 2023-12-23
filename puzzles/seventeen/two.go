@@ -2,7 +2,6 @@ package seventeen
 
 import (
 	"fmt"
-	"time"
 )
 
 const (
@@ -19,22 +18,11 @@ func Two(
 	c := newCity(input)
 	dijkstraUltraHeatLossToTarget(&c)
 
-	min := -1
-	for _, vals := range c.minHeatLossToTarget[0][0] {
-		for _, v := range vals {
-			if v == 0 {
-				continue
-			}
-			if min == -1 || v < min {
-				min = v
-			}
-		}
-	}
-
 	// 1294 is too high "and it's the right answer for somebody else"
 	// 1269 is too high
+	// 1261 is too high
 
-	return min, nil
+	return c.minHeatLossToTarget[0][0], nil
 }
 
 func (c *city) getUltraPrevious(
@@ -44,118 +32,62 @@ func (c *city) getUltraPrevious(
 	output := make([]position, 0, 32)
 
 	// comes from the north
-	if (pos.heading == east ||
-		pos.heading == west) && pos.numStraight() > requiredBeforeTurn {
-		for i := uint8(0); i < maxUltraStraightLine; i++ {
-			output = append(output, position{
+	if pos.heading == east || pos.heading == west {
+		for i := uint8(minUltraStraightLine); i <= maxUltraStraightLine; i++ {
+			newPos := position{
 				prev:            &pos,
-				row:             pos.row - 1,
+				row:             pos.row - int(i),
 				col:             pos.col,
-				totalHeatLoss:   pos.totalHeatLoss + c.blocks[pos.row][pos.col],
+				totalHeatLoss:   pos.totalHeatLoss,
 				heading:         south,
 				leftInDirection: i,
-				straight:        1,
-			})
-		}
-	}
-	if pos.heading == south {
-		for n := int(pos.leftInDirection) - 1; n >= 0; n-- {
-			output = append(output, position{
-				prev:            &pos,
-				row:             pos.row - 1,
-				col:             pos.col,
-				totalHeatLoss:   pos.totalHeatLoss + c.blocks[pos.row][pos.col],
-				heading:         south,
-				leftInDirection: uint8(n),
-				straight:        pos.straight + 1,
-			})
+			}
+			output = append(output, newPos)
 		}
 	}
 
 	// comes from the west
-	if (pos.heading == north ||
-		pos.heading == south) && pos.numStraight() > requiredBeforeTurn {
-		for i := uint8(0); i < maxUltraStraightLine; i++ {
-			output = append(output, position{
+	if pos.heading == north || pos.heading == south {
+		for i := uint8(minUltraStraightLine); i <= maxUltraStraightLine; i++ {
+			newPos := position{
 				prev:            &pos,
 				row:             pos.row,
-				col:             pos.col - 1,
-				totalHeatLoss:   pos.totalHeatLoss + c.blocks[pos.row][pos.col],
+				col:             pos.col - int(i),
+				totalHeatLoss:   pos.totalHeatLoss,
 				heading:         east,
 				leftInDirection: i,
-				straight:        1,
-			})
-		}
-	}
-	if pos.heading == east {
-		for n := int(pos.leftInDirection) - 1; n >= 0; n-- {
-			output = append(output, position{
-				prev:            &pos,
-				row:             pos.row,
-				col:             pos.col - 1,
-				totalHeatLoss:   pos.totalHeatLoss + c.blocks[pos.row][pos.col],
-				heading:         east,
-				leftInDirection: uint8(n),
-				straight:        pos.straight + 1,
-			})
+			}
+			output = append(output, newPos)
 		}
 	}
 
 	// comes from the east
-	if (pos.heading == north ||
-		pos.heading == south) && pos.numStraight() > requiredBeforeTurn {
-		for i := uint8(0); i < maxUltraStraightLine; i++ {
-			output = append(output, position{
+	if pos.heading == north || pos.heading == south {
+		for i := uint8(minUltraStraightLine); i <= maxUltraStraightLine; i++ {
+			newPos := position{
 				prev:            &pos,
 				row:             pos.row,
-				col:             pos.col + 1,
-				totalHeatLoss:   pos.totalHeatLoss + c.blocks[pos.row][pos.col],
+				col:             pos.col + int(i),
+				totalHeatLoss:   pos.totalHeatLoss,
 				heading:         west,
 				leftInDirection: i,
-				straight:        1,
-			})
-		}
-	}
-	if pos.heading == west {
-		for n := int(pos.leftInDirection) - 1; n >= 0; n-- {
-			output = append(output, position{
-				prev:            &pos,
-				row:             pos.row,
-				col:             pos.col + 1,
-				totalHeatLoss:   pos.totalHeatLoss + c.blocks[pos.row][pos.col],
-				heading:         west,
-				leftInDirection: uint8(n),
-				straight:        pos.straight + 1,
-			})
+			}
+			output = append(output, newPos)
 		}
 	}
 
 	// comes from the south
-	if (pos.heading == east ||
-		pos.heading == west) && pos.numStraight() > requiredBeforeTurn {
-		for i := uint8(0); i < maxUltraStraightLine; i++ {
-			output = append(output, position{
+	if pos.heading == east || pos.heading == west {
+		for i := uint8(minUltraStraightLine); i <= maxUltraStraightLine; i++ {
+			newPos := position{
 				prev:            &pos,
-				row:             pos.row + 1,
+				row:             pos.row + int(i),
 				col:             pos.col,
-				totalHeatLoss:   pos.totalHeatLoss + c.blocks[pos.row][pos.col],
+				totalHeatLoss:   pos.totalHeatLoss,
 				heading:         north,
 				leftInDirection: i,
-				straight:        1,
-			})
-		}
-	}
-	if pos.heading == north {
-		for n := int(pos.leftInDirection) - 1; n >= 0; n-- {
-			output = append(output, position{
-				prev:            &pos,
-				row:             pos.row + 1,
-				col:             pos.col,
-				totalHeatLoss:   pos.totalHeatLoss + c.blocks[pos.row][pos.col],
-				heading:         north,
-				leftInDirection: uint8(n),
-				straight:        pos.straight + 1,
-			})
+			}
+			output = append(output, newPos)
 		}
 	}
 
@@ -165,24 +97,24 @@ func (c *city) getUltraPrevious(
 func dijkstraUltraHeatLossToTarget(c *city) {
 	pending := make([]position, 0, 2048)
 
-	for i := uint8(0); i < maxUltraStraightLine; i++ {
+	for i := uint8(minUltraStraightLine); i <= maxUltraStraightLine; i++ {
+		above := position{
+			row:             citySize - 1 - int(i),
+			col:             citySize - 1,
+			heading:         south,
+			leftInDirection: i,
+		}
+
+		left := position{
+			row:             citySize - 1,
+			col:             citySize - 1 - int(i),
+			heading:         east,
+			leftInDirection: i,
+		}
+
 		pending = append(pending,
-			position{
-				row:             citySize - 2,
-				col:             citySize - 1,
-				totalHeatLoss:   c.blocks[citySize-1][citySize-1],
-				heading:         south,
-				leftInDirection: maxUltraStraightLine - 1 - i,
-				straight:        1,
-			},
-			position{
-				row:             citySize - 1,
-				col:             citySize - 2,
-				totalHeatLoss:   c.blocks[citySize-1][citySize-1],
-				heading:         east,
-				leftInDirection: maxUltraStraightLine - 1 - i,
-				straight:        1,
-			},
+			above,
+			left,
 		)
 	}
 
@@ -192,15 +124,16 @@ func dijkstraUltraHeatLossToTarget(c *city) {
 	for len(pending) > 0 {
 		iterated++
 		pos := pending[0]
-		if iterated > 0 || iterated%100 == 0 {
+		if iterated%10000 == 0 {
 			fmt.Printf("iterated:   %d\n", iterated)
 			fmt.Printf("remembered: %d\n", remembered)
 			fmt.Printf("remaining:  %d\n", len(pending))
-			fmt.Printf("city\n%s\n\n", c.withPos(pos))
-			time.Sleep(32 * time.Millisecond)
+			fmt.Printf("\n")
+			// fmt.Printf("city\n%s\n\n", c.withPos(pos))
+			// time.Sleep(16 * time.Millisecond)
 		}
 
-		if c.isBetter(pos) {
+		if c.isBetter(&pos) {
 			remembered++
 			c.remember(pos)
 

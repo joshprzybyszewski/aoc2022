@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	citySize = 13
+	citySize = 141
 
 	maxStraightLine = 3
 )
@@ -18,25 +18,13 @@ func One(
 	c := newCity(input)
 	dijkstraHeatLossToTarget(&c)
 
-	min := -1
-	for _, vals := range c.minHeatLossToTarget[0][0] {
-		for _, v := range vals {
-			if v == 0 {
-				continue
-			}
-			if min == -1 || v < min {
-				min = v
-			}
-		}
-	}
-
-	return min, nil
+	return c.minHeatLossToTarget[0][0], nil
 }
 
 type city struct {
 	blocks [citySize][citySize]int
 
-	minHeatLossToTarget [citySize][citySize][maxHeading][maxUltraStraightLine]int
+	minHeatLossToTarget [citySize][citySize]int
 }
 
 func newCity(input string) city {
@@ -56,6 +44,35 @@ func newCity(input string) city {
 	return c
 }
 
+func (c *city) applyHeatLoss(pos *position) {
+	switch pos.heading {
+	case south:
+		for n := 1; n <= int(pos.leftInDirection); n++ {
+			if pos.row+n >= 0 && pos.row+n < citySize {
+				pos.totalHeatLoss += c.blocks[pos.row+n][pos.col]
+			}
+		}
+	case north:
+		for n := 1; n <= int(pos.leftInDirection); n++ {
+			if pos.row-n >= 0 && pos.row-n < citySize {
+				pos.totalHeatLoss += c.blocks[pos.row-n][pos.col]
+			}
+		}
+	case east:
+		for n := 1; n <= int(pos.leftInDirection); n++ {
+			if pos.col+n >= 0 && pos.col+n < citySize {
+				pos.totalHeatLoss += c.blocks[pos.row][pos.col+n]
+			}
+		}
+	case west:
+		for n := 1; n <= int(pos.leftInDirection); n++ {
+			if pos.col-n >= 0 && pos.col-n < citySize {
+				pos.totalHeatLoss += c.blocks[pos.row][pos.col-n]
+			}
+		}
+	}
+}
+
 func (c city) String() string {
 	var sb strings.Builder
 	sb.WriteString("        ")
@@ -66,18 +83,8 @@ func (c city) String() string {
 	for ri := 0; ri < citySize; ri++ {
 		sb.WriteString(fmt.Sprintf("Row %3d:", ri))
 		for ci := 0; ci < citySize; ci++ {
-			v := -1
-			for _, vals := range c.minHeatLossToTarget[ri][ci] {
-				for _, tot := range vals {
-					if tot == 0 {
-						continue
-					}
-					if tot < v || v == -1 {
-						v = tot
-					}
-				}
-			}
-			if v == -1 {
+			v := c.minHeatLossToTarget[ri][ci]
+			if v == 0 {
 				sb.WriteString("     ")
 			} else {
 				sb.WriteString(fmt.Sprintf("%4d ", v))
@@ -89,25 +96,8 @@ func (c city) String() string {
 }
 
 func (c city) withPos(pos position) string {
-	var values [citySize][citySize]int
-	for ri := 0; ri < citySize; ri++ {
-		for ci := 0; ci < citySize; ci++ {
-			v := -1
-			for _, vals := range c.minHeatLossToTarget[ri][ci] {
-				for _, tot := range vals {
-					if tot == 0 {
-						continue
-					}
-					if tot < v || v == -1 {
-						v = tot
-					}
-				}
-			}
-			values[ri][ci] = v
-		}
-	}
-
 	var headings [citySize][citySize]heading
+	var numInDir [citySize][citySize]int
 
 	for cur := &pos; cur != nil; cur = cur.prev {
 		if cur.row >= citySize ||
@@ -117,42 +107,45 @@ func (c city) withPos(pos position) string {
 			continue
 		}
 		headings[cur.row][cur.col] = cur.heading
-	}
-	if pos.row < citySize &&
-		pos.col < citySize &&
-		pos.row >= 0 &&
-		pos.col >= 0 {
-		headings[pos.row][pos.col] = maxHeading
-
+		numInDir[cur.row][cur.col] = int(cur.leftInDirection)
 	}
 
 	var sb strings.Builder
 	sb.WriteString("        ")
 	for ci := 0; ci < citySize; ci++ {
-		sb.WriteString(fmt.Sprintf("%4d ", ci))
+		sb.WriteString(fmt.Sprintf("  %4d ", ci))
 	}
 	sb.WriteByte('\n')
 	for ri := 0; ri < citySize; ri++ {
 		sb.WriteString(fmt.Sprintf("Row %3d:", ri))
 		for ci := 0; ci < citySize; ci++ {
+			if pos.row == ri && pos.col == ci {
+				sb.WriteByte('X')
+			} else {
+				sb.WriteByte(' ')
+			}
 			switch headings[ri][ci] {
 			case east:
 				sb.WriteByte('>')
+				sb.WriteByte('0' + byte(numInDir[ri][ci]))
 			case west:
 				sb.WriteByte('<')
+				sb.WriteByte('0' + byte(numInDir[ri][ci]))
 			case north:
 				sb.WriteByte('^')
+				sb.WriteByte('0' + byte(numInDir[ri][ci]))
 			case south:
 				sb.WriteByte('v')
-			case maxHeading:
-				sb.WriteByte('X')
+				sb.WriteByte('0' + byte(numInDir[ri][ci]))
 			default:
 				sb.WriteByte(' ')
+				sb.WriteByte(' ')
 			}
-			if values[ri][ci] == -1 {
+			if c.minHeatLossToTarget[ri][ci] == 0 {
 				sb.WriteString("    ")
+				// sb.WriteString("--- ")
 			} else {
-				sb.WriteString(fmt.Sprintf("%3d ", values[ri][ci]))
+				sb.WriteString(fmt.Sprintf("%3d ", c.minHeatLossToTarget[ri][ci]))
 			}
 		}
 		sb.WriteByte('\n')
@@ -160,7 +153,7 @@ func (c city) withPos(pos position) string {
 	return sb.String()
 }
 
-func (c *city) isBetter(pos position) bool {
+func (c *city) isBetter(pos *position) bool {
 	if pos.row < 0 ||
 		pos.col < 0 ||
 		pos.row >= citySize ||
@@ -174,8 +167,10 @@ func (c *city) isBetter(pos position) bool {
 		return false
 	}
 
-	if c.minHeatLossToTarget[pos.row][pos.col][pos.heading][pos.leftInDirection] != 0 &&
-		c.minHeatLossToTarget[pos.row][pos.col][pos.heading][pos.leftInDirection] <= pos.totalHeatLoss {
+	c.applyHeatLoss(pos)
+
+	if c.minHeatLossToTarget[pos.row][pos.col] != 0 &&
+		c.minHeatLossToTarget[pos.row][pos.col] <= pos.totalHeatLoss {
 		return false
 	}
 
@@ -185,7 +180,7 @@ func (c *city) isBetter(pos position) bool {
 func (c *city) remember(
 	pos position,
 ) {
-	c.minHeatLossToTarget[pos.row][pos.col][pos.heading][pos.leftInDirection] = pos.totalHeatLoss
+	c.minHeatLossToTarget[pos.row][pos.col] = pos.totalHeatLoss
 }
 
 func (c *city) getPrevious(
@@ -331,7 +326,7 @@ func dijkstraHeatLossToTarget(c *city) {
 		iterated++
 		pos := pending[0]
 
-		if c.isBetter(pos) {
+		if c.isBetter(&pos) {
 			remembered++
 			c.remember(pos)
 
