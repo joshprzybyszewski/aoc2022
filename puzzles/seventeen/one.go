@@ -1,30 +1,29 @@
 package seventeen
 
-import (
-	"fmt"
-	"strings"
-)
-
 const (
 	citySize = 141
 
+	minStraightLine = 1
 	maxStraightLine = 3
+
+	maxNumPrevious     = 2 * (maxUltraStraightLine + 1 - minUltraStraightLine)
+	initialPendingSize = citySize * citySize * maxUltraNumPrevious
 )
 
 func One(
 	input string,
 ) (int, error) {
-	return 1076, nil
+	// return 1076, nil
 	c := newCity(input)
 	dijkstraHeatLossToTarget(&c)
 
-	return c.minHeatLossToTarget[0][0], nil
+	return c.getMinValAt(0, 0), nil
 }
 
 type city struct {
 	blocks [citySize][citySize]int
 
-	minHeatLossToTarget [citySize][citySize]int
+	minHeatLossToTarget [citySize][citySize][maxHeading]int
 }
 
 func newCity(input string) city {
@@ -47,110 +46,49 @@ func newCity(input string) city {
 func (c *city) applyHeatLoss(pos *position) {
 	switch pos.heading {
 	case south:
+		if pos.row+int(pos.leftInDirection) >= citySize {
+			panic(`unexpected`)
+		}
 		for n := 1; n <= int(pos.leftInDirection); n++ {
-			if pos.row+n >= 0 && pos.row+n < citySize {
-				pos.totalHeatLoss += c.blocks[pos.row+n][pos.col]
-			}
+			pos.totalHeatLoss += c.blocks[pos.row+n][pos.col]
 		}
 	case north:
+		if pos.row-int(pos.leftInDirection) < 0 {
+			panic(`unexpected`)
+		}
+
 		for n := 1; n <= int(pos.leftInDirection); n++ {
-			if pos.row-n >= 0 && pos.row-n < citySize {
-				pos.totalHeatLoss += c.blocks[pos.row-n][pos.col]
-			}
+			pos.totalHeatLoss += c.blocks[pos.row-n][pos.col]
 		}
 	case east:
+		if pos.col+int(pos.leftInDirection) >= citySize {
+			panic(`unexpected`)
+		}
 		for n := 1; n <= int(pos.leftInDirection); n++ {
-			if pos.col+n >= 0 && pos.col+n < citySize {
-				pos.totalHeatLoss += c.blocks[pos.row][pos.col+n]
-			}
+			pos.totalHeatLoss += c.blocks[pos.row][pos.col+n]
 		}
 	case west:
+		if pos.col-int(pos.leftInDirection) < 0 {
+			panic(`unexpected`)
+		}
+
 		for n := 1; n <= int(pos.leftInDirection); n++ {
-			if pos.col-n >= 0 && pos.col-n < citySize {
-				pos.totalHeatLoss += c.blocks[pos.row][pos.col-n]
-			}
+			pos.totalHeatLoss += c.blocks[pos.row][pos.col-n]
 		}
 	}
 }
 
-func (c city) String() string {
-	var sb strings.Builder
-	sb.WriteString("        ")
-	for ci := 0; ci < citySize; ci++ {
-		sb.WriteString(fmt.Sprintf("%4d ", ci))
-	}
-	sb.WriteByte('\n')
-	for ri := 0; ri < citySize; ri++ {
-		sb.WriteString(fmt.Sprintf("Row %3d:", ri))
-		for ci := 0; ci < citySize; ci++ {
-			v := c.minHeatLossToTarget[ri][ci]
-			if v == 0 {
-				sb.WriteString("     ")
-			} else {
-				sb.WriteString(fmt.Sprintf("%4d ", v))
-			}
-		}
-		sb.WriteByte('\n')
-	}
-	return sb.String()
-}
-
-func (c city) withPos(pos position) string {
-	var headings [citySize][citySize]heading
-	var numInDir [citySize][citySize]int
-
-	for cur := &pos; cur != nil; cur = cur.prev {
-		if cur.row >= citySize ||
-			cur.col >= citySize ||
-			cur.row < 0 ||
-			cur.col < 0 {
+func (c *city) getMinValAt(ri, ci int) int {
+	min := 0
+	for _, v := range c.minHeatLossToTarget[ri][ci] {
+		if v == 0 {
 			continue
 		}
-		headings[cur.row][cur.col] = cur.heading
-		numInDir[cur.row][cur.col] = int(cur.leftInDirection)
-	}
-
-	var sb strings.Builder
-	sb.WriteString("        ")
-	for ci := 0; ci < citySize; ci++ {
-		sb.WriteString(fmt.Sprintf("  %4d ", ci))
-	}
-	sb.WriteByte('\n')
-	for ri := 0; ri < citySize; ri++ {
-		sb.WriteString(fmt.Sprintf("Row %3d:", ri))
-		for ci := 0; ci < citySize; ci++ {
-			if pos.row == ri && pos.col == ci {
-				sb.WriteByte('X')
-			} else {
-				sb.WriteByte(' ')
-			}
-			switch headings[ri][ci] {
-			case east:
-				sb.WriteByte('>')
-				sb.WriteByte('0' + byte(numInDir[ri][ci]))
-			case west:
-				sb.WriteByte('<')
-				sb.WriteByte('0' + byte(numInDir[ri][ci]))
-			case north:
-				sb.WriteByte('^')
-				sb.WriteByte('0' + byte(numInDir[ri][ci]))
-			case south:
-				sb.WriteByte('v')
-				sb.WriteByte('0' + byte(numInDir[ri][ci]))
-			default:
-				sb.WriteByte(' ')
-				sb.WriteByte(' ')
-			}
-			if c.minHeatLossToTarget[ri][ci] == 0 {
-				sb.WriteString("    ")
-				// sb.WriteString("--- ")
-			} else {
-				sb.WriteString(fmt.Sprintf("%3d ", c.minHeatLossToTarget[ri][ci]))
-			}
+		if min == 0 || v < min {
+			min = v
 		}
-		sb.WriteByte('\n')
 	}
-	return sb.String()
+	return min
 }
 
 func (c *city) isBetter(pos *position) bool {
@@ -169,8 +107,15 @@ func (c *city) isBetter(pos *position) bool {
 
 	c.applyHeatLoss(pos)
 
-	if c.minHeatLossToTarget[pos.row][pos.col] != 0 &&
-		c.minHeatLossToTarget[pos.row][pos.col] <= pos.totalHeatLoss {
+	val := c.minHeatLossToTarget[pos.row][pos.col][pos.heading]
+	if val != 0 &&
+		val <= pos.totalHeatLoss {
+		return false
+	}
+
+	val = c.minHeatLossToTarget[pos.row][pos.col][pos.heading.opposite()]
+	if val != 0 &&
+		val <= pos.totalHeatLoss {
 		return false
 	}
 
@@ -178,113 +123,68 @@ func (c *city) isBetter(pos *position) bool {
 }
 
 func (c *city) remember(
-	pos position,
+	pos *position,
 ) {
-	c.minHeatLossToTarget[pos.row][pos.col] = pos.totalHeatLoss
+	c.minHeatLossToTarget[pos.row][pos.col][pos.heading] = pos.totalHeatLoss
+	c.minHeatLossToTarget[pos.row][pos.col][pos.heading.opposite()] = pos.totalHeatLoss
 }
 
 func (c *city) getPrevious(
-	pos position,
+	pos *position,
 ) []position {
 
-	output := make([]position, 0, 8)
+	output := make([]position, 0, maxNumPrevious)
 
-	// comes from the north
-	if pos.heading == east ||
-		pos.heading == west {
-		for i := uint8(0); i < maxStraightLine; i++ {
-			output = append(output, position{
-				row:             pos.row - 1,
-				col:             pos.col,
-				totalHeatLoss:   pos.totalHeatLoss + c.blocks[pos.row][pos.col],
-				heading:         south,
-				leftInDirection: i,
-			})
-		}
-	}
-	if pos.heading == south {
-		for n := int(pos.leftInDirection) - 1; n >= 0; n-- {
-			output = append(output, position{
-				row:             pos.row - 1,
-				col:             pos.col,
-				totalHeatLoss:   pos.totalHeatLoss + c.blocks[pos.row][pos.col],
-				heading:         south,
-				leftInDirection: uint8(n),
-			})
+	if pos.heading == east || pos.heading == west {
+		for i := uint8(minStraightLine); i <= maxStraightLine; i++ {
+			output = append(output,
+				position{
+					prev:            pos,
+					row:             pos.row - int(i),
+					col:             pos.col,
+					totalHeatLoss:   pos.totalHeatLoss,
+					heading:         south,
+					leftInDirection: i,
+				},
+			)
 		}
 	}
 
-	// comes from the west
-	if pos.heading == north ||
-		pos.heading == south {
-		for i := uint8(0); i < maxStraightLine; i++ {
+	if pos.heading == north || pos.heading == south {
+		for i := uint8(minStraightLine); i <= maxStraightLine; i++ {
 			output = append(output, position{
+				prev:            pos,
 				row:             pos.row,
-				col:             pos.col - 1,
-				totalHeatLoss:   pos.totalHeatLoss + c.blocks[pos.row][pos.col],
+				col:             pos.col - int(i),
+				totalHeatLoss:   pos.totalHeatLoss,
 				heading:         east,
 				leftInDirection: i,
 			})
 		}
 	}
-	if pos.heading == east {
-		for n := int(pos.leftInDirection) - 1; n >= 0; n-- {
-			output = append(output, position{
-				row:             pos.row,
-				col:             pos.col - 1,
-				totalHeatLoss:   pos.totalHeatLoss + c.blocks[pos.row][pos.col],
-				heading:         east,
-				leftInDirection: uint8(n),
-			})
-		}
-	}
 
-	// comes from the east
-	if pos.heading == north ||
-		pos.heading == south {
-		for i := uint8(0); i < maxStraightLine; i++ {
+	if pos.heading == north || pos.heading == south {
+		for i := uint8(minStraightLine); i <= maxStraightLine; i++ {
 			output = append(output, position{
+				prev:            pos,
 				row:             pos.row,
-				col:             pos.col + 1,
-				totalHeatLoss:   pos.totalHeatLoss + c.blocks[pos.row][pos.col],
+				col:             pos.col + int(i),
+				totalHeatLoss:   pos.totalHeatLoss,
 				heading:         west,
 				leftInDirection: i,
 			})
 		}
 	}
-	if pos.heading == west {
-		for n := int(pos.leftInDirection) - 1; n >= 0; n-- {
-			output = append(output, position{
-				row:             pos.row,
-				col:             pos.col + 1,
-				totalHeatLoss:   pos.totalHeatLoss + c.blocks[pos.row][pos.col],
-				heading:         west,
-				leftInDirection: uint8(n),
-			})
-		}
-	}
 
-	// comes from the south
-	if pos.heading == east ||
-		pos.heading == west {
-		for i := uint8(0); i < maxStraightLine; i++ {
+	if pos.heading == east || pos.heading == west {
+		for i := uint8(minStraightLine); i <= maxStraightLine; i++ {
 			output = append(output, position{
-				row:             pos.row + 1,
+				prev:            pos,
+				row:             pos.row + int(i),
 				col:             pos.col,
-				totalHeatLoss:   pos.totalHeatLoss + c.blocks[pos.row][pos.col],
+				totalHeatLoss:   pos.totalHeatLoss,
 				heading:         north,
 				leftInDirection: i,
-			})
-		}
-	}
-	if pos.heading == north {
-		for n := int(pos.leftInDirection) - 1; n >= 0; n-- {
-			output = append(output, position{
-				row:             pos.row + 1,
-				col:             pos.col,
-				totalHeatLoss:   pos.totalHeatLoss + c.blocks[pos.row][pos.col],
-				heading:         north,
-				leftInDirection: uint8(n),
 			})
 		}
 	}
@@ -293,52 +193,81 @@ func (c *city) getPrevious(
 }
 
 func dijkstraHeatLossToTarget(c *city) {
-	pending := make([]position, 0, 128)
+	pending := make([]position, 0, initialPendingSize)
 
-	for i := uint8(0); i < maxStraightLine; i++ {
+	for i := uint8(minStraightLine); i <= maxStraightLine; i++ {
+		above := position{
+			row:             citySize - 1 - int(i),
+			col:             citySize - 1,
+			totalHeatLoss:   0,
+			heading:         south,
+			leftInDirection: i,
+		}
+
+		left := position{
+			row:             citySize - 1,
+			col:             citySize - 1 - int(i),
+			totalHeatLoss:   0,
+			heading:         east,
+			leftInDirection: i,
+		}
+
 		pending = append(pending,
-			position{
-				row:             citySize - 2,
-				col:             citySize - 1,
-				totalHeatLoss:   c.blocks[citySize-1][citySize-1],
-				heading:         south,
-				leftInDirection: i,
-			},
-			position{
-				row:             citySize - 1,
-				col:             citySize - 2,
-				totalHeatLoss:   c.blocks[citySize-1][citySize-1],
-				heading:         east,
-				leftInDirection: i,
-			},
+			above,
+			left,
 		)
 	}
 
 	var iterated, remembered int
 
+	// var allStarting []position
+
 	for len(pending) > 0 {
-		// if iterated%10000000 == 0 {
-		// 	fmt.Printf("iterated:   %d\n", iterated)
-		// 	fmt.Printf("remembered: %d\n", remembered)
-		// 	fmt.Printf("remaining:  %d\n", len(pending))
-		// 	fmt.Printf("city\n%s\n\n", c)
-		// }
 		iterated++
 		pos := pending[0]
 
+		// if iterated%10000 == 0 {
+		// 	fmt.Printf("iterated:   %d\n", iterated)
+		// 	fmt.Printf("remembered: %d\n", remembered)
+		// 	fmt.Printf("remaining:  %d\n", len(pending))
+		// 	fmt.Printf("\n")
+		// 	fmt.Printf("city\n%s\n\n", c.withPos(pos))
+		// 	// time.Sleep(64 * time.Millisecond)
+		// }
+
 		if c.isBetter(&pos) {
 			remembered++
-			c.remember(pos)
+			c.remember(&pos)
 
-			pending = append(pending, c.getPrevious(pos)...)
+			pending = append(pending, c.getPrevious(&pos)...)
 		}
+
+		// if pos.row == 0 && pos.col == 0 {
+		// 	allStarting = append(allStarting, pos)
+		// }
 
 		pending = pending[1:]
 	}
 
-	// fmt.Printf("iterated:   %d\n", iterated)
-	// fmt.Printf("remembered: %d\n", remembered)
-	// fmt.Printf("city\n%s\n\n", c)
+	/*
+		slices.SortFunc(allStarting, func(a, b position) int {
+			return a.totalHeatLoss - b.totalHeatLoss
+		})
+
+		for _, pos := range allStarting {
+			fmt.Printf("From Start: %d\n", pos.totalHeatLoss)
+			fmt.Printf("DoubleCheck: %d\n", c.getPathHeatLoss(&pos))
+			fmt.Printf("%s\n\n", c.withPos(pos))
+			if pos.totalHeatLoss > 1070 {
+				break
+			}
+			// time.Sleep(64 * time.Millisecond)
+		}
+
+		fmt.Printf("iterated:   %d\n", iterated)
+		fmt.Printf("remembered: %d\n", remembered)
+		// fmt.Printf("city\n%s\n\n", c)
+	*/
 }
 
 type heading uint8
@@ -352,6 +281,19 @@ const (
 	maxHeading = 5
 )
 
+func (h heading) opposite() heading {
+	// 1 -> 3 : 0b0001 -> 0b0011
+	// 2 -> 4 : 0b0010 -> 0b0100
+	// 3 -> 1 : 0b0011 -> 0b0001
+	// 4 -> 2 : 0b0100 -> 0b0010
+	h += 2
+
+	if h > 4 {
+		h -= 4
+	}
+	return h
+}
+
 type position struct {
 	row int // uint8
 	col int // uint8
@@ -363,67 +305,4 @@ type position struct {
 	totalHeatLoss int
 
 	prev *position
-}
-
-func (p position) String() string {
-	return fmt.Sprintf("(%3d, %3d) %d", p.row, p.col, p.totalHeatLoss)
-}
-
-func (p position) numStraight() int {
-	return p.straight
-	// total := 0
-
-	// for prev := &p; prev != nil && prev.heading == p.heading; prev = prev.prev {
-	// 	total++
-	// }
-
-	// return total
-}
-
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-
-func drawPath(p *position, c *city) string {
-	var output [citySize][citySize]byte
-	for ri := 0; ri < citySize; ri++ {
-		for ci := 0; ci < citySize; ci++ {
-			output[ri][ci] = '0' + byte(c.blocks[ri][ci])
-		}
-	}
-
-	for p != nil {
-		switch p.heading {
-		case east:
-			output[p.row][p.col] = '>'
-		case south:
-			output[p.row][p.col] = 'v'
-		case west:
-			output[p.row][p.col] = '<'
-		case north:
-			output[p.row][p.col] = '^'
-		default:
-			panic(`ahh`)
-		}
-		p = p.prev
-	}
-
-	var sb strings.Builder
-	for ri := 0; ri < citySize; ri++ {
-		sb.WriteString(string(output[ri][:]))
-		sb.WriteByte('\n')
-	}
-	return sb.String()
 }
