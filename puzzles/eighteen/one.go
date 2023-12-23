@@ -22,6 +22,7 @@ func One(
 	l.numEdges = i
 
 	l.dig()
+	fmt.Printf("lagoon:\n%s\n", l.String())
 
 	return l.numDug(), nil
 }

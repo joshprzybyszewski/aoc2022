@@ -7,6 +7,7 @@ import (
 func Two(
 	input string,
 ) (int, error) {
+	return 0, nil
 	var l lagoon
 	var i int
 	for len(input) > 0 {

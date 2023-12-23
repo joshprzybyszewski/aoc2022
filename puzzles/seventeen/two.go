@@ -1,6 +1,9 @@
 package seventeen
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 const (
 	maxUltraStraightLine = 10
@@ -169,7 +172,7 @@ func dijkstraUltraHeatLossToTarget(c *city) {
 				col:             citySize - 1,
 				totalHeatLoss:   c.blocks[citySize-1][citySize-1],
 				heading:         south,
-				leftInDirection: i,
+				leftInDirection: maxUltraStraightLine - 1 - i,
 				straight:        1,
 			},
 			position{
@@ -177,7 +180,7 @@ func dijkstraUltraHeatLossToTarget(c *city) {
 				col:             citySize - 2,
 				totalHeatLoss:   c.blocks[citySize-1][citySize-1],
 				heading:         east,
-				leftInDirection: i,
+				leftInDirection: maxUltraStraightLine - 1 - i,
 				straight:        1,
 			},
 		)
@@ -187,14 +190,15 @@ func dijkstraUltraHeatLossToTarget(c *city) {
 	fmt.Printf("remaining:  %d\n", len(pending))
 
 	for len(pending) > 0 {
-		// if iterated%10000000 == 0 {
-		// 	fmt.Printf("iterated:   %d\n", iterated)
-		// 	fmt.Printf("remembered: %d\n", remembered)
-		// 	fmt.Printf("remaining:  %d\n", len(pending))
-		// 	fmt.Printf("city\n%s\n\n", c)
-		// }
 		iterated++
 		pos := pending[0]
+		if iterated > 0 || iterated%100 == 0 {
+			fmt.Printf("iterated:   %d\n", iterated)
+			fmt.Printf("remembered: %d\n", remembered)
+			fmt.Printf("remaining:  %d\n", len(pending))
+			fmt.Printf("city\n%s\n\n", c.withPos(pos))
+			time.Sleep(32 * time.Millisecond)
+		}
 
 		if c.isBetter(pos) {
 			remembered++

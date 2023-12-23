@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	citySize = 141
+	citySize = 13
 
 	maxStraightLine = 3
 )
@@ -77,7 +77,83 @@ func (c city) String() string {
 					}
 				}
 			}
-			sb.WriteString(fmt.Sprintf("%4d ", v))
+			if v == -1 {
+				sb.WriteString("     ")
+			} else {
+				sb.WriteString(fmt.Sprintf("%4d ", v))
+			}
+		}
+		sb.WriteByte('\n')
+	}
+	return sb.String()
+}
+
+func (c city) withPos(pos position) string {
+	var values [citySize][citySize]int
+	for ri := 0; ri < citySize; ri++ {
+		for ci := 0; ci < citySize; ci++ {
+			v := -1
+			for _, vals := range c.minHeatLossToTarget[ri][ci] {
+				for _, tot := range vals {
+					if tot == 0 {
+						continue
+					}
+					if tot < v || v == -1 {
+						v = tot
+					}
+				}
+			}
+			values[ri][ci] = v
+		}
+	}
+
+	var headings [citySize][citySize]heading
+
+	for cur := &pos; cur != nil; cur = cur.prev {
+		if cur.row >= citySize ||
+			cur.col >= citySize ||
+			cur.row < 0 ||
+			cur.col < 0 {
+			continue
+		}
+		headings[cur.row][cur.col] = cur.heading
+	}
+	if pos.row < citySize &&
+		pos.col < citySize &&
+		pos.row >= 0 &&
+		pos.col >= 0 {
+		headings[pos.row][pos.col] = maxHeading
+
+	}
+
+	var sb strings.Builder
+	sb.WriteString("        ")
+	for ci := 0; ci < citySize; ci++ {
+		sb.WriteString(fmt.Sprintf("%4d ", ci))
+	}
+	sb.WriteByte('\n')
+	for ri := 0; ri < citySize; ri++ {
+		sb.WriteString(fmt.Sprintf("Row %3d:", ri))
+		for ci := 0; ci < citySize; ci++ {
+			switch headings[ri][ci] {
+			case east:
+				sb.WriteByte('>')
+			case west:
+				sb.WriteByte('<')
+			case north:
+				sb.WriteByte('^')
+			case south:
+				sb.WriteByte('v')
+			case maxHeading:
+				sb.WriteByte('X')
+			default:
+				sb.WriteByte(' ')
+			}
+			if values[ri][ci] == -1 {
+				sb.WriteString("    ")
+			} else {
+				sb.WriteString(fmt.Sprintf("%3d ", values[ri][ci]))
+			}
 		}
 		sb.WriteByte('\n')
 	}
