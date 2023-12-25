@@ -1,9 +1,5 @@
 package seventeen
 
-import (
-	"fmt"
-)
-
 const (
 	maxUltraStraightLine = 10
 	minUltraStraightLine = 4
@@ -111,54 +107,15 @@ func dijkstraUltraHeatLossToTarget(c *city) {
 		)
 	}
 
-	var iterated, remembered int
-
-	// var allStarting []position
-
 	for len(pending) > 0 {
-		iterated++
 		pos := pending[0]
 
-		// if iterated%100 == 0 {
-		// 	fmt.Printf("iterated:   %d\n", iterated)
-		// 	fmt.Printf("remembered: %d\n", remembered)
-		// 	fmt.Printf("remaining:  %d\n", len(pending))
-		// 	fmt.Printf("\n")
-		// 	fmt.Printf("city\n%s\n\n", c.withPos(pos))
-		// 	// time.Sleep(64 * time.Millisecond)
-		// }
-
 		if c.isBetter(&pos) {
-			remembered++
 			c.remember(&pos)
 
 			pending = append(pending, c.getUltraPrevious(&pos)...)
 		}
 
-		// if pos.row == 0 && pos.col == 0 {
-		// 	allStarting = append(allStarting, pos)
-		// }
-
 		pending = pending[1:]
 	}
-
-	/*
-		slices.SortFunc(allStarting, func(a, b position) int {
-			return a.totalHeatLoss - b.totalHeatLoss
-		})
-
-		for _, pos := range allStarting {
-			fmt.Printf("From Start: %d\n", pos.totalHeatLoss)
-			fmt.Printf("DoubleCheck: %d\n", c.getPathHeatLoss(&pos))
-			fmt.Printf("%s\n\n", c.withPos(pos))
-			if pos.totalHeatLoss > 1263 {
-				break
-			}
-			// time.Sleep(64 * time.Millisecond)
-		}
-	*/
-
-	fmt.Printf("iterated:   %d\n", iterated)
-	fmt.Printf("remembered: %d\n", remembered)
-	fmt.Printf("city\n%s\n\n", c)
 }
