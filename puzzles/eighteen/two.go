@@ -1,131 +1,74 @@
 package eighteen
 
-import (
-	"slices"
-)
-
 func Two(
 	input string,
 ) (int, error) {
-	return 0, nil
-	var l lagoon
-	var i int
-	for len(input) > 0 {
-		l.edges[i], input = newEdge(input)
-		i++
+	l := newLagoon(input, true)
+
+	return l.numDug(), nil
+}
+
+func newLineV2(
+	cur coord,
+	input string,
+) (line, coord, string) {
+
+	input = input[2:]
+	for input[0] != ' ' {
 		input = input[1:]
 	}
-	l.numEdges = i
+	input = input[2:]
 
-	gcfHor, gcfVer := convertEdges(&l)
+	dir := input[6]
 
-	l.dig()
+	num := getDistanceFromHexCode(input[:7])
 
-	// fmt.Printf("lagoon:\n%s\n", l.String())
-	// fmt.Printf("gcfHor: %d\n", gcfHor)
-	// fmt.Printf("gcfVer: %d\n", gcfVer)
+	var l line
+	switch dir {
+	case '0': // east / Right
+		l.isHorizontal = true
+		l.val = cur.row
+		l.low = cur.col
+		cur.col += num
+		l.high = cur.col
+	case '2': // west / Left
+		l.isHorizontal = true
+		l.val = cur.row
+		l.high = cur.col
+		cur.col -= num
+		l.low = cur.col
+	case '3': // north / Up
+		l.isHorizontal = false
+		l.val = cur.col
+		l.high = cur.row
+		cur.row -= num
+		l.low = cur.row
+	case '1': // south / Down
+		l.isHorizontal = false
+		l.val = cur.col
+		l.low = cur.row
+		cur.row += num
+		l.high = cur.row
+	default:
+		panic(`unexpected heading ` + string(dir))
+	}
 
-	return l.numDug() * gcfHor * gcfVer, nil
+	return l, cur, input[8:]
 }
 
-func convertEdges(
-	l *lagoon,
-) (int, int) {
-	for i := 0; i < l.numEdges; i++ {
-		l.edges[i] = convertEdge(l.edges[i])
-	}
-
-	gcfHor, gcfVer := getGCF(l)
-
-	for i := 0; i < l.numEdges; i++ {
-		if l.edges[i].heading == east || l.edges[i].heading == west {
-			l.edges[i].num /= gcfHor
-		} else {
-			l.edges[i].num /= gcfVer
-		}
-
-	}
-
-	return gcfHor, gcfVer
-}
-
-func convertEdge(
-	e edge,
-) edge {
-	switch e.color[6] {
-	case '0':
-		e.heading = east
-	case '1':
-		e.heading = south
-	case '2':
-		e.heading = west
-	case '3':
-		e.heading = north
-	}
-
-	e.num = 0
+func getDistanceFromHexCode(
+	hexCode string,
+) int {
+	num := 0
 	for i := 1; i < 6; i++ {
-		e.num *= 16 // TODO this could be <<= 8 probably
-		e.num += int(e.color[i] - '0')
-	}
-
-	return e
-}
-
-func getGCF(
-	l *lagoon,
-) (int, int) {
-
-	hors := make([]int, 0, l.numEdges)
-	vers := make([]int, 0, l.numEdges)
-	for i := 0; i < l.numEdges; i++ {
-		if l.edges[i].heading == east || l.edges[i].heading == west {
-			hors = append(hors, l.edges[i].num)
+		// bit shifting 4 places is multiplying by 16.
+		num <<= 4
+		if hexCode[i] <= '9' {
+			num += int(hexCode[i] - '0')
 		} else {
-			vers = append(vers, l.edges[i].num)
-		}
+			num += int(hexCode[i]-'a') + 10
 
-	}
-	slices.Sort(hors)
-	slices.Sort(vers)
-
-	gcfHor := 1
-	n := 2
-	for n < hors[0]/2 {
-		if !isMultiple(hors, n) {
-			n++
-		}
-
-		gcfHor *= n
-		for i := range hors {
-			hors[i] /= n
 		}
 	}
-
-	gcfVer := 1
-	n = 2
-	for n < vers[0]/2 {
-		if !isMultiple(vers, n) {
-			n++
-		}
-
-		gcfVer *= n
-		for i := range vers {
-			vers[i] /= n
-		}
-	}
-
-	return gcfHor, gcfVer
-}
-
-func isMultiple(
-	vals []int,
-	n int,
-) bool {
-	for _, v := range vals {
-		if v%n != 0 {
-			return false
-		}
-	}
-	return true
+	return num
 }
