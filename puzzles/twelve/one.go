@@ -1,9 +1,5 @@
 package twelve
 
-import (
-	"fmt"
-)
-
 type part uint8
 
 const (
@@ -41,10 +37,8 @@ func One(
 
 		p, groups, input = newPossibilities(input)
 		p.build(groups)
-		ans := p.answer(groups)
-		fmt.Printf("answer: %d\n", ans)
-		total += ans
 
+		total += p.answer(groups)
 	}
 
 	return total, nil

@@ -1,6 +1,32 @@
 package twelve
 
-import "fmt"
+func Two(
+	input string,
+) (int, error) {
+	var p possibilities
+	var groups []int
+
+	var total int
+
+	for len(input) > 0 {
+		if input[0] == '\n' {
+			input = input[1:]
+			continue
+		}
+
+		p, groups, input = newPossibilities(input)
+		groups = unfold(&p, groups)
+
+		p.build(groups)
+
+		total += p.answer(groups)
+	}
+
+	// 5728112261200 is too high
+	// 5696803857515 is too high
+
+	return total, nil
+}
 
 func unfold(
 	p *possibilities,
@@ -23,32 +49,4 @@ func unfold(
 	p.lineLength = cpI
 
 	return output
-}
-
-func Two(
-	input string,
-) (int, error) {
-	var p possibilities
-	var groups []int
-
-	var total int
-
-	for len(input) > 0 {
-		if input[0] == '\n' {
-			input = input[1:]
-			continue
-		}
-
-		p, groups, input = newPossibilities(input)
-		groups = unfold(&p, groups)
-		p.build(groups)
-		ans := p.answer(groups)
-		fmt.Printf("answer: %d\n", ans)
-		total += ans
-	}
-
-	// 5728112261200 is too high
-	// 5696803857515 is too high
-
-	return total, nil
 }
