@@ -205,6 +205,9 @@ type processor struct {
 	numHighPulsesSent int
 
 	queue []cable
+
+	hasRx                bool
+	numLowPulsesReceived int
 }
 
 func newProcessor(
@@ -216,7 +219,14 @@ func newProcessor(
 	}
 }
 
+func (p *processor) addRx() {
+	p.hasRx = true
+}
+
 func (p *processor) pushButton() {
+
+	p.numLowPulsesReceived = 0
+
 	const (
 		buttonPulse = lowPulse
 	)
@@ -267,8 +277,14 @@ func (p *processor) resolvePulses() {
 			p.resolveFlipFlop(c, ffm)
 		} else if cm = p.m.getConjunction(c.destination); cm != nil {
 			p.resolveConjunction(c, cm)
-		} else {
-			panic(`unexpected`)
+		} else if p.hasRx && c.destination == `rx` {
+			if c.pulse == lowPulse {
+				p.numLowPulsesReceived++
+			}
+			// } else {
+
+			// fmt.Printf("No destination: %s\n", c)
+			// 	// panic(`unexpected`)
 		}
 	}
 }
