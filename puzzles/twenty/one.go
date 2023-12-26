@@ -2,172 +2,206 @@ package twenty
 
 import (
 	"fmt"
-	"strconv"
+	"slices"
 	"strings"
 )
 
 func One(
 	input string,
 ) (int, error) {
-	numbers := make([]int, 0, 1028)
+	m := newMachine(input)
+	fmt.Printf("machine: %+v\n", m)
 
-	var val int
-	var err error
+	// TODO push button on the machine
+	return 0, nil
+}
 
-	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
-		if nli == 0 {
-			input = input[nli+1:]
+func newMachine(input string) machine {
+	m := machine{
+		flipFlops:    make([]flipFlopModule, 0, 32),
+		conjunctions: make([]conjunctionModule, 0, 32),
+	}
+	var src string
+	var dests []string
+
+	cables := make([]cable, 0, 256)
+
+	for len(input) > 0 {
+		if len(input) > 5 {
+			fmt.Printf("input: %q\n", input[:5])
+		}
+		if input[0] == '\n' {
+			break
+		}
+		if input[0] == 'b' {
+			m.broadcaster.destinations, input = getDestinations(input)
 			continue
 		}
 
-		val, err = strconv.Atoi(input[0:nli])
-		if err != nil {
-			return 0, err
+		mt := input[0]
+		input = input[1:]
+
+		src, dests, input = getSourceAndDestinations(input)
+		for _, dest := range dests {
+			cables = append(cables, cable{
+				source:      src,
+				destination: dest,
+			})
 		}
-		numbers = append(numbers, val)
-		input = input[nli+1:]
+
+		switch mt {
+		case '%':
+			m.flipFlops = append(m.flipFlops, newFlipFlopModule(src, dests))
+		case '&':
+			m.conjunctions = append(m.conjunctions, newConjunctionModule(src, dests))
+		default:
+			fmt.Printf("mt: %s\n", string(mt))
+			panic(`unexpected`)
+		}
 	}
 
-	linkedList, zero := convertToDoublyLinkedList(numbers)
-	if zero == nil {
-		return 0, fmt.Errorf("did not have zero in the data set")
+	slices.SortFunc(cables, func(a, b cable) int {
+		d := strings.Compare(a.destination, b.destination)
+		if d != 0 {
+			return d
+		}
+		return strings.Compare(a.source, b.source)
+	})
+
+	slices.SortFunc(m.flipFlops, func(a, b flipFlopModule) int {
+		return strings.Compare(a.name, b.name)
+	})
+
+	slices.SortFunc(m.conjunctions, func(a, b conjunctionModule) int {
+		return strings.Compare(a.name, b.name)
+	})
+
+	for cableIndex, cmi := 0, 0; cableIndex < len(cables) && cmi < len(m.conjunctions); {
+		if cables[cableIndex].destination == m.conjunctions[cmi].name {
+			m.conjunctions[cmi].addInput(cables[cableIndex].source)
+			cableIndex++
+			continue
+		}
+		if cmi < len(m.conjunctions)-1 && cables[cableIndex].destination == m.conjunctions[cmi+1].name {
+			cmi++
+			continue
+		}
+		cableIndex++
 	}
 
-	mixSteps(linkedList)
-
-	oneThou := zero.getNthValue(1000 % len(numbers))
-	twoThou := zero.getNthValue(2000 % len(numbers))
-	threeThou := zero.getNthValue(3000 % len(numbers))
-
-	return oneThou + twoThou + threeThou, nil
+	return m
 }
 
-func convertToDoublyLinkedList(numbers []int) ([]*node, *node) {
-	output := make([]*node, len(numbers))
-	var zero *node
+func getSourceAndDestinations(input string) (string, []string, string) {
+	var source string
+	for i := 0; ; i++ {
+		if input[i] == ' ' {
+			source = input[:i]
+			input = input[i:]
+			break
+		}
+	}
+	dests, input := getDestinations(input)
+	return source, dests, input
+}
 
-	for i := range numbers {
-		output[i] = newNode(numbers[i])
-		if output[i].val == 0 {
-			if zero != nil {
-				panic(`has more than one zero in the data-set`)
+func getDestinations(input string) ([]string, string) {
+	dests := make([]string, 0, 5)
+
+	for {
+		if input[0] == '-' {
+			if input[1] != '>' || input[2] != ' ' {
+				panic(`unexpected`)
 			}
-			zero = output[i]
+			input = input[3:]
+			break
 		}
+		input = input[1:]
 	}
 
-	for i := 1; i < len(output)-1; i++ {
-		output[i].prev = output[i-1]
-		output[i].next = output[i+1]
+	i := 0
+	for {
+		if input[i] == '\n' {
+			dests = append(dests, input[:i])
+			input = input[i+1:]
+			break
+		}
+		if input[i] == ',' {
+			dests = append(dests, input[:i])
+			if input[i+1] != ' ' {
+				panic(`unexpected`)
+			}
+			input = input[i+2:]
+			i = 0
+			continue
+		}
+		i++
 	}
 
-	output[0].prev = output[len(output)-1]
-	output[0].next = output[1]
-	output[len(output)-1].prev = output[len(output)-2]
-	output[len(output)-1].next = output[0]
-
-	return output, zero
+	return dests, input
 }
 
-func mixSteps(
-	nodes []*node,
+type pulse bool
+
+const (
+	highPulse pulse = true
+	lowPulse  pulse = false
+)
+
+type cable struct {
+	source      string
+	destination string
+
+	pulse pulse
+}
+
+type machine struct {
+	broadcaster broadcasterModule
+
+	flipFlops []flipFlopModule
+
+	conjunctions []conjunctionModule
+
+	// TODO pending pulses
+}
+
+type broadcasterModule struct {
+	destinations []string
+}
+
+type flipFlopModule struct {
+	name string
+	last pulse
+
+	outputs []string
+}
+
+func newFlipFlopModule(name string, dests []string) flipFlopModule {
+	return flipFlopModule{
+		name:    name,
+		last:    lowPulse,
+		outputs: dests,
+	}
+}
+
+type conjunctionModule struct {
+	name string
+
+	inputsByName map[string]pulse
+
+	outputs []string
+}
+
+func newConjunctionModule(name string, dests []string) conjunctionModule {
+	return conjunctionModule{
+		name:         name,
+		inputsByName: make(map[string]pulse, 8),
+		outputs:      dests,
+	}
+}
+
+func (c *conjunctionModule) addInput(
+	src string,
 ) {
-	for _, n := range nodes {
-		if n.val > 0 {
-			n.forwardSteps(n.val % (len(nodes) - 1))
-		} else if n.val < 0 {
-			n.backwardSteps((-n.val) % (len(nodes) - 1))
-		}
-	}
-}
-
-type node struct {
-	prev *node
-	next *node
-
-	val int
-}
-
-func newNode(val int) *node {
-	return &node{
-		val: val,
-	}
-}
-
-func (n *node) forwardSteps(steps int) {
-	if steps == 0 {
-		// nothing to do
-		return
-	}
-	// A <-> n <-> B ... C <-> D
-	// A <-> B       ... C <-> n <-> D
-	// keep in mind that C could equal A or B
-	a := n.prev
-	b := n.next
-
-	c := n
-	for s := 0; s < steps; s++ {
-		c = c.next
-	}
-	d := c.next
-
-	if c == a {
-		// n moves after a, where it already is.
-		return
-	}
-
-	a.next = b
-	b.prev = a
-
-	c.next = n
-	n.prev = c
-
-	n.next = d
-	d.prev = n
-}
-
-func (n *node) backwardSteps(steps int) {
-	if steps == 0 {
-		// nothing to do
-		return
-	}
-	// A <-> B       ... C <-> n <-> D
-	// A <-> n <-> B ... C <-> D
-	// keep in mind that C could equal A or B
-
-	c := n.prev
-	d := n.next
-
-	b := n
-	for s := 0; s < steps; s++ {
-		b = b.prev
-	}
-	a := b.prev
-
-	if b == d {
-		// n moves before d, where it already is.
-		return
-	}
-
-	a.next = n
-	n.prev = a
-
-	n.next = b
-	b.prev = n
-
-	c.next = d
-	d.prev = c
-}
-
-func (n *node) getNthValue(steps int) int {
-	if steps == 0 {
-		// nothing to do
-		return n.val
-	}
-
-	iter := n
-	for s := 0; s < steps; s++ {
-		iter = iter.next
-	}
-	return iter.val
+	c.inputsByName[src] = lowPulse
 }
