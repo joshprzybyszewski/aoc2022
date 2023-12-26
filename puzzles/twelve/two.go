@@ -22,9 +22,6 @@ func Two(
 		total += p.answer(groups)
 	}
 
-	// 5728112261200 is too high
-	// 5696803857515 is too high
-
 	return total, nil
 }
 

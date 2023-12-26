@@ -121,13 +121,13 @@ func (p *possibilities) buildSubGroup(
 
 		start := i - group
 		for j := start - 1; j >= 0; j-- {
-			if checkBefore && p.hasBrokenInRange(0, j-1) {
+			if checkBefore && (p.hasBrokenInRange(0, j-1) || p.hasBrokenInRange(j+group, i-1)) {
 				continue
 			}
 			if p.canPlace(j, group) {
 				p.possibles[len(groups)][j] += prevVal
 			}
-			if p.hasBrokenInRange(j+group, start) {
+			if p.hasBrokenInRange(j+group, i-1) {
 				break
 			}
 		}
