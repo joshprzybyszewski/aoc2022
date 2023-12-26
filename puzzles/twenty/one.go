@@ -10,10 +10,15 @@ func One(
 	input string,
 ) (int, error) {
 	m := newMachine(input)
-	fmt.Printf("machine: %+v\n", m)
+	// fmt.Printf("machine: %+v\n", m)
 
-	// TODO push button on the machine
-	return 0, nil
+	p := newProcessor(&m)
+
+	for n := 0; n < 1000; n++ {
+		p.pushButton()
+	}
+
+	return p.numLowPulsesSent * p.numHighPulsesSent, nil
 }
 
 func newMachine(input string) machine {
@@ -27,9 +32,6 @@ func newMachine(input string) machine {
 	cables := make([]cable, 0, 256)
 
 	for len(input) > 0 {
-		if len(input) > 5 {
-			fmt.Printf("input: %q\n", input[:5])
-		}
 		if input[0] == '\n' {
 			break
 		}
@@ -148,11 +150,22 @@ const (
 	lowPulse  pulse = false
 )
 
+func (p pulse) String() string {
+	if p == highPulse {
+		return `high`
+	}
+	return `low`
+}
+
 type cable struct {
 	source      string
 	destination string
 
 	pulse pulse
+}
+
+func (c cable) String() string {
+	return fmt.Sprintf("%s -%s-> %s", c.source, c.pulse, c.destination)
 }
 
 type machine struct {
@@ -161,8 +174,144 @@ type machine struct {
 	flipFlops []flipFlopModule
 
 	conjunctions []conjunctionModule
+}
 
-	// TODO pending pulses
+func (m *machine) getFlipFlop(
+	dest string,
+) *flipFlopModule {
+	for i := range m.flipFlops {
+		if m.flipFlops[i].name == dest {
+			return &m.flipFlops[i]
+		}
+	}
+	return nil
+}
+
+func (m *machine) getConjunction(
+	dest string,
+) *conjunctionModule {
+	for i := range m.conjunctions {
+		if m.conjunctions[i].name == dest {
+			return &m.conjunctions[i]
+		}
+	}
+	return nil
+}
+
+type processor struct {
+	m *machine
+
+	numLowPulsesSent  int
+	numHighPulsesSent int
+
+	queue []cable
+}
+
+func newProcessor(
+	m *machine,
+) processor {
+	return processor{
+		m:     m,
+		queue: make([]cable, 0, 5000),
+	}
+}
+
+func (p *processor) pushButton() {
+	const (
+		buttonPulse = lowPulse
+	)
+	p.numLowPulsesSent += 1
+	for _, dest := range p.m.broadcaster.destinations {
+		p.addPulse(
+			`broadcaster`,
+			dest,
+			buttonPulse,
+		)
+	}
+
+	p.resolvePulses()
+}
+
+func (p *processor) addPulse(
+	src string,
+	dest string,
+	state pulse,
+) {
+	p.queue = append(p.queue, cable{
+		source:      src,
+		destination: dest,
+		pulse:       state,
+	})
+}
+
+func (p *processor) resolvePulses() {
+
+	var c cable
+	var ffm *flipFlopModule
+	var cm *conjunctionModule
+
+	for len(p.queue) > 0 {
+		c = p.queue[0]
+		if c.pulse == lowPulse {
+			p.numLowPulsesSent++
+		} else if c.pulse == highPulse {
+			p.numHighPulsesSent++
+		} else {
+			panic(`unexpected`)
+		}
+		p.queue = p.queue[1:]
+
+		// fmt.Printf("Processing: %s\n", c)
+
+		if ffm = p.m.getFlipFlop(c.destination); ffm != nil {
+			p.resolveFlipFlop(c, ffm)
+		} else if cm = p.m.getConjunction(c.destination); cm != nil {
+			p.resolveConjunction(c, cm)
+		} else {
+			panic(`unexpected`)
+		}
+	}
+}
+
+func (p *processor) resolveFlipFlop(
+	c cable,
+	ffm *flipFlopModule,
+) {
+	if c.pulse == highPulse {
+		return
+	}
+
+	ffm.isOn = !ffm.isOn
+
+	pulse := lowPulse
+	if ffm.isOn {
+		pulse = highPulse
+	}
+	for _, dest := range ffm.outputs {
+		p.addPulse(ffm.name, dest, pulse)
+	}
+}
+
+func (p *processor) resolveConjunction(
+	c cable,
+	cm *conjunctionModule,
+) {
+	cm.inputsByName[c.source] = c.pulse
+
+	pulse := highPulse
+	if c.pulse == highPulse {
+		pulse = lowPulse
+		for _, p := range cm.inputsByName {
+			if p == lowPulse {
+				pulse = highPulse
+				break
+			}
+		}
+	}
+
+	for _, dest := range cm.outputs {
+		p.addPulse(cm.name, dest, pulse)
+	}
 }
 
 type broadcasterModule struct {
@@ -171,7 +320,7 @@ type broadcasterModule struct {
 
 type flipFlopModule struct {
 	name string
-	last pulse
+	isOn bool
 
 	outputs []string
 }
@@ -179,7 +328,7 @@ type flipFlopModule struct {
 func newFlipFlopModule(name string, dests []string) flipFlopModule {
 	return flipFlopModule{
 		name:    name,
-		last:    lowPulse,
+		isOn:    false,
 		outputs: dests,
 	}
 }
