@@ -65,3 +65,35 @@ func TestUnfold(t *testing.T) {
 		}
 	}
 }
+
+func TestDists(t *testing.T) {
+	p, _ := newPossibilities(`??#.#.?? 1,1`)
+	p.findDistances()
+
+	for i, v := range []int{2, 1, 0, 1, 0, 12, 11, 10, 0} {
+		if p.distToBroken[i] != v {
+			t.Logf("Expected: %+v, actual: %+v. For index %d", v, p.distToBroken[i], i)
+			t.Fail()
+		}
+	}
+
+	for i, v := range []int{3, 2, 1, 0, 1, 0, 11, 10, 0} {
+		if p.distToSafe[i] != v {
+			t.Logf("Expected: %+v, actual: %+v. For index %d", v, p.distToBroken[i], i)
+			t.Fail()
+		}
+	}
+
+	if p.hasBrokenInRange(0, 1) {
+		t.Fail()
+	}
+	if !p.hasBrokenInRange(0, 2) {
+		t.Fail()
+	}
+	if !p.hasBrokenInRange(2, 4) {
+		t.Fail()
+	}
+	if p.hasBrokenInRange(5, 7) {
+		t.Fail()
+	}
+}

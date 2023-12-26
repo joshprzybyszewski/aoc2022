@@ -6,13 +6,16 @@ const (
 )
 
 type possibilities struct {
+	possibles [maxNumGroups][maxLineLength]int
+
 	line       [maxLineLength]part
 	lineLength int
 
+	distToBroken [maxLineLength]int
+	distToSafe   [maxLineLength]int
+
 	groups    [maxNumGroups]int
 	numGroups int
-
-	possibles [maxNumGroups][maxLineLength]int
 }
 
 func newPossibilities(
@@ -78,7 +81,26 @@ func (p *possibilities) answer() int {
 	return total
 }
 
+func (p *possibilities) findDistances() {
+	toBroken := p.lineLength + 1
+	toSafe := p.lineLength + 1
+	for i := p.lineLength - 1; i >= 0; i-- {
+		toBroken++
+		toSafe++
+
+		switch p.line[i] {
+		case broken:
+			toBroken = 0
+		case safe:
+			toSafe = 0
+		}
+		p.distToBroken[i] = toBroken
+		p.distToSafe[i] = toSafe
+	}
+}
+
 func (p *possibilities) build() {
+	p.findDistances()
 	p.buildSubGroup(0)
 }
 
@@ -133,11 +155,15 @@ func (p *possibilities) canPlace(
 	group int,
 ) bool {
 
+	if p.distToSafe[startIndex] < group {
+		return false
+	}
+
 	if startIndex+group > p.lineLength {
 		// extends beyond this line
 		return false
 	}
-	
+
 	if startIndex > 0 &&
 		p.line[startIndex-1] == broken {
 		// the piece before this group attempt is broken; cannot place it starting here.
@@ -150,22 +176,18 @@ func (p *possibilities) canPlace(
 		return false
 	}
 
-	for n := 0; n < group; n++ {
-		if p.line[startIndex+n] == safe {
-			// One of the pieces in this group is marked as safe; cannot place it here
-			return false
-		}
-	}
-
-
 	return true
 }
 
 func (p *possibilities) hasBrokenInRange(
 	startIndex, endIndex int,
 ) bool {
+	// if p.distToBroken[startIndex] <= (endIndex - startIndex) {
+	// 	return true
+	// }
 	for n := startIndex; n <= endIndex; n++ {
 		if p.line[n] == broken {
+			// panic(`should've been caught`)
 			return true
 		}
 	}

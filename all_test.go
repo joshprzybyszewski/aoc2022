@@ -16,7 +16,7 @@ func BenchmarkAll(b *testing.B) {
 		today = 25
 	}
 
-	for day := 1; day <= today; day++ {
+	for day := 12; day <= 12; day++ {
 		b.Run(fmt.Sprintf("Day %d", day), func(b *testing.B) {
 			input, err := util.Input(day)
 			if err != nil {
