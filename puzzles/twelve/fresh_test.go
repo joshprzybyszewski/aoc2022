@@ -79,7 +79,7 @@ func TestDists(t *testing.T) {
 
 	for i, v := range []int{3, 2, 1, 0, 1, 0, 11, 10, 0} {
 		if p.distToSafe[i] != v {
-			t.Logf("Expected: %+v, actual: %+v. For index %d", v, p.distToBroken[i], i)
+			t.Logf("Expected: %+v, actual: %+v. For index %d", v, p.distToSafe[i], i)
 			t.Fail()
 		}
 	}
@@ -95,5 +95,25 @@ func TestDists(t *testing.T) {
 	}
 	if p.hasBrokenInRange(5, 7) {
 		t.Fail()
+	}
+	if p.hasBrokenInRange(7, 4) {
+		t.Fail()
+	}
+
+	p, _ = newPossibilities(`?# 1`)
+	p.findDistances()
+
+	for i, v := range []int{1, 0, 0} {
+		if p.distToBroken[i] != v {
+			t.Logf("Expected: %+v, actual: %+v. For index %d", v, p.distToBroken[i], i)
+			t.Fail()
+		}
+	}
+
+	for i, v := range []int{5, 4, 0} {
+		if p.distToSafe[i] != v {
+			t.Logf("Expected: %+v, actual: %+v. For index %d", v, p.distToSafe[i], i)
+			t.Fail()
+		}
 	}
 }

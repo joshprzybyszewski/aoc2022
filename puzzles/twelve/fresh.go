@@ -182,14 +182,8 @@ func (p *possibilities) canPlace(
 func (p *possibilities) hasBrokenInRange(
 	startIndex, endIndex int,
 ) bool {
-	// if p.distToBroken[startIndex] <= (endIndex - startIndex) {
-	// 	return true
-	// }
-	for n := startIndex; n <= endIndex; n++ {
-		if p.line[n] == broken {
-			// panic(`should've been caught`)
-			return true
-		}
-	}
-	return false
+
+	return startIndex < p.lineLength &&
+		endIndex >= startIndex &&
+		p.distToBroken[startIndex] <= (endIndex-startIndex)
 }
