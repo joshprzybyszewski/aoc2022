@@ -13,10 +13,8 @@ func One(
 	input string,
 ) (int, error) {
 	g := newGarden(input)
-	fmt.Printf("garden:\n%s\n", g)
 
 	dijkstra(&g, 64)
-	fmt.Printf("garden:\n%s\n", g)
 
 	return g.numEven(), nil
 }
