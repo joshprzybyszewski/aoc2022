@@ -4,7 +4,6 @@ func Two(
 	input string,
 ) (int, error) {
 	var p possibilities
-	var groups []int
 
 	var total int
 
@@ -14,12 +13,12 @@ func Two(
 			continue
 		}
 
-		p, groups, input = newPossibilities(input)
-		groups = unfold(&p, groups)
+		p, input = newPossibilities(input)
+		unfold(&p)
 
-		p.build(groups)
+		p.build()
 
-		total += p.answer(groups)
+		total += p.answer()
 	}
 
 	return total, nil
@@ -27,13 +26,17 @@ func Two(
 
 func unfold(
 	p *possibilities,
-	groups []int,
-) []int {
+) {
 
-	output := make([]int, 0, len(groups)*5)
-	for i := 0; i < 5; i++ {
-		output = append(output, groups...)
+	cpGI := p.numGroups
+	for i := 1; i < 5; i++ {
+		for j := 0; j < p.numGroups; j++ {
+			p.groups[cpGI] = p.groups[j]
+			cpGI++
+		}
 	}
+	p.numGroups = cpGI
+
 	cpI := p.lineLength
 	for i := 1; i < 5; i++ {
 		p.line[cpI] = unknown
@@ -44,6 +47,4 @@ func unfold(
 		}
 	}
 	p.lineLength = cpI
-
-	return output
 }

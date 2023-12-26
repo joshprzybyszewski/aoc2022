@@ -36,11 +36,31 @@ func TestFresh(t *testing.T) {
 		input: `?#?...#??.# 2,1,1`,
 		exp:   2,
 	}} {
-		p, groups, _ := newPossibilities(tc.input)
-		p.build(groups)
-		act := p.answer(groups)
+		p, _ := newPossibilities(tc.input)
+		p.build()
+		act := p.answer()
 		if act != tc.exp {
 			t.Logf("Expected: %d, actual: %d. For %q", tc.exp, act, tc.input)
+			t.Fail()
+		}
+	}
+}
+
+func TestUnfold(t *testing.T) {
+	type testcase struct {
+		input string
+		exp   string
+	}
+
+	for _, tc := range []testcase{{
+		input: `# 1`,
+		exp:   `#?#?#?#?# 1,1,1,1,1`,
+	}} {
+		act, _ := newPossibilities(tc.input)
+		unfold(&act)
+		exp, _ := newPossibilities(tc.exp)
+		if act != exp {
+			t.Logf("Expected: %+v\n, actual: %+v\n. For %q", exp, act, tc.input)
 			t.Fail()
 		}
 	}

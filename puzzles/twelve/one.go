@@ -25,8 +25,7 @@ func One(
 ) (int, error) {
 
 	var p possibilities
-	var groups []int
-
+	
 	var total int
 
 	for len(input) > 0 {
@@ -35,10 +34,10 @@ func One(
 			continue
 		}
 
-		p, groups, input = newPossibilities(input)
-		p.build(groups)
+		p,  input = newPossibilities(input)
+		p.build()
 
-		total += p.answer(groups)
+		total += p.answer()
 	}
 
 	return total, nil
