@@ -3,7 +3,7 @@ package twelve
 import "fmt"
 
 func unfold(
-	r *row,
+	p *possibilities,
 	groups []int,
 ) []int {
 
@@ -11,16 +11,16 @@ func unfold(
 	for i := 0; i < 5; i++ {
 		output = append(output, groups...)
 	}
-	cpI := r.numParts
+	cpI := p.lineLength
 	for i := 1; i < 5; i++ {
-		r.parts[cpI] = unknown
+		p.line[cpI] = unknown
 		cpI++
-		for j := 0; j < r.numParts; j++ {
-			r.parts[cpI] = r.parts[j]
+		for j := 0; j < p.lineLength; j++ {
+			p.line[cpI] = p.line[j]
 			cpI++
 		}
 	}
-	r.numParts = cpI
+	p.lineLength = cpI
 
 	return output
 }
@@ -28,56 +28,27 @@ func unfold(
 func Two(
 	input string,
 ) (int, error) {
-	total := 0
-	var i, cur int
-	var r row
-	var addGroup bool
-	groups := make([]int, 0, 40)
+	var p possibilities
+	var groups []int
+
+	var total int
+
 	for len(input) > 0 {
 		if input[0] == '\n' {
-			if r.numParts > 0 {
-				groups = append(groups, cur)
-				// fmt.Printf("  %-105s %v\n", r, groups)
-				groups = unfold(&r, groups)
-				populateAllowed(&r, groups)
-				fmt.Printf("  %-105s %v\n", r, groups)
-				num := getNum(
-					r,
-					0,
-					groups,
-					getRemainingRequired(groups),
-				)
-				// fmt.Printf("ANSWER: %d\n\n\n", num)
-				total += num
-			}
-			i = 0
-			cur = 0
-			r = row{}
-			addGroup = false
-			groups = groups[:0]
-		} else if addGroup {
-			switch input[0] {
-			case ',':
-				// iterate past.
-				groups = append(groups, cur)
-				cur = 0
-			default:
-				cur *= 10
-				cur += int(input[0] - '0')
-			}
-		} else {
-			switch input[0] {
-			case '?':
-				r.parts[i] = unknown
-			case '#':
-				r.parts[i] = broken
-			case ' ':
-				r.numParts = i
-				addGroup = true
-			}
-			i++
+			input = input[1:]
+			continue
 		}
-		input = input[1:]
+
+		p, groups, input = newPossibilities(input)
+		groups = unfold(&p, groups)
+		p.build(groups)
+		ans := p.answer(groups)
+		fmt.Printf("answer: %d\n", ans)
+		total += ans
 	}
+
+	// 5728112261200 is too high
+	// 5696803857515 is too high
+
 	return total, nil
 }

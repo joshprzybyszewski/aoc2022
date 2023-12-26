@@ -1,0 +1,38 @@
+package twelve
+
+import "testing"
+
+func TestFresh(t *testing.T) {
+	type testcase struct {
+		input string
+		exp   int
+	}
+
+	for _, tc := range []testcase{{
+		// 	input: `????#?.???? 2,2,1`,
+		// 	exp:   14,
+		// }, {
+		// 	input: `??? 1`,
+		// 	exp:   3,
+		// }, {
+		// 	input: `???? 1,1`,
+		// 	exp:   3,
+		// }, {
+		// 	input: `????? 1,1`,
+		// 	exp:   6,
+		// }, {
+		// 	input: `????.? 1,1`,
+		// 	exp:   7,
+		// }, {
+		input: `?###??????????###??????????###??????????###??????????###???????? 3,2,1,3,2,1,3,2,1,3,2,1,3,2,1`,
+		exp:   506250,
+	}} {
+		p, groups, _ := newPossibilities(tc.input)
+		p.build(groups)
+		act := p.answer(groups)
+		if act != tc.exp {
+			t.Logf("Expected: %d, actual: %d. For %q", tc.exp, act, tc.input)
+			t.Fail()
+		}
+	}
+}

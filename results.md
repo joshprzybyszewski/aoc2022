@@ -49,5 +49,9 @@ cpu: AMD EPYC 7763 64-Core Processor
 |Day 14 Part Two|13.81 ms|0|0|
 |Day 15 Part One|41.19 µs|0|0|
 |Day 15 Part Two|731.31 µs|131200|26249|
-|Day 16 Part One|141.79 µs|0|0|
-|Day 16 Part Two|28.21 ms|0|0|
+|Day 16 Part One|152.96 µs|0|0|
+|Day 16 Part Two|27.77 ms|0|0|
+|Day 17 Part One|17.06 s|16484535992|47701554|
+|Day 17 Part Two|17.89 s|14728004872|46846699|
+|Day 18 Part One|193.56 µs|0|0|
+|Day 18 Part Two|207.02 µs|0|0|
