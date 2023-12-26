@@ -180,3 +180,24 @@ func (pg *precomputedGarden) topDepth() int {
 func (pg *precomputedGarden) bottomDepth() int {
 	return pg.distances[pg.exits.bottom.row][gridSize-1]
 }
+
+func (pg *precomputedGarden) getNumEven(
+	maxDepth int,
+) int {
+	if maxDepth > pg.maxDistance {
+		return pg.numEven
+	}
+
+	output := 0
+	for ri := range pg.distances {
+		for ci := range pg.distances[ri] {
+			if pg.distances[ri][ci] > maxDepth {
+				continue
+			}
+			if pg.distances[ri][ci]%2 == 0 {
+				pg.numEven++
+			}
+		}
+	}
+	return output
+}

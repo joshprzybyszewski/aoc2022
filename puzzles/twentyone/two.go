@@ -50,40 +50,15 @@ func (gb *galaxyBuilder) addInitial(
 		panic(`unexpected`)
 	}
 
-	gb.totalEven += gp.start.numEven
-
-	gb.pending = append(gb.pending,
+	gb.process(
+		gp,
 		plotPosition{
 			plot: coord{
 				row: 0,
-				col: 1,
-			},
-			entrance:    gp.start.exits.right,
-			depthBefore: gp.start.rightDepth(),
-		},
-		plotPosition{
-			plot: coord{
-				row: 0,
-				col: -1,
-			},
-			entrance:    gp.start.exits.left,
-			depthBefore: gp.start.leftDepth(),
-		},
-		plotPosition{
-			plot: coord{
-				row: 1,
 				col: 0,
 			},
-			entrance:    gp.start.exits.bottom,
-			depthBefore: gp.start.bottomDepth(),
-		},
-		plotPosition{
-			plot: coord{
-				row: -1,
-				col: 0,
-			},
-			entrance:    gp.start.exits.top,
-			depthBefore: gp.start.topDepth(),
+			entrance:    gp.start.entrance,
+			depthBefore: 0,
 		},
 	)
 }
@@ -109,27 +84,7 @@ func (gb *galaxyBuilder) populate(
 
 		gb.seenPlots[p.plot] = struct{}{}
 
-		// Look at the next one above
-		// above := p
-		// above.plot.row--
-		// above.plot.entrance =
-		// pending = append(pending,
-		// 	pos{
-		// 		plot: coord{
-		// 			row: 0,
-		// 			col: 1,
-		// 		},
-		// 		entrance:    gp.start.exits.right,
-		// 		depthBefore: gp.start.rightDepth(),
-		// 	},
-		// )
-
-		// below
-
-		// right
-
-		// left
-
+		gb.process(gp, p)
 	}
 }
 
@@ -139,7 +94,39 @@ func (gb *galaxyBuilder) process(
 ) {
 	plot := gp.get(pos.entrance)
 
-	// TODO process this plot.
-	// add numEven
-	// look up, right, down, and left, adding those plots to the pending queue
+	gb.totalEven += plot.getNumEven(
+		gb.maxDepth - pos.depthBefore,
+	)
+
+	above := pos
+	above.plot.row--
+	above.entrance = plot.exits.top
+	above.depthBefore += plot.topDepth()
+	if above.depthBefore < gb.maxDepth {
+		gb.pending = append(gb.pending, above)
+	}
+
+	below := pos
+	below.plot.row++
+	below.entrance = plot.exits.bottom
+	below.depthBefore += plot.bottomDepth()
+	if below.depthBefore < gb.maxDepth {
+		gb.pending = append(gb.pending, below)
+	}
+
+	left := pos
+	left.plot.row--
+	left.entrance = plot.exits.left
+	left.depthBefore += plot.leftDepth()
+	if left.depthBefore < gb.maxDepth {
+		gb.pending = append(gb.pending, left)
+	}
+
+	right := pos
+	right.plot.row++
+	right.entrance = plot.exits.right
+	right.depthBefore += plot.rightDepth()
+	if right.depthBefore < gb.maxDepth {
+		gb.pending = append(gb.pending, right)
+	}
 }
