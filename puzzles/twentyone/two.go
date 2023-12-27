@@ -8,7 +8,7 @@ func Two(
 	for _, depth := range []int{
 		6,
 		10,
-		50,
+		// 50,
 		// 100,
 		// 500,
 		// 1000,
@@ -46,6 +46,8 @@ type plotPosition struct {
 
 	entrance    coord
 	depthBefore int
+
+	additionalEntrances []coord
 }
 
 type galaxyBuilder struct {
@@ -116,16 +118,19 @@ func (gb *galaxyBuilder) process(
 ) {
 	fmt.Printf("Processing plot %d, %+v\n", pos.depthBefore, pos.plot)
 
-	plot := gp.get(pos.entrance)
+	plot := gp.get(pos.entrance, pos.additionalEntrances...)
 	fmt.Printf("%s\n\n", plot)
 
 	gb.totalEven += plot.getNumEven(
 		gb.maxDepth - pos.depthBefore,
 	)
 
+	pos.additionalEntrances = nil
+
 	above := pos
 	above.plot.row--
 	above.entrance = plot.exits.top
+	above.additionalEntrances = plot.additionalExits.top
 	above.depthBefore += plot.topDepth()
 	if above.depthBefore < gb.maxDepth {
 		gb.pending = append(gb.pending, above)
@@ -134,6 +139,7 @@ func (gb *galaxyBuilder) process(
 	below := pos
 	below.plot.row++
 	below.entrance = plot.exits.bottom
+	below.additionalEntrances = plot.additionalExits.bottom
 	below.depthBefore += plot.bottomDepth()
 	if below.depthBefore < gb.maxDepth {
 		gb.pending = append(gb.pending, below)
@@ -142,6 +148,7 @@ func (gb *galaxyBuilder) process(
 	left := pos
 	left.plot.col--
 	left.entrance = plot.exits.left
+	left.additionalEntrances = plot.additionalExits.left
 	left.depthBefore += plot.leftDepth()
 	if left.depthBefore < gb.maxDepth {
 		gb.pending = append(gb.pending, left)
@@ -150,6 +157,7 @@ func (gb *galaxyBuilder) process(
 	right := pos
 	right.plot.col++
 	right.entrance = plot.exits.right
+	right.additionalEntrances = plot.additionalExits.right
 	right.depthBefore += plot.rightDepth()
 	if right.depthBefore < gb.maxDepth {
 		gb.pending = append(gb.pending, right)

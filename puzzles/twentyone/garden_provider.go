@@ -3,6 +3,8 @@ package twentyone
 import "fmt"
 
 type gardenProvider struct {
+	gar *garden
+
 	entrances struct {
 		// the entrance is in the top row
 		top [gridSize]precomputedGarden
@@ -20,48 +22,65 @@ type gardenProvider struct {
 func newGardenProvider(
 	initial garden,
 ) gardenProvider {
-	g := gardenProvider{
+	return gardenProvider{
 		start: newPrecomputedInitialGarden(initial),
-	}
-	g.precompute(&initial)
-
-	return g
-}
-
-func (g *gardenProvider) precompute(gar *garden) {
-	for val := 0; val < gridSize; val++ {
-		g.entrances.top[val] = newPrecomputedGarden(
-			gar,
-			coord{
-				row: 0,
-				col: val,
-			},
-		)
-		g.entrances.bottom[val] = newPrecomputedGarden(
-			gar,
-			coord{
-				row: gridSize - 1,
-				col: val,
-			},
-		)
-		g.entrances.left[val] = newPrecomputedGarden(
-			gar,
-			coord{
-				row: val,
-				col: 0,
-			},
-		)
-		g.entrances.right[val] = newPrecomputedGarden(
-			gar,
-			coord{
-				row: val,
-				col: gridSize - 1,
-			},
-		)
+		gar:   &initial,
 	}
 }
 
-func (g *gardenProvider) get(entrance coord) precomputedGarden {
+func (g *gardenProvider) precompute(
+	entrance coord,
+) {
+	if entrance.row == 0 {
+		if g.entrances.top[entrance.col].maxDistance == 0 {
+			g.entrances.top[entrance.col] = newPrecomputedGarden(
+				g.gar,
+				entrance,
+			)
+		}
+
+	} else if entrance.row == gridSize-1 {
+		if g.entrances.bottom[entrance.col].maxDistance == 0 {
+			g.entrances.bottom[entrance.col] = newPrecomputedGarden(
+				g.gar,
+				entrance,
+			)
+		}
+	} else if entrance.col == 0 {
+		if g.entrances.left[entrance.row].maxDistance == 0 {
+			g.entrances.left[entrance.row] = newPrecomputedGarden(
+				g.gar,
+				entrance,
+			)
+		}
+	} else if entrance.col == gridSize-1 {
+		if g.entrances.right[entrance.row].maxDistance == 0 {
+			g.entrances.right[entrance.row] = newPrecomputedGarden(
+				g.gar,
+				entrance,
+			)
+		}
+	} else if entrance != g.start.entrance {
+		fmt.Printf("entrance: %+v\n", entrance)
+		panic(`unexpected`)
+	}
+}
+
+func (g *gardenProvider) get(
+	entrance coord,
+	additional ...coord,
+) precomputedGarden {
+	if len(additional) > 0 {
+		// do something else
+		return newPrecomputedGardenWithManyEntrances(
+			g.gar,
+			entrance,
+			additional,
+		)
+	}
+
+	g.precompute(entrance)
+
 	if entrance.row == 0 {
 		return g.entrances.top[entrance.col]
 	}

@@ -15,7 +15,15 @@ type precomputedGarden struct {
 		bottom coord
 	}
 
-	entrance coord
+	additionalExits struct {
+		left   []coord
+		top    []coord
+		right  []coord
+		bottom []coord
+	}
+
+	entrance       coord
+	otherEntrances []coord
 
 	numEven     int
 	numOdd      int
@@ -29,6 +37,7 @@ func newPrecomputedInitialGarden(
 		&gar,
 		gar.start,
 		0,
+		nil,
 	)
 }
 
@@ -40,6 +49,20 @@ func newPrecomputedGarden(
 		gar,
 		entrance,
 		1,
+		nil,
+	)
+}
+
+func newPrecomputedGardenWithManyEntrances(
+	gar *garden,
+	entrance coord,
+	additionalEntrances []coord,
+) precomputedGarden {
+	return newPrecomputedGardenWithEntranceDepth(
+		gar,
+		entrance,
+		1,
+		additionalEntrances,
 	)
 }
 
@@ -47,9 +70,11 @@ func newPrecomputedGardenWithEntranceDepth(
 	gar *garden,
 	entrance coord,
 	initialDepth int,
+	additionalEntrances []coord,
 ) precomputedGarden {
 	pg := precomputedGarden{
-		entrance: entrance,
+		entrance:       entrance,
+		otherEntrances: additionalEntrances,
 	}
 
 	for ri := range pg.distances {
@@ -71,6 +96,13 @@ func newPrecomputedGardenWithEntranceDepth(
 		coord: pg.entrance,
 		depth: initialDepth,
 	})
+
+	for _, entrance := range additionalEntrances {
+		pending = append(pending, pos{
+			coord: entrance,
+			depth: initialDepth,
+		})
+	}
 
 	for len(pending) > 0 {
 		c := pending[0]
@@ -94,7 +126,9 @@ func newPrecomputedGardenWithEntranceDepth(
 			} else {
 				otherVal := pg.distances[0][pg.exits.top.col]
 				if c.depth <= otherVal {
-					fmt.Printf("May have multiple exits...\n") // TODO
+					exit := c.coord
+					exit.row = gridSize - 1
+					pg.additionalExits.top = append(pg.additionalExits.top, exit)
 				}
 			}
 		} else if pg.distances[c.row-1][c.col] == 0 { // c.row MUST be > 0
@@ -115,7 +149,9 @@ func newPrecomputedGardenWithEntranceDepth(
 			} else {
 				otherVal := pg.distances[pg.exits.left.row][0]
 				if c.depth <= otherVal {
-					fmt.Printf("May have multiple exits...\n") // TODO
+					exit := c.coord
+					exit.col = gridSize - 1
+					pg.additionalExits.left = append(pg.additionalExits.left, exit)
 				}
 			}
 		} else if pg.distances[c.row][c.col-1] == 0 {
@@ -135,7 +171,9 @@ func newPrecomputedGardenWithEntranceDepth(
 			} else {
 				otherVal := pg.distances[gridSize-1][pg.exits.bottom.col]
 				if c.depth <= otherVal {
-					fmt.Printf("May have multiple exits...\n") // TODO
+					exit := c.coord
+					exit.row = 0
+					pg.additionalExits.bottom = append(pg.additionalExits.bottom, exit)
 				}
 			}
 		} else if pg.distances[c.row+1][c.col] == 0 {
@@ -155,7 +193,9 @@ func newPrecomputedGardenWithEntranceDepth(
 			} else {
 				otherVal := pg.distances[pg.exits.right.row][gridSize-1]
 				if c.depth <= otherVal {
-					fmt.Printf("May have multiple exits...\n") // TODO
+					exit := c.coord
+					exit.col = 0
+					pg.additionalExits.right = append(pg.additionalExits.right, exit)
 				}
 			}
 		} else if pg.distances[c.row][c.col+1] == 0 {
@@ -245,6 +285,38 @@ func (pg precomputedGarden) String() string {
 
 	sb.WriteString(`Entrance: `)
 	sb.WriteString(fmt.Sprintf("%+v", pg.entrance))
+	sb.WriteByte('\n')
+
+	for _, entrance := range pg.otherEntrances {
+		sb.WriteString(`Additional Entrance: `)
+		sb.WriteString(fmt.Sprintf("%+v", entrance))
+		sb.WriteByte('\n')
+	}
+
+	sb.WriteString("Exits:\n")
+	sb.WriteString(` top:`)
+	sb.WriteString(fmt.Sprintf("%+v", pg.exits.top))
+	for _, exit := range pg.additionalExits.top {
+		sb.WriteString(fmt.Sprintf(", %+v", exit))
+	}
+	sb.WriteByte('\n')
+	sb.WriteString(` right:`)
+	sb.WriteString(fmt.Sprintf("%+v", pg.exits.right))
+	for _, exit := range pg.additionalExits.right {
+		sb.WriteString(fmt.Sprintf(", %+v", exit))
+	}
+	sb.WriteByte('\n')
+	sb.WriteString(` bottom:`)
+	sb.WriteString(fmt.Sprintf("%+v", pg.exits.bottom))
+	for _, exit := range pg.additionalExits.bottom {
+		sb.WriteString(fmt.Sprintf(", %+v", exit))
+	}
+	sb.WriteByte('\n')
+	sb.WriteString(` left:`)
+	sb.WriteString(fmt.Sprintf("%+v", pg.exits.left))
+	for _, exit := range pg.additionalExits.left {
+		sb.WriteString(fmt.Sprintf(", %+v", exit))
+	}
 	sb.WriteByte('\n')
 
 	sb.WriteString(`Max Distance: `)
