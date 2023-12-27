@@ -1,18 +1,40 @@
 package twentyone
 
+import "fmt"
+
 func Two(
 	input string,
 ) (int, error) {
+	for _, depth := range []int{
+		6,
+		10,
+		50,
+		// 100,
+		// 500,
+		// 1000,
+		// 5000,
+	} {
+		answer := getAnswerFromGrid(input, depth)
+		fmt.Printf("Got %10d in %4d steps\n", answer, depth)
+	}
+
+	return 0, nil
+}
+
+func getAnswerFromGrid(
+	input string,
+	depth int,
+) int {
 	initial := newGarden(input)
 
 	gardenProvider := newGardenProvider(initial)
 
 	galaxy := newGalaxyBuilder()
 
-	galaxy.populate(&gardenProvider, 1000)
+	galaxy.populate(&gardenProvider, depth)
 	// galaxy.populate(&gardenProvider, stepGoal)
 
-	return galaxy.totalEven, nil
+	return galaxy.totalEven
 }
 
 const (
@@ -92,7 +114,10 @@ func (gb *galaxyBuilder) process(
 	gp *gardenProvider,
 	pos plotPosition,
 ) {
+	fmt.Printf("Processing plot %d, %+v\n", pos.depthBefore, pos.plot)
+
 	plot := gp.get(pos.entrance)
+	fmt.Printf("%s\n\n", plot)
 
 	gb.totalEven += plot.getNumEven(
 		gb.maxDepth - pos.depthBefore,
@@ -115,7 +140,7 @@ func (gb *galaxyBuilder) process(
 	}
 
 	left := pos
-	left.plot.row--
+	left.plot.col--
 	left.entrance = plot.exits.left
 	left.depthBefore += plot.leftDepth()
 	if left.depthBefore < gb.maxDepth {
@@ -123,7 +148,7 @@ func (gb *galaxyBuilder) process(
 	}
 
 	right := pos
-	right.plot.row++
+	right.plot.col++
 	right.entrance = plot.exits.right
 	right.depthBefore += plot.rightDepth()
 	if right.depthBefore < gb.maxDepth {

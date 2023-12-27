@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	gridSize = 131
+	gridSize = 11
 )
 
 func One(
