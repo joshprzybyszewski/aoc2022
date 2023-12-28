@@ -81,6 +81,9 @@ func (g *gardenProvider) getDown(
 func (g *gardenProvider) getWithBottomRowAndLeftColumn(
 	bottomRow, leftColumn [gridSize]int,
 ) precomputedGarden {
+	if bottomRow[0] != leftColumn[gridSize-1] {
+		panic(`unexpected`)
+	}
 	starts := make(map[coord]int, gridSize*2)
 	for val := 0; val < gridSize; val++ {
 		starts[coord{
@@ -101,6 +104,10 @@ func (g *gardenProvider) getWithBottomRowAndLeftColumn(
 func (g *gardenProvider) getWithTopRowAndLeftColumn(
 	topRow, leftColumn [gridSize]int,
 ) precomputedGarden {
+	if topRow[0] != leftColumn[gridSize-1] {
+		panic(`unexpected`)
+	}
+
 	starts := make(map[coord]int, gridSize*2)
 	for val := 0; val < gridSize; val++ {
 		starts[coord{
@@ -111,6 +118,53 @@ func (g *gardenProvider) getWithTopRowAndLeftColumn(
 			row: val,
 			col: 0,
 		}] = leftColumn[val]
+	}
+	return newPrecomputedGardenWithStarts(
+		g.gar,
+		starts,
+	)
+}
+
+func (g *gardenProvider) getWithBottomRowAndRightColumn(
+	bottomRow, rightColumn [gridSize]int,
+) precomputedGarden {
+	if bottomRow[gridSize-1] != rightColumn[gridSize-1] {
+		panic(`unexpected`)
+	}
+	starts := make(map[coord]int, gridSize*2)
+	for val := 0; val < gridSize; val++ {
+		starts[coord{
+			row: gridSize - 1,
+			col: val,
+		}] = bottomRow[val]
+		starts[coord{
+			row: val,
+			col: gridSize - 1,
+		}] = rightColumn[val]
+	}
+	return newPrecomputedGardenWithStarts(
+		g.gar,
+		starts,
+	)
+}
+
+func (g *gardenProvider) getWithTopRowAndRightColumn(
+	topRow, rightColumn [gridSize]int,
+) precomputedGarden {
+	if topRow[gridSize-1] != rightColumn[0] {
+		panic(`unexpected`)
+	}
+
+	starts := make(map[coord]int, gridSize*2)
+	for val := 0; val < gridSize; val++ {
+		starts[coord{
+			row: 0,
+			col: val,
+		}] = topRow[val]
+		starts[coord{
+			row: val,
+			col: gridSize - 1,
+		}] = rightColumn[val]
 	}
 	return newPrecomputedGardenWithStarts(
 		g.gar,
