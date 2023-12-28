@@ -101,6 +101,9 @@ func (gb *galaxyBuilder) populate(
 		coord{row: 0, col: -1},
 		gb.getColumnToTheLeft(&groundzero),
 	)
+
+	// TODO go through the quartiles
+
 }
 
 func (gb *galaxyBuilder) getColumnToTheRight(
@@ -159,13 +162,11 @@ func (gb *galaxyBuilder) extendRight(
 
 	gb.totalEven += num
 
-	gb.extendUp(
+	gb.extendUpAndLeft(
 		myCoord.up(),
-		gb.getRowAbove(&myplot),
 	)
-	gb.extendDown(
+	gb.extendDownAndLeft(
 		myCoord.down(),
-		gb.getRowBelow(&myplot),
 	)
 
 	gb.extendRight(
@@ -251,6 +252,75 @@ func (gb *galaxyBuilder) extendDown(
 		gb.getRowBelow(&myplot),
 	)
 
+}
+
+func (gb *galaxyBuilder) extendUpAndLeft(
+	myCoord coord,
+) {
+	left, ok := gb.gardensByCoord[myCoord.left()]
+	if !ok {
+		return
+	}
+	leftColumn := gb.getColumnToTheRight(&left)
+
+	below, ok := gb.gardensByCoord[myCoord.down()]
+	if !ok {
+		return
+	}
+	bottomRow := gb.getRowAbove(&below)
+
+	if gb.isBeyond(bottomRow) && gb.isBeyond(leftColumn) {
+		return
+	}
+
+	myplot := gb.gp.getWithBottomRowAndLeftColumn(
+		bottomRow,
+		leftColumn,
+	)
+	gb.gardensByCoord[myCoord] = myplot
+
+	num := myplot.getNumEven(
+		gb.maxDepth,
+	)
+
+	gb.totalEven += num
+
+	gb.extendUpAndLeft(
+		myCoord.up().left(),
+	)
+}
+
+func (gb *galaxyBuilder) extendDownAndLeft(
+	myCoord coord,
+) {
+	left, ok := gb.gardensByCoord[myCoord.left()]
+	if !ok {
+		return
+	}
+	leftColumn := gb.getColumnToTheRight(&left)
+
+	above, ok := gb.gardensByCoord[myCoord.up()]
+	if !ok {
+		return
+	}
+	topRow := gb.getRowBelow(&above)
+
+	if gb.isBeyond(topRow) && gb.isBeyond(leftColumn) {
+		return
+	}
+
+	myplot := gb.gp.getWithTopRowAndLeftColumn(topRow, leftColumn)
+	gb.gardensByCoord[myCoord] = myplot
+
+	num := myplot.getNumEven(
+		gb.maxDepth,
+	)
+
+	gb.totalEven += num
+
+	gb.extendDownAndLeft(
+		myCoord.down().left(),
+	)
 }
 
 func (gb *galaxyBuilder) isBeyond(
