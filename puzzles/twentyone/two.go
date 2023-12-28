@@ -9,11 +9,11 @@ func Two(
 	input string,
 ) (int, error) {
 	for _, depth := range []int{
-		// 6,
-		// 10,
+		6,
+		10,
 		50,
-		// 100,
-		// 500,
+		100,
+		500,
 		// 1000,
 		// 5000,
 	} {
@@ -35,8 +35,9 @@ func getAnswerFromGrid(
 	galaxy := newGalaxyBuilder(&gardenProvider)
 
 	galaxy.populate(depth)
-	fmt.Printf("Galaxy:\n%s\n", galaxy.String())
-	// galaxy.populate(&gardenProvider, stepGoal)
+	if len(galaxy.gardensByCoord) < 100 {
+		fmt.Printf("Galaxy:\n%s\n", galaxy.String())
+	}
 
 	return galaxy.totalEven
 }
@@ -52,7 +53,7 @@ type galaxyBuilder struct {
 
 	totalEven int
 
-	gardensByCoord map[coord]precomputedGarden
+	gardensByCoord map[coord]*precomputedGarden
 }
 
 func newGalaxyBuilder(
@@ -60,7 +61,7 @@ func newGalaxyBuilder(
 ) galaxyBuilder {
 	return galaxyBuilder{
 		gp:             gp,
-		gardensByCoord: make(map[coord]precomputedGarden, 100),
+		gardensByCoord: make(map[coord]*precomputedGarden, 100),
 	}
 }
 
@@ -74,7 +75,7 @@ func (gb *galaxyBuilder) populate(
 
 	// get the starting plot
 	groundzero := gb.gp.get(gb.gp.gar.start)
-	gb.gardensByCoord[coord{0, 0}] = groundzero
+	gb.gardensByCoord[coord{0, 0}] = &groundzero
 
 	gb.totalEven += groundzero.getNumEven(
 		gb.maxDepth, /*- pos.depthBefore*/
@@ -83,84 +84,39 @@ func (gb *galaxyBuilder) populate(
 	// extend up and down from the start
 	gb.extendUp(
 		coord{row: -1, col: 0},
-		gb.getRowAbove(&groundzero),
 	)
 	gb.extendDown(
 		coord{row: 1, col: 0},
-		gb.getRowBelow(&groundzero),
 	)
 
 	// extend right, which extends up and down along the way
 	gb.extendRight(
 		coord{row: 0, col: 1},
-		gb.getColumnToTheRight(&groundzero),
 	)
 
 	// extend left, which extends up and down along the way
 	gb.extendLeft(
 		coord{row: 0, col: -1},
-		gb.getColumnToTheLeft(&groundzero),
 	)
 
 	// TODO go through the quartiles
 
 }
 
-func (gb *galaxyBuilder) getColumnToTheRight(
-	pg *precomputedGarden,
-) [gridSize]int {
-	var output [gridSize]int
-	for row := 0; row < gridSize; row++ {
-		output[row] = pg.distances[row][gridSize-1] + 1
-	}
-	return output
-}
-
-func (gb *galaxyBuilder) getColumnToTheLeft(
-	pg *precomputedGarden,
-) [gridSize]int {
-	var output [gridSize]int
-	for row := 0; row < gridSize; row++ {
-		output[row] = pg.distances[row][0] + 1
-	}
-	return output
-}
-
-func (gb *galaxyBuilder) getRowAbove(
-	pg *precomputedGarden,
-) [gridSize]int {
-	var output [gridSize]int
-	for col := 0; col < gridSize; col++ {
-		output[col] = pg.distances[0][col] + 1
-	}
-	return output
-}
-
-func (gb *galaxyBuilder) getRowBelow(
-	pg *precomputedGarden,
-) [gridSize]int {
-	var output [gridSize]int
-	for col := 0; col < gridSize; col++ {
-		output[col] = pg.distances[gridSize-1][col] + 1
-	}
-	return output
-}
-
 func (gb *galaxyBuilder) extendRight(
 	myCoord coord,
-	leftColumn [gridSize]int,
 ) {
-	if gb.isBeyond(leftColumn) {
+
+	myplot := gb.gp.getWithNeighbors(neighbors{
+		left: gb.gardensByCoord[myCoord.left()],
+	})
+	if myplot.minDistance > gb.maxDepth {
 		return
 	}
-
-	myplot := gb.gp.getRight(leftColumn)
-	gb.gardensByCoord[myCoord] = myplot
-	num := myplot.getNumEven(
+	gb.gardensByCoord[myCoord] = &myplot
+	gb.totalEven += myplot.getNumEven(
 		gb.maxDepth,
 	)
-
-	gb.totalEven += num
 
 	gb.extendUpAndLeft(
 		myCoord.up(),
@@ -171,21 +127,21 @@ func (gb *galaxyBuilder) extendRight(
 
 	gb.extendRight(
 		myCoord.right(),
-		gb.getColumnToTheRight(&myplot),
 	)
 
 }
 
 func (gb *galaxyBuilder) extendLeft(
 	myCoord coord,
-	rightColumn [gridSize]int,
 ) {
-	if gb.isBeyond(rightColumn) {
+
+	myplot := gb.gp.getWithNeighbors(neighbors{
+		right: gb.gardensByCoord[myCoord.right()],
+	})
+	if myplot.minDistance > gb.maxDepth {
 		return
 	}
-
-	myplot := gb.gp.getLeft(rightColumn)
-	gb.gardensByCoord[myCoord] = myplot
+	gb.gardensByCoord[myCoord] = &myplot
 	num := myplot.getNumEven(
 		gb.maxDepth,
 	)
@@ -201,20 +157,20 @@ func (gb *galaxyBuilder) extendLeft(
 
 	gb.extendLeft(
 		myCoord.left(),
-		gb.getColumnToTheLeft(&myplot),
 	)
 }
 
 func (gb *galaxyBuilder) extendUp(
 	myCoord coord,
-	bottomRow [gridSize]int,
 ) {
-	if gb.isBeyond(bottomRow) {
+
+	myplot := gb.gp.getWithNeighbors(neighbors{
+		below: gb.gardensByCoord[myCoord.down()],
+	})
+	if myplot.minDistance > gb.maxDepth {
 		return
 	}
-
-	myplot := gb.gp.getUp(bottomRow)
-	gb.gardensByCoord[myCoord] = myplot
+	gb.gardensByCoord[myCoord] = &myplot
 
 	num := myplot.getNumEven(
 		gb.maxDepth,
@@ -224,30 +180,27 @@ func (gb *galaxyBuilder) extendUp(
 
 	gb.extendUp(
 		myCoord.up(),
-		gb.getRowAbove(&myplot),
 	)
 
 }
 
 func (gb *galaxyBuilder) extendDown(
 	myCoord coord,
-	topRow [gridSize]int,
 ) {
-	if gb.isBeyond(topRow) {
+	myplot := gb.gp.getWithNeighbors(neighbors{
+		above: gb.gardensByCoord[myCoord.up()],
+	})
+	if myplot.minDistance > gb.maxDepth {
 		return
 	}
+	gb.gardensByCoord[myCoord] = &myplot
 
-	myplot := gb.gp.getDown(topRow)
-	gb.gardensByCoord[myCoord] = myplot
-	num := myplot.getNumEven(
+	gb.totalEven += myplot.getNumEven(
 		gb.maxDepth,
 	)
 
-	gb.totalEven += num
-
 	gb.extendDown(
 		myCoord.down(),
-		gb.getRowBelow(&myplot),
 	)
 
 }
@@ -255,33 +208,33 @@ func (gb *galaxyBuilder) extendDown(
 func (gb *galaxyBuilder) extendUpAndLeft(
 	myCoord coord,
 ) {
+	_, ok := gb.gardensByCoord[myCoord]
+	if ok {
+		return
+	}
+
 	left, ok := gb.gardensByCoord[myCoord.left()]
 	if !ok {
 		return
 	}
-	leftColumn := gb.getColumnToTheRight(&left)
 
 	below, ok := gb.gardensByCoord[myCoord.down()]
 	if !ok {
 		return
 	}
-	bottomRow := gb.getRowAbove(&below)
 
-	if gb.isBeyond(bottomRow) && gb.isBeyond(leftColumn) {
+	myplot := gb.gp.getWithNeighbors(neighbors{
+		left:  left,
+		below: below,
+	})
+	if myplot.minDistance > gb.maxDepth {
 		return
 	}
+	gb.gardensByCoord[myCoord] = &myplot
 
-	myplot := gb.gp.getWithBottomRowAndLeftColumn(
-		bottomRow,
-		leftColumn,
-	)
-	gb.gardensByCoord[myCoord] = myplot
-
-	num := myplot.getNumEven(
+	gb.totalEven += myplot.getNumEven(
 		gb.maxDepth,
 	)
-
-	gb.totalEven += num
 
 	gb.extendUpAndLeft(
 		myCoord.up().left(),
@@ -291,30 +244,33 @@ func (gb *galaxyBuilder) extendUpAndLeft(
 func (gb *galaxyBuilder) extendDownAndLeft(
 	myCoord coord,
 ) {
+	_, ok := gb.gardensByCoord[myCoord]
+	if ok {
+		return
+	}
+
 	left, ok := gb.gardensByCoord[myCoord.left()]
 	if !ok {
 		return
 	}
-	leftColumn := gb.getColumnToTheRight(&left)
 
 	above, ok := gb.gardensByCoord[myCoord.up()]
 	if !ok {
 		return
 	}
-	topRow := gb.getRowBelow(&above)
 
-	if gb.isBeyond(topRow) && gb.isBeyond(leftColumn) {
+	myplot := gb.gp.getWithNeighbors(neighbors{
+		left:  left,
+		above: above,
+	})
+	if myplot.minDistance > gb.maxDepth {
 		return
 	}
+	gb.gardensByCoord[myCoord] = &myplot
 
-	myplot := gb.gp.getWithTopRowAndLeftColumn(topRow, leftColumn)
-	gb.gardensByCoord[myCoord] = myplot
-
-	num := myplot.getNumEven(
+	gb.totalEven += myplot.getNumEven(
 		gb.maxDepth,
 	)
-
-	gb.totalEven += num
 
 	gb.extendDownAndLeft(
 		myCoord.down().left(),
@@ -324,33 +280,33 @@ func (gb *galaxyBuilder) extendDownAndLeft(
 func (gb *galaxyBuilder) extendUpAndRight(
 	myCoord coord,
 ) {
+	_, ok := gb.gardensByCoord[myCoord]
+	if ok {
+		return
+	}
+
 	right, ok := gb.gardensByCoord[myCoord.right()]
 	if !ok {
 		return
 	}
-	rightColumn := gb.getColumnToTheLeft(&right)
 
 	below, ok := gb.gardensByCoord[myCoord.down()]
 	if !ok {
 		return
 	}
-	bottomRow := gb.getRowAbove(&below)
 
-	if gb.isBeyond(bottomRow) && gb.isBeyond(rightColumn) {
+	myplot := gb.gp.getWithNeighbors(neighbors{
+		right: right,
+		below: below,
+	})
+	if myplot.minDistance > gb.maxDepth {
 		return
 	}
+	gb.gardensByCoord[myCoord] = &myplot
 
-	myplot := gb.gp.getWithBottomRowAndRightColumn(
-		bottomRow,
-		rightColumn,
-	)
-	gb.gardensByCoord[myCoord] = myplot
-
-	num := myplot.getNumEven(
+	gb.totalEven += myplot.getNumEven(
 		gb.maxDepth,
 	)
-
-	gb.totalEven += num
 
 	gb.extendUpAndRight(
 		myCoord.up().right(),
@@ -360,45 +316,37 @@ func (gb *galaxyBuilder) extendUpAndRight(
 func (gb *galaxyBuilder) extendDownAndRight(
 	myCoord coord,
 ) {
+	_, ok := gb.gardensByCoord[myCoord]
+	if ok {
+		return
+	}
+
 	right, ok := gb.gardensByCoord[myCoord.right()]
 	if !ok {
 		return
 	}
-	rightColumn := gb.getColumnToTheLeft(&right)
 
 	above, ok := gb.gardensByCoord[myCoord.up()]
 	if !ok {
 		return
 	}
-	topRow := gb.getRowBelow(&above)
 
-	if gb.isBeyond(topRow) && gb.isBeyond(rightColumn) {
+	myplot := gb.gp.getWithNeighbors(neighbors{
+		right: right,
+		above: above,
+	})
+	if myplot.minDistance > gb.maxDepth {
 		return
 	}
+	gb.gardensByCoord[myCoord] = &myplot
 
-	myplot := gb.gp.getWithTopRowAndRightColumn(topRow, rightColumn)
-	gb.gardensByCoord[myCoord] = myplot
-
-	num := myplot.getNumEven(
+	gb.totalEven += myplot.getNumEven(
 		gb.maxDepth,
 	)
-
-	gb.totalEven += num
 
 	gb.extendDownAndRight(
 		myCoord.down().right(),
 	)
-}
-
-func (gb *galaxyBuilder) isBeyond(
-	startingValues [gridSize]int,
-) bool {
-	for _, v := range startingValues {
-		if v < gb.maxDepth {
-			return false
-		}
-	}
-	return true
 }
 
 func (gb *galaxyBuilder) String() string {

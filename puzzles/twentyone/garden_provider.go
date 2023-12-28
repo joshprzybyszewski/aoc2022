@@ -38,134 +38,77 @@ func (g *gardenProvider) get(
 	panic(`unexpected entrance`)
 }
 
-func (g *gardenProvider) getRight(
-	leftColumn [gridSize]int,
-) precomputedGarden {
-	// TODO cache this intelligently
-	return newPrecomputedGardenWithLeftColumn(
-		g.gar,
-		leftColumn,
-	)
+type neighbors struct {
+	above *precomputedGarden
+	below *precomputedGarden
+	left  *precomputedGarden
+	right *precomputedGarden
 }
 
-func (g *gardenProvider) getLeft(
-	rightColumn [gridSize]int,
+func (g *gardenProvider) getWithNeighbors(
+	n neighbors,
 ) precomputedGarden {
-	// TODO cache this intelligently
-	return newPrecomputedGardenWithRightColumn(
-		g.gar,
-		rightColumn,
-	)
-}
-
-func (g *gardenProvider) getUp(
-	bottomRow [gridSize]int,
-) precomputedGarden {
-	// TODO cache this intelligently
-	return newPrecomputedGardenWithBottomRow(
-		g.gar,
-		bottomRow,
-	)
-}
-
-func (g *gardenProvider) getDown(
-	topRow [gridSize]int,
-) precomputedGarden {
-	// TODO cache this intelligently
-	return newPrecomputedGardenWithTopRow(
-		g.gar,
-		topRow,
-	)
-}
-
-func (g *gardenProvider) getWithBottomRowAndLeftColumn(
-	bottomRow, leftColumn [gridSize]int,
-) precomputedGarden {
-	if bottomRow[0] != leftColumn[gridSize-1] {
-		panic(`unexpected`)
-	}
 	starts := make(map[coord]int, gridSize*2)
 	for val := 0; val < gridSize; val++ {
-		starts[coord{
-			row: gridSize - 1,
-			col: val,
-		}] = bottomRow[val]
-		starts[coord{
-			row: val,
-			col: 0,
-		}] = leftColumn[val]
+		if n.above != nil {
+			starts[coord{
+				row: 0,
+				col: val,
+			}] = n.above.distances[gridSize-1][val] + 1
+		}
+		if n.below != nil {
+			starts[coord{
+				row: gridSize - 1,
+				col: val,
+			}] = n.below.distances[0][val] + 1
+		}
+		if n.left != nil {
+			starts[coord{
+				row: val,
+				col: 0,
+			}] = n.left.distances[val][gridSize-1] + 1
+		}
+		if n.right != nil {
+			starts[coord{
+				row: val,
+				col: gridSize - 1,
+			}] = n.right.distances[val][0] + 1
+		}
 	}
-	return newPrecomputedGardenWithStarts(
-		g.gar,
-		starts,
-	)
-}
 
-func (g *gardenProvider) getWithTopRowAndLeftColumn(
-	topRow, leftColumn [gridSize]int,
-) precomputedGarden {
-	if topRow[0] != leftColumn[gridSize-1] {
+	if len(starts) == 0 {
 		panic(`unexpected`)
 	}
 
-	starts := make(map[coord]int, gridSize*2)
-	for val := 0; val < gridSize; val++ {
-		starts[coord{
-			row: 0,
-			col: val,
-		}] = topRow[val]
-		starts[coord{
-			row: val,
-			col: 0,
-		}] = leftColumn[val]
+	if n.above != nil {
+		if n.left != nil {
+			if n.above.distances[gridSize-1][0] != n.left.distances[0][gridSize-1] {
+				fmt.Printf("Interesting: %d, %d\n", n.above.distances[gridSize-1][0], n.left.distances[gridSize-1][0])
+				panic(`unexpected`)
+			}
+		}
+		if n.right != nil {
+			if n.above.distances[gridSize-1][gridSize-1] != n.right.distances[0][0] {
+				fmt.Printf("Interesting: %d, %d\n", n.above.distances[gridSize-1][gridSize-1], n.right.distances[0][0])
+				panic(`unexpected`)
+			}
+		}
 	}
-	return newPrecomputedGardenWithStarts(
-		g.gar,
-		starts,
-	)
-}
-
-func (g *gardenProvider) getWithBottomRowAndRightColumn(
-	bottomRow, rightColumn [gridSize]int,
-) precomputedGarden {
-	if bottomRow[gridSize-1] != rightColumn[gridSize-1] {
-		panic(`unexpected`)
-	}
-	starts := make(map[coord]int, gridSize*2)
-	for val := 0; val < gridSize; val++ {
-		starts[coord{
-			row: gridSize - 1,
-			col: val,
-		}] = bottomRow[val]
-		starts[coord{
-			row: val,
-			col: gridSize - 1,
-		}] = rightColumn[val]
-	}
-	return newPrecomputedGardenWithStarts(
-		g.gar,
-		starts,
-	)
-}
-
-func (g *gardenProvider) getWithTopRowAndRightColumn(
-	topRow, rightColumn [gridSize]int,
-) precomputedGarden {
-	if topRow[gridSize-1] != rightColumn[0] {
-		panic(`unexpected`)
+	if n.below != nil {
+		if n.left != nil {
+			if n.below.distances[0][0] != n.left.distances[gridSize-1][gridSize-1] {
+				fmt.Printf("Interesting: %d, %d\n", n.below.distances[0][0], n.left.distances[gridSize-1][0])
+				panic(`unexpected`)
+			}
+		}
+		if n.right != nil {
+			if n.below.distances[0][gridSize-1] != n.right.distances[gridSize-1][0] {
+				fmt.Printf("Interesting: %d, %d\n", n.below.distances[0][0], n.right.distances[0][0])
+				panic(`unexpected`)
+			}
+		}
 	}
 
-	starts := make(map[coord]int, gridSize*2)
-	for val := 0; val < gridSize; val++ {
-		starts[coord{
-			row: 0,
-			col: val,
-		}] = topRow[val]
-		starts[coord{
-			row: val,
-			col: gridSize - 1,
-		}] = rightColumn[val]
-	}
 	return newPrecomputedGardenWithStarts(
 		g.gar,
 		starts,

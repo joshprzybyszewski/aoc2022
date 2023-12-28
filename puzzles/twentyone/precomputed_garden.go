@@ -10,6 +10,7 @@ type precomputedGarden struct {
 
 	numEven     int
 	numOdd      int
+	minDistance int
 	maxDistance int
 }
 
@@ -21,74 +22,6 @@ func newPrecomputedInitialGarden(
 		map[coord]int{
 			gar.start: 0,
 		},
-	)
-}
-
-func newPrecomputedGardenWithLeftColumn(
-	gar *garden,
-	left [gridSize]int,
-) precomputedGarden {
-	starts := make(map[coord]int, gridSize)
-	for row := 0; row < gridSize; row++ {
-		starts[coord{
-			row: row,
-			col: 0,
-		}] = left[row]
-	}
-	return newPrecomputedGardenWithStarts(
-		gar,
-		starts,
-	)
-}
-
-func newPrecomputedGardenWithRightColumn(
-	gar *garden,
-	right [gridSize]int,
-) precomputedGarden {
-	starts := make(map[coord]int, gridSize)
-	for row := 0; row < gridSize; row++ {
-		starts[coord{
-			row: row,
-			col: gridSize - 1,
-		}] = right[row]
-	}
-	return newPrecomputedGardenWithStarts(
-		gar,
-		starts,
-	)
-}
-
-func newPrecomputedGardenWithBottomRow(
-	gar *garden,
-	bottom [gridSize]int,
-) precomputedGarden {
-	starts := make(map[coord]int, gridSize)
-	for col := 0; col < gridSize; col++ {
-		starts[coord{
-			row: gridSize - 1,
-			col: col,
-		}] = bottom[col]
-	}
-	return newPrecomputedGardenWithStarts(
-		gar,
-		starts,
-	)
-}
-
-func newPrecomputedGardenWithTopRow(
-	gar *garden,
-	top [gridSize]int,
-) precomputedGarden {
-	starts := make(map[coord]int, gridSize)
-	for col := 0; col < gridSize; col++ {
-		starts[coord{
-			row: 0,
-			col: col,
-		}] = top[col]
-	}
-	return newPrecomputedGardenWithStarts(
-		gar,
-		starts,
 	)
 }
 
@@ -140,7 +73,7 @@ func newPrecomputedGardenWithStarts(
 
 		if c.row == 0 {
 			// do nothing
-		} else if pg.distances[c.row-1][c.col] == 0 { // c.row MUST be > 0
+		} else if pg.distances[c.row-1][c.col] != -1 { // c.row MUST be > 0
 			pending = append(pending, pos{
 				coord: coord{
 					row: c.row - 1,
@@ -152,7 +85,7 @@ func newPrecomputedGardenWithStarts(
 
 		if c.col == 0 {
 			// do nothing
-		} else if pg.distances[c.row][c.col-1] == 0 {
+		} else if pg.distances[c.row][c.col-1] != -1 {
 			pending = append(pending, pos{
 				coord: coord{
 					row: c.row,
@@ -163,7 +96,7 @@ func newPrecomputedGardenWithStarts(
 		}
 		if c.row == gridSize-1 {
 			// do nothing
-		} else if pg.distances[c.row+1][c.col] == 0 {
+		} else if pg.distances[c.row+1][c.col] != -1 {
 			pending = append(pending, pos{
 				coord: coord{
 					row: c.row + 1,
@@ -174,7 +107,7 @@ func newPrecomputedGardenWithStarts(
 		}
 		if c.col == gridSize-1 {
 			// do nothing
-		} else if pg.distances[c.row][c.col+1] == 0 {
+		} else if pg.distances[c.row][c.col+1] != -1 {
 			pending = append(pending, pos{
 				coord: coord{
 					row: c.row,
@@ -185,10 +118,14 @@ func newPrecomputedGardenWithStarts(
 		}
 	}
 
+	pg.minDistance = -1
 	for ri := range pg.distances {
 		for ci := range pg.distances[ri] {
 			if pg.distances[ri][ci] > pg.maxDistance {
 				pg.maxDistance = pg.distances[ri][ci]
+			}
+			if pg.distances[ri][ci] > 0 && (pg.minDistance == -1 || pg.distances[ri][ci] < pg.minDistance) {
+				pg.minDistance = pg.distances[ri][ci]
 			}
 			if pg.distances[ri][ci]%2 == 0 {
 				pg.numEven++
