@@ -47,6 +47,26 @@ type coord struct {
 	col int
 }
 
+func (c coord) up() coord {
+	c.row--
+	return c
+}
+
+func (c coord) down() coord {
+	c.row++
+	return c
+}
+
+func (c coord) left() coord {
+	c.col--
+	return c
+}
+
+func (c coord) right() coord {
+	c.col++
+	return c
+}
+
 type garden struct {
 	tiles [gridSize][gridSize]tile
 

@@ -129,6 +129,11 @@ func newPrecomputedGardenWithStarts(
 			if c.depth >= pg.distances[c.row][c.col] {
 				continue
 			}
+			imOdd := c.depth%2 == 1
+			wasOdd := pg.distances[c.row][c.col]%2 == 1
+			if imOdd != wasOdd {
+				panic(`unexpected`)
+			}
 		}
 
 		pg.distances[c.row][c.col] = c.depth
@@ -245,4 +250,29 @@ func (pg precomputedGarden) String() string {
 		sb.WriteByte('\n')
 	}
 	return sb.String()
+}
+
+func (pg precomputedGarden) lines(
+	maxDepth int,
+) [gridSize]string {
+	var sb [gridSize]strings.Builder
+	var output [gridSize]string
+
+	for ri := range pg.distances {
+		for ci := range pg.distances[ri] {
+			if pg.distances[ri][ci] > maxDepth {
+				sb[ri].WriteByte('.')
+			} else if pg.distances[ri][ci] < 0 {
+				sb[ri].WriteByte('#')
+				// } else if pg.distances[ri][ci]%2 == 0 {
+				// 	sb.WriteByte('E')
+				// } else {
+				// 	sb.WriteByte('O')
+			} else {
+				sb[ri].WriteByte('0' + byte(pg.distances[ri][ci]%10))
+			}
+		}
+		output[ri] = sb[ri].String()
+	}
+	return output
 }
