@@ -1,7 +1,6 @@
 package four
 
 import (
-	"strconv"
 	"strings"
 )
 
@@ -9,9 +8,12 @@ func Two(
 	input string,
 ) (int, error) {
 
-	var s1, e1, s2, e2, i1, i2 int
-	var err error
+	numCopies := make([]int, 200)
 	total := 0
+
+	tmp, cardCopies, j := 0, 0, 0
+
+	var i int
 
 	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
 		if nli == 0 {
@@ -19,39 +21,17 @@ func Two(
 			continue
 		}
 
-		i1 = 0
-		i2 = strings.Index(input, `-`)
-		s1, err = strconv.Atoi(input[i1:i2])
-		if err != nil {
-			return 0, err
-		}
-		i1 = i2 + 1
-		i2 = strings.Index(input, `,`)
-		e1, err = strconv.Atoi(input[i1:i2])
-		if err != nil {
-			return 0, err
-		}
-		i1 = i2 + 1
-		i2 = i1 + strings.Index(input[i1:], `-`)
-		s2, err = strconv.Atoi(input[i1:i2])
-		if err != nil {
-			return 0, err
-		}
-		i1 = i2 + 1
-		i2 = nli
-		e2, err = strconv.Atoi(input[i1:i2])
-		if err != nil {
-			return 0, err
+		// one original copy.
+		cardCopies = numCopies[i] + 1
+		total += cardCopies
+
+		tmp = i + newCard(input[:nli]).numMatching() + 1
+		for j = i + 1; j < tmp; j++ {
+			numCopies[j] += cardCopies
 		}
 
-		if (s1 >= s2 && s1 <= e2) ||
-			(e1 >= s2 && e1 <= e2) ||
-			(s2 >= s1 && s2 <= e1) ||
-			(e2 >= s1 && e2 <= e1) {
-			// the ranges are partially overlapping
-			total++
-		}
 		input = input[nli+1:]
+		i++
 	}
 
 	return total, nil

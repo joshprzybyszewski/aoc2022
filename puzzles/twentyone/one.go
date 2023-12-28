@@ -1,174 +1,221 @@
 package twentyone
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
+
+const (
+	gridSize = 131
+)
 
 func One(
 	input string,
 ) (int, error) {
-	monkeys, nameToIndex, err := convertToMonkeys(input)
-	if err != nil {
-		return 0, err
-	}
+	g := newGarden(input)
 
-	return int(monkeys[nameToIndex[`root`]].eval()), nil
+	dijkstra(&g, 64)
+
+	return g.numEven(), nil
 }
 
-type operation uint8
+type tile uint8
 
 const (
-	mult operation = '*'
-	div  operation = '/'
-	add  operation = '+'
-	sub  operation = '-'
+	unset tile = 0
+	odd   tile = 1
+	even  tile = 2
+	rocks tile = 3
 )
 
-type monkey struct {
-	left  *monkey
-	right *monkey
-	op    operation
-
-	value int64
+func (t tile) toByte() byte {
+	switch t {
+	case unset:
+		return '.'
+	case odd:
+		return 'O'
+	case even:
+		return 'E'
+	case rocks:
+		return '#'
+	}
+	panic(`unexpected`)
 }
 
-func (m *monkey) Print() {
-	m.print(0)
+type coord struct {
+	row int
+	col int
 }
 
-func (m *monkey) print(
-	indents int,
-) {
-	bi := buildIndents(indents)
-	if m.left == nil {
-		fmt.Printf(
-			"%svalue: %d\n",
-			bi,
-			m.value,
-		)
-		return
-	}
-	if m.right != nil {
-		fmt.Printf(
-			"%sop: %s\n",
-			bi, string(m.op),
-		)
-		fmt.Printf(
-			"%sleft:\n",
-			bi,
-		)
-		m.left.print(indents + 1)
-		fmt.Printf(
-			"%sright:\n",
-			bi,
-		)
-		m.right.print(indents + 1)
-		return
-	}
-
-	fmt.Printf(
-		"%snoop\n",
-		bi,
-	)
-	fmt.Printf(
-		"%sleft:\n",
-		bi,
-	)
-	m.left.print(indents + 1)
+func (c coord) up() coord {
+	c.row--
+	return c
 }
 
-func buildIndents(n int) string {
-	out := ``
-	for i := 0; i < n; i++ {
-		out += ` `
-	}
-	return out
+func (c coord) down() coord {
+	c.row++
+	return c
 }
 
-func (m *monkey) eval() int64 {
-	if m.left == nil {
-		return m.value
-	}
-
-	l := m.left.eval()
-	if m.right == nil {
-		return l
-	}
-
-	r := m.right.eval()
-
-	switch m.op {
-	case mult:
-		return l * r
-	case div:
-		return l / r
-	case add:
-		return l + r
-	case sub:
-		return l - r
-	default:
-		panic(`ahhh`)
-	}
+func (c coord) left() coord {
+	c.col--
+	return c
 }
 
-func (m *monkey) dependsOn(
-	target *monkey,
-) bool {
-	if m == nil {
-		return false
-	}
-	if m == target {
-		return true
-	}
-
-	return m.left.dependsOn(target) || m.right.dependsOn(target)
+func (c coord) right() coord {
+	c.col++
+	return c
 }
 
-func (m *monkey) reverseEval(
-	prev int64,
-	target *monkey,
-) (int64, bool) {
-	if m == target {
-		return prev, true
-	}
+type garden struct {
+	tiles [gridSize][gridSize]tile
 
-	if m.left == nil {
-		// no evaluation
-		return m.value, false
-	}
+	start coord
+}
 
-	leftDep := m.left.dependsOn(target)
-	if !leftDep {
-		if !m.right.dependsOn(target) {
-			// neither side depends on the target => standard evaluation
-			return m.eval(), false
-		}
-	}
+func newGarden(input string) garden {
+	ri, ci := 0, 0
+	var g garden
 
-	var known, next int64
-
-	if leftDep {
-		known = m.right.eval()
-	} else {
-		known = m.left.eval()
-	}
-
-	switch m.op {
-	case mult:
-		next = prev / known
-	case div:
-		next = known * prev
-	case add:
-		next = prev - known
-	case sub:
-		// this tricked me:
-		if leftDep {
-			next = known + prev
+	for len(input) > 0 {
+		if input[0] == '\n' {
+			ri++
+			ci = -1
 		} else {
-			next = known - prev
+			switch input[0] {
+			case '.':
+				// g.tiles[ri][ci] = unset
+			case '#':
+				g.tiles[ri][ci] = rocks
+			case 'S':
+				g.start.row = ri
+				g.start.col = ci
+				// g.tiles[ri][ci] = unset
+			default:
+				panic(`unexpected`)
+			}
 		}
+		ci++
+		input = input[1:]
 	}
 
-	if leftDep {
-		return m.left.reverseEval(next, target)
+	return g
+}
+
+func (g garden) String() string {
+	var sb strings.Builder
+
+	for ri := 0; ri < gridSize; ri++ {
+		for ci := 0; ci < gridSize; ci++ {
+			sb.WriteByte(g.tiles[ri][ci].toByte())
+		}
+		sb.WriteByte('\n')
 	}
-	return m.right.reverseEval(next, target)
+	return sb.String()
+}
+
+func (g *garden) numEven() int {
+	total := 0
+
+	for ri := 0; ri < gridSize; ri++ {
+		for ci := 0; ci < gridSize; ci++ {
+			if g.tiles[ri][ci] == even {
+				total++
+			}
+		}
+	}
+	return total
+}
+
+func dijkstra(
+	g *garden,
+	maxDepth int,
+) {
+	type pos struct {
+		coord
+		tile  tile
+		depth int
+	}
+	pending := make([]pos, 0, 4096)
+
+	pending = append(pending, pos{
+		coord: g.start,
+		tile:  even,
+	})
+
+	for len(pending) > 0 {
+		c := pending[0]
+		pending = pending[1:]
+
+		if g.tiles[c.row][c.col] != unset {
+			if g.tiles[c.row][c.col] != c.tile {
+				fmt.Printf("expected: %d, actual: %d", c.tile, g.tiles[c.row][c.col])
+				panic(`unexpected`)
+			}
+			continue
+		}
+
+		if c.depth%2 == 0 {
+			if c.tile != even {
+				panic(`unexpected`)
+			}
+		} else {
+			if c.tile != odd {
+				panic(`unexpected`)
+			}
+		}
+
+		g.tiles[c.row][c.col] = c.tile
+		if c.depth == maxDepth {
+			continue
+		} else if c.depth > maxDepth {
+			panic(`unexpected`)
+		}
+
+		next := odd
+		if c.tile == odd {
+			next = even
+		}
+
+		if c.row > 0 && g.tiles[c.row-1][c.col] == unset {
+			pending = append(pending, pos{
+				coord: coord{
+					row: c.row - 1,
+					col: c.col,
+				},
+				tile:  next,
+				depth: c.depth + 1,
+			})
+		}
+		if c.col > 0 && g.tiles[c.row][c.col-1] == unset {
+			pending = append(pending, pos{
+				coord: coord{
+					row: c.row,
+					col: c.col - 1,
+				},
+				tile:  next,
+				depth: c.depth + 1,
+			})
+		}
+		if c.row < gridSize-1 && g.tiles[c.row+1][c.col] == unset {
+			pending = append(pending, pos{
+				coord: coord{
+					row: c.row + 1,
+					col: c.col,
+				},
+				tile:  next,
+				depth: c.depth + 1,
+			})
+		}
+		if c.col < gridSize-1 && g.tiles[c.row][c.col+1] == unset {
+			pending = append(pending, pos{
+				coord: coord{
+					row: c.row,
+					col: c.col + 1,
+				},
+				tile:  next,
+				depth: c.depth + 1,
+			})
+		}
+	}
 }

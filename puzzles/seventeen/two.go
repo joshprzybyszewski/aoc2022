@@ -1,112 +1,121 @@
 package seventeen
 
-import (
-	"fmt"
-)
-
 const (
-	numRocksPart2 = 1000000000000
+	maxUltraStraightLine = 10
+	minUltraStraightLine = 4
+
+	maxUltraNumPrevious     = 2 * (maxUltraStraightLine + 1 - minUltraStraightLine)
+	initialUltraPendingSize = citySize * citySize * maxUltraNumPrevious
 )
-
-type reduction struct {
-	jetIndex   int
-	numReduced int
-	rockIndex  int
-
-	chamber chamber
-}
-
-func (r *reduction) String() string {
-	s := fmt.Sprintf("\nReduced %4d rows\n", r.numReduced)
-	s += fmt.Sprintf("\tHeight:        %3d\n", r.chamber.minEmptyRow)
-	s += fmt.Sprintf("\tPending:         %d\n", r.chamber.pendingIndex)
-	s += fmt.Sprintf("\tJet Index:   %5d\n", r.jetIndex)
-	s += fmt.Sprintf("\tRock Index: %6d\n\n\n", r.rockIndex)
-	return s
-}
-
-func (r *reduction) same(other *reduction) bool {
-	if r.jetIndex != other.jetIndex {
-		return false
-	}
-	if r.chamber.minEmptyRow != other.chamber.minEmptyRow {
-		return false
-	}
-	if r.chamber.pendingIndex != other.chamber.pendingIndex {
-		return false
-	}
-
-	for row := 0; row < r.chamber.minEmptyRow; row++ {
-		if r.chamber.settled[row] != other.chamber.settled[row] {
-			return false
-		}
-	}
-
-	return true
-}
 
 func Two(
 	input string,
 ) (int, error) {
-	c := newChamber()
-	jetIndex := 0
 
-	numRowsReduced := 0
-	var numReduced int
+	c := newCity(input)
+	dijkstraUltraHeatLossToTarget(&c)
 
-	reductions := make([]*reduction, 0, 1024)
-	var same *reduction
+	return c.getMinValAt(0, 0), nil
+}
 
-	for nr := 0; nr < numRocksPart2; nr++ {
-		numReduced = c.reduce()
-		if numReduced > 0 {
-			numRowsReduced += numReduced
-			red := &reduction{
-				jetIndex:   jetIndex,
-				numReduced: numRowsReduced,
-				rockIndex:  nr,
-				chamber:    c,
-			}
-			same = nil
-			for _, other := range reductions {
-				if red.same(other) {
-					same = other
-					break
-				}
-			}
-			if same == nil {
-				reductions = append(reductions, red)
-			} else {
-				dRow := red.numReduced - same.numReduced
-				dNR := red.rockIndex - same.rockIndex
-				for nr+dNR < numRocksPart2 {
-					numRowsReduced += dRow
-					nr += dNR
-				}
-			}
+func (c *city) getUltraPrevious(
+	pos *position,
+) []position {
 
-		}
+	output := make([]position, 0, maxUltraNumPrevious)
 
-		for {
-			switch input[jetIndex] {
-			case '<':
-				c.pushLeft()
-			case '>':
-				c.pushRight()
-			default:
-				panic(input[jetIndex])
-			}
-
-			jetIndex++
-			if jetIndex == len(input)-1 {
-				jetIndex = 0
-			}
-
-			if !c.fall() {
-				break
-			}
+	if pos.heading == east || pos.heading == west {
+		for i := uint8(minUltraStraightLine); i <= maxUltraStraightLine; i++ {
+			output = append(output,
+				position{
+					prev:            pos,
+					row:             pos.row - int(i),
+					col:             pos.col,
+					totalHeatLoss:   pos.totalHeatLoss,
+					heading:         south,
+					leftInDirection: i,
+				},
+			)
 		}
 	}
 
-	return numRowsReduced + c.minEmptyRow, nil
+	if pos.heading == north || pos.heading == south {
+		for i := uint8(minUltraStraightLine); i <= maxUltraStraightLine; i++ {
+			output = append(output, position{
+				prev:            pos,
+				row:             pos.row,
+				col:             pos.col - int(i),
+				totalHeatLoss:   pos.totalHeatLoss,
+				heading:         east,
+				leftInDirection: i,
+			})
+		}
+	}
+
+	if pos.heading == north || pos.heading == south {
+		for i := uint8(minUltraStraightLine); i <= maxUltraStraightLine; i++ {
+			output = append(output, position{
+				prev:            pos,
+				row:             pos.row,
+				col:             pos.col + int(i),
+				totalHeatLoss:   pos.totalHeatLoss,
+				heading:         west,
+				leftInDirection: i,
+			})
+		}
+	}
+
+	if pos.heading == east || pos.heading == west {
+		for i := uint8(minUltraStraightLine); i <= maxUltraStraightLine; i++ {
+			output = append(output, position{
+				prev:            pos,
+				row:             pos.row + int(i),
+				col:             pos.col,
+				totalHeatLoss:   pos.totalHeatLoss,
+				heading:         north,
+				leftInDirection: i,
+			})
+		}
+	}
+
+	return output
+}
+
+func dijkstraUltraHeatLossToTarget(c *city) {
+	pending := make([]position, 0, initialUltraPendingSize)
+
+	for i := uint8(minUltraStraightLine); i <= maxUltraStraightLine; i++ {
+		above := position{
+			row:             citySize - 1 - int(i),
+			col:             citySize - 1,
+			totalHeatLoss:   0,
+			heading:         south,
+			leftInDirection: i,
+		}
+
+		left := position{
+			row:             citySize - 1,
+			col:             citySize - 1 - int(i),
+			totalHeatLoss:   0,
+			heading:         east,
+			leftInDirection: i,
+		}
+
+		pending = append(pending,
+			above,
+			left,
+		)
+	}
+
+	for len(pending) > 0 {
+		pos := pending[0]
+
+		if c.isBetter(&pos) {
+			c.remember(&pos)
+
+			pending = append(pending, c.getUltraPrevious(&pos)...)
+		}
+
+		pending = pending[1:]
+	}
 }

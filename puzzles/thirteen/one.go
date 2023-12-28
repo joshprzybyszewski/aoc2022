@@ -1,149 +1,115 @@
 package thirteen
 
 import (
-	"strconv"
 	"strings"
 )
+
+type rect struct {
+	rows [20]uint64
+	cols [20]uint64
+
+	numRows int
+	numCols int
+}
+
+func (r rect) isReflection(maxVal int, isHorizontal bool) bool {
+	cmpVal := maxVal + 1
+	if isHorizontal {
+
+		if cmpVal >= r.numRows {
+			return false
+		}
+
+		for maxVal >= 0 && cmpVal < r.numRows {
+			if r.rows[maxVal] != r.rows[cmpVal] {
+				return false
+			}
+			maxVal--
+			cmpVal++
+		}
+		return true
+	}
+
+	if cmpVal >= r.numCols {
+		return false
+	}
+
+	for maxVal >= 0 && cmpVal < r.numCols {
+		if r.cols[maxVal] != r.cols[cmpVal] {
+			return false
+		}
+		maxVal--
+		cmpVal++
+	}
+	return true
+}
+
+func (r rect) getNumBeforeReflection() int {
+	for ri := 0; ri < r.numRows; ri++ {
+		if r.isReflection(ri, true) {
+			return 100 * (ri + 1)
+		}
+	}
+
+	for ci := 0; ci < r.numCols; ci++ {
+		if r.isReflection(ci, false) {
+			return ci + 1
+		}
+	}
+	panic(`dev error`)
+	return 0
+}
+
+func newRect(
+	input string,
+) (string, rect) {
+
+	var r rect
+	ri, ci := 0, 0
+
+	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
+		if nli == 0 {
+			r.numRows = ri
+			return input[nli+1:], r
+		}
+
+		if ri == 0 {
+			r.numCols = nli
+		} else if r.numCols != nli {
+			panic(`dev error`)
+		}
+
+		for ci = 0; ci < nli; ci++ {
+			if input[ci] == '.' {
+				continue
+			}
+			// TODO we can do fewer bit shifts if we keep track of this var elsewhere probably.
+			r.rows[ri] |= 1 << ci
+			r.cols[ci] |= 1 << ri
+		}
+
+		ri++
+		input = input[nli+1:]
+	}
+
+	r.numRows = ri
+	return input, r
+}
 
 func One(
 	input string,
 ) (int, error) {
 
 	sum := 0
-	var l, r []thing
-	var i, nli, nli2 int
-	var line1, line2 string
+	var r rect
 
 	for len(input) > 0 {
-		nli = strings.Index(input, "\n")
-		if nli < 0 {
+		if input == "\n" {
 			break
-		} else if nli == 0 {
-			// skip empty line
-			input = input[1:]
-			continue
-		} else {
-			line1 = input[:nli]
 		}
-
-		nli2 = nli + 1 + strings.Index(input[nli+1:], "\n")
-		if nli2 == nli+1 {
-			// skip past empty line
-			input = input[nli2+1:]
-			continue
-		} else if nli2 < nli {
-			line2 = input[nli+1:]
-			input = input[:0]
-		} else {
-			line2 = input[nli+1 : nli2]
-			input = input[nli2+1:]
-		}
-
-		l, _ = parse(line1, 0)
-		r, _ = parse(line2, 0)
-
-		switch compareSlices(l, r) {
-		case valid:
-			sum += i + 1
-		case unknown:
-			panic(`unexpected`)
-		}
-		i++
+		input, r = newRect(input)
+		sum += r.getNumBeforeReflection()
 	}
 
 	return sum, nil
-}
-
-type answer uint8
-
-const (
-	unknown answer = iota
-	valid
-	invalid
-)
-
-func compareSlices(
-	l, r []thing,
-) answer {
-	var a answer
-	for i := range l {
-		if i >= len(r) {
-			return invalid
-		}
-
-		a = compare(l[i], r[i])
-		if a != unknown {
-			return a
-		}
-	}
-	if len(l) < len(r) {
-		return valid
-	}
-	return unknown
-}
-
-func compare(
-	l, r thing,
-) answer {
-	if l.slice == nil && r.slice == nil {
-		// compare ints
-		if l.value < r.value {
-			return valid
-		} else if l.value > r.value {
-			return invalid
-		}
-		return unknown
-	} else if l.slice != nil && r.slice != nil {
-		return compareSlices(l.slice, r.slice)
-	} else if l.slice == nil {
-		return compareSlices([]thing{l}, r.slice)
-	} else if r.slice == nil {
-		return compareSlices(l.slice, []thing{r})
-	}
-	panic(`cannot reach here`)
-}
-
-type thing struct {
-	slice []thing
-	value int
-}
-
-func parse(
-	line string,
-	start int,
-) ([]thing, int) {
-	output := make([]thing, 0)
-
-	var child []thing
-	var endIndex, ci, bi, v int
-	var err error
-
-	for i := start + 1; i < len(line); {
-		switch line[i] {
-		case '[':
-			child, endIndex = parse(line, i)
-			output = append(output, thing{
-				slice: child,
-			})
-			i = endIndex + 1
-		case ']':
-			return output, i
-		case ',':
-			i++
-		default:
-			ci = strings.Index(line[i:], `,`)
-			bi = strings.Index(line[i:], `]`)
-			if ci == -1 || (bi >= 0 && bi < ci) {
-				ci = bi
-			}
-			v, err = strconv.Atoi(line[i : i+ci])
-			if err != nil {
-				panic(err)
-			}
-			output = append(output, thing{value: v})
-			i += ci
-		}
-	}
-
-	panic(`should not have reached here`)
 }

@@ -39,12 +39,6 @@ func Solvers(
 		return wrapIntSolver(p1), wrapIntSolver(p2)
 	}
 	switch day {
-	case 5:
-		return five.One, five.Two
-	case 10:
-		return wrapIntSolver(ten.One), ten.Two
-	case 11:
-		return wrapIntSolver(eleven.One), wrapInt64Solver(eleven.Two)
 	case 25:
 		return twentyfive.One, nil
 
@@ -64,6 +58,8 @@ func IntSolvers(
 		return three.One, three.Two
 	case 4:
 		return four.One, four.Two
+	case 5:
+		return five.One, five.Two
 	case 6:
 		return six.One, six.Two
 	case 7:
@@ -73,9 +69,9 @@ func IntSolvers(
 	case 9:
 		return nine.One, nine.Two
 	case 10:
-		return ten.One, nil
+		return ten.One, ten.Two
 	case 11:
-		return eleven.One, nil
+		return eleven.One, eleven.Two
 	case 12:
 		return twelve.One, twelve.Two
 	case 13:
@@ -120,6 +116,18 @@ func wrapIntSolver(
 
 func wrapInt64Solver(
 	is func(string) (int64, error),
+) func(string) (string, error) {
+	return func(input string) (string, error) {
+		i, err := is(input)
+		if err != nil {
+			return ``, err
+		}
+		return fmt.Sprintf("%d", i), nil
+	}
+}
+
+func wrapUint64Solver(
+	is func(string) (uint64, error),
 ) func(string) (string, error) {
 	return func(input string) (string, error) {
 		i, err := is(input)

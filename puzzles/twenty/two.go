@@ -1,51 +1,30 @@
 package twenty
 
-import (
-	"strconv"
-	"strings"
-)
-
-const (
-	decryptionKey = 811589153
-
-	numRoundsOfMixing = 10
-)
+import "fmt"
 
 func Two(
 	input string,
 ) (int, error) {
-	numbers := make([]int, 0, 1028)
+	m := newMachine(input)
+	// fmt.Printf("machine: %+v\n", m)
 
-	var val int
-	var err error
+	p := newProcessor(&m)
+	p.addRx()
 
-	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
-		if nli == 0 {
-			input = input[nli+1:]
-			continue
+	for n := 0; ; n++ {
+		p.pushButton()
+		if p.numLowPulsesReceived > 0 {
+			fmt.Printf("n = %d, rx %d\n", n, p.numLowPulsesReceived)
 		}
-
-		val, err = strconv.Atoi(input[0:nli])
-		if err != nil {
-			return 0, err
+		if n%10000 == 0 {
+			fmt.Printf("n = %10d\n", n)
+			fmt.Printf("  low  = %10d\n", p.numLowPulsesSent)
+			fmt.Printf("  high = %10d\n", p.numHighPulsesSent)
 		}
-		numbers = append(numbers, val)
-		input = input[nli+1:]
+		if p.numLowPulsesReceived == 1 {
+			// it's currently higher than 48810000
+			// we need a way to work backwards to detect what the answer is.
+			return n, nil
+		}
 	}
-
-	for i := range numbers {
-		numbers[i] *= decryptionKey
-	}
-
-	linkedList, zero := convertToDoublyLinkedList(numbers)
-
-	for i := 0; i < numRoundsOfMixing; i++ {
-		mixSteps(linkedList)
-	}
-
-	oneThou := zero.getNthValue(1000 % len(numbers))
-	twoThou := zero.getNthValue(2000 % len(numbers))
-	threeThou := zero.getNthValue(3000 % len(numbers))
-
-	return oneThou + twoThou + threeThou, nil
 }

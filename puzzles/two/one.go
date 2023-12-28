@@ -1,96 +1,115 @@
 package two
 
 import (
-	"fmt"
 	"strings"
+
+	"github.com/joshprzybyszewski/aoc2022/util/strutil"
+)
+
+const (
+	newline   = "\n"
+	semicolon = ";"
+	comma     = ","
 )
 
 func One(
 	input string,
 ) (int, error) {
-	var s int
-	var err error
+	max := handful{
+		red:   12,
+		green: 13,
+		blue:  14,
+	}
 
-	total := 0
-	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
-		if nli == 0 {
-			input = input[1:]
-			continue
+	i := 0
+	sum := 0
+	var hi int
+	var line string
+	var hasImpossible bool
+	for nli := strings.Index(input, newline); nli >= 0; nli = strings.Index(input, newline) {
+		line = input[strings.Index(input, `:`)+1 : nli]
+		hasImpossible = false
+		for {
+			hi = strings.Index(line, semicolon)
+			if hi == -1 {
+				hi = len(line)
+			}
+
+			handful := interpretSeen(line[:hi])
+			if !isPossible(handful, max) {
+				hasImpossible = true
+				break
+			}
+			if hi == len(line) {
+				break
+			}
+
+			line = line[hi+1:]
+
 		}
-		s, err = score(input[0:nli])
-		if err != nil {
-			return 0, err
+
+		if !hasImpossible {
+			sum += (i + 1)
 		}
-		total += s
 		input = input[nli+1:]
+		i++
 	}
 
-	return total, nil
+	return sum, nil
 }
 
-func score(
-	line string,
-) (int, error) {
-	ss, err := shapeScore(line[2])
-	if err != nil {
-		return 0, err
+func interpretSeen(
+	input string,
+) handful {
+
+	output := handful{}
+	var val, valEndIndex, ci int
+	for {
+		input = strutil.TrimSpaces(input)
+		ci = strings.Index(input, comma)
+		if ci == -1 {
+			ci = len(input)
+		}
+
+		val, valEndIndex = strutil.IntBeforeSpace(input[:ci])
+		valEndIndex++
+
+		if input[valEndIndex:ci] == `red` {
+			if output.red != 0 {
+				panic(`already red set`)
+			}
+			output.red = val
+		} else if input[valEndIndex:ci] == `blue` {
+			if output.blue != 0 {
+				panic(`already blue set`)
+			}
+			output.blue = val
+		} else if input[valEndIndex:ci] == `green` {
+			if output.green != 0 {
+				panic(`already green set`)
+			}
+			output.green = val
+		} else {
+			panic(`unknown line: ` + input[:ci])
+		}
+		if ci == len(input) {
+			return output
+		}
+		input = input[ci+1:]
 	}
 
-	ws, err := winScore(line[0], line[2])
-	if err != nil {
-		return 0, err
-	}
-
-	return ss + ws, nil
 }
 
-func shapeScore(
-	encChar byte,
-) (int, error) {
-	switch encChar {
-	case 'X':
-		return 1, nil
-	case 'Y':
-		return 2, nil
-	case 'Z':
-		return 3, nil
-	}
-
-	return 0, fmt.Errorf(`unsupported char: %q`, encChar)
+type handful struct {
+	red   int
+	blue  int
+	green int
 }
 
-func winScore(
-	encChar1, encChar2 byte,
-) (int, error) { // nolint:gocyclo yes i know
-	switch encChar2 {
-	case 'X': // rock
-		switch encChar1 {
-		case 'A': // rock
-			return 3, nil
-		case 'B': // paper
-			return 0, nil
-		case 'C': // scissors
-			return 6, nil
-		}
-	case 'Y': // paper
-		switch encChar1 {
-		case 'A': // rock
-			return 6, nil
-		case 'B': // paper
-			return 3, nil
-		case 'C': // scissors
-			return 0, nil
-		}
-	case 'Z': // scissors
-		switch encChar1 {
-		case 'A': // rock
-			return 0, nil
-		case 'B': // paper
-			return 6, nil
-		case 'C': // scissors
-			return 3, nil
-		}
-	}
-
-	return 0, fmt.Errorf(`unsupported chars: %q %q`, encChar1, encChar2)
+func isPossible(
+	seen, max handful,
+) bool {
+	return seen.red <= max.red &&
+		seen.green <= max.green &&
+		seen.blue <= max.blue
 }

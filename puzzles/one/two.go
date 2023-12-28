@@ -1,45 +1,102 @@
 package one
 
 import (
-	"strconv"
 	"strings"
 )
 
 func Two(
 	input string,
 ) (int, error) {
-
-	var val int
-	var err error
-	elves := make([]int, 0, 236)
-	cur := 0
+	sum := 0
 	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
-		if nli == 0 {
-			elves = append(elves, cur)
-			cur = 0
-		} else {
-			val, err = strconv.Atoi(input[0:nli])
-			if err != nil {
-				return 0, err
-			}
-			cur += val
-		}
+		sum += getValueWithString(input[:nli])
 		input = input[nli+1:]
 	}
-	top3 := [3]int{-1, -1, -1}
 
-	for _, e := range elves {
-		if e > top3[0] {
-			top3[2] = top3[1]
-			top3[1] = top3[0]
-			top3[0] = e
-		} else if e > top3[1] {
-			top3[2] = top3[1]
-			top3[1] = e
-		} else if e > top3[2] {
-			top3[2] = e
-		}
+	return sum, nil
+}
+
+var stringValues = []string{
+	`zero`,
+	`one`,
+	`two`,
+	`three`,
+	`four`,
+	`five`,
+	`six`,
+	`seven`,
+	`eight`,
+	`nine`,
+}
+
+func getStringValue(input string) int {
+	switch input[0] {
+	case 'z', 'o', 't', 'f', 's', 'e', 'n':
+		// these are the only valid starting chars
+	default:
+		return -1
 	}
 
-	return top3[0] + top3[1] + top3[2], nil
+	for i, sv := range stringValues {
+		if input == sv || (len(input) > len(sv) && input[:len(sv)] == sv) {
+			return i
+		}
+	}
+	return -1
+}
+
+func getValueWithString(line string) int {
+	first := -1
+	firstIndex := -1
+	last := -1
+	var i, val int
+	var c byte
+
+	for i = 0; i < len(line); i++ {
+		c = line[i]
+		if c >= '0' && c <= '9' {
+			firstIndex = i
+			first = int(c - '0')
+
+			break
+		}
+		next := line[i:]
+		if i+5 < len(line) {
+			next = line[i : i+5]
+		}
+
+		val = getStringValue(next)
+		if val == -1 {
+			continue
+		}
+
+		firstIndex = i
+		first = val
+		break
+	}
+	if first == -1 {
+		return 0
+	}
+
+	for i = len(line) - 1; i >= firstIndex; i-- {
+		c = line[i]
+		if c >= '0' && c <= '9' {
+
+			last = int(c - '0')
+			break
+		}
+		next := line[i:]
+		if i+5 < len(line) {
+			next = line[i : i+5]
+		}
+
+		val = getStringValue(next)
+		if val == -1 {
+			continue
+		}
+		last = val
+		break
+	}
+
+	return first*10 + last
 }

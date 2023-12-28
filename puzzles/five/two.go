@@ -1,43 +1,34 @@
 package five
 
-import "strings"
-
 func Two(
 	input string,
-) (string, error) {
-	stacks := newStacks()
+) (int, error) {
 
-	move := func(si, di int, q int) {
-		for i := 0; i < q; i++ {
-			stacks[di].values[stacks[di].length+i] = stacks[si].values[stacks[si].length-q+i]
-		}
-		stacks[si].length -= q
-		stacks[di].length += q
+	seeds, mm, err := getSeedsAndMultiMapping(input)
+	if err != nil {
+		return 0, err
 	}
 
-	var inst instruction
-	var err error
+	lowest, _ := mm.transformWithMax(seeds[0])
+	tmp, s, maxS, max := 0, 0, 0, 0
 
-	// jump past the stacks information
-	input = input[strings.Index(input, "\n\n")+2:]
+	for i := 0; i < len(seeds); i += 2 {
+		maxS = seeds[i] + seeds[i+1]
+		for s = seeds[i]; s < maxS; {
+			tmp, max = mm.transformWithMax(s)
+			if tmp < lowest {
+				lowest = tmp
+			}
 
-	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
-		if nli == 0 {
-			// skip empty lines
-			input = input[1:]
-			continue
+			if max <= 1 {
+				s++
+			} else {
+				// skip ahead
+				s += (max - 1)
+			}
 		}
-		inst, err = newInstruction(input[:nli])
-		if err != nil {
-			return ``, err
-		}
-		move(inst.source-1, inst.dest-1, inst.quantity)
-		input = input[nli+1:]
 	}
 
-	output := make([]byte, 0, len(stacks))
-	for i := range stacks {
-		output = append(output, stacks[i].values[stacks[i].length-1])
-	}
-	return string(output), nil
+	return lowest, nil
+
 }
