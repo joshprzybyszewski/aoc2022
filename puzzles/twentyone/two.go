@@ -14,8 +14,8 @@ func Two(
 		50,
 		100,
 		500,
-		// 1000,
-		// 5000,
+		1000,
+		5000,
 	} {
 		answer := getAnswerFromGrid(input, depth)
 		fmt.Printf("Got %10d in %4d steps\n", answer, depth)
@@ -35,9 +35,9 @@ func getAnswerFromGrid(
 	galaxy := newGalaxyBuilder(&gardenProvider)
 
 	galaxy.populate(depth)
-	if len(galaxy.gardensByCoord) < 100 {
-		fmt.Printf("Galaxy:\n%s\n", galaxy.String())
-	}
+	// if len(galaxy.gardensByCoord) < 10 {
+	// 	fmt.Printf("Galaxy:\n%s\n", galaxy.String())
+	// }
 
 	return galaxy.totalEven
 }
