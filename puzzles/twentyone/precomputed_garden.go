@@ -8,23 +8,6 @@ import (
 type precomputedGarden struct {
 	distances [gridSize][gridSize]int
 
-	exits struct {
-		left   coord
-		top    coord
-		right  coord
-		bottom coord
-	}
-
-	additionalExits struct {
-		left   []coord
-		top    []coord
-		right  []coord
-		bottom []coord
-	}
-
-	entrance       coord
-	otherEntrances []coord
-
 	numEven     int
 	numOdd      int
 	maxDistance int
@@ -33,49 +16,87 @@ type precomputedGarden struct {
 func newPrecomputedInitialGarden(
 	gar garden,
 ) precomputedGarden {
-	return newPrecomputedGardenWithEntranceDepth(
+	return newPrecomputedGardenWithStarts(
 		&gar,
-		gar.start,
-		0,
-		nil,
+		map[coord]int{
+			gar.start: 0,
+		},
 	)
 }
 
-func newPrecomputedGarden(
+func newPrecomputedGardenWithLeftColumn(
 	gar *garden,
-	entrance coord,
+	left [gridSize]int,
 ) precomputedGarden {
-	return newPrecomputedGardenWithEntranceDepth(
-		gar,
-		entrance,
-		1,
-		nil,
-	)
-}
-
-func newPrecomputedGardenWithManyEntrances(
-	gar *garden,
-	entrance coord,
-	additionalEntrances []coord,
-) precomputedGarden {
-	return newPrecomputedGardenWithEntranceDepth(
-		gar,
-		entrance,
-		1,
-		additionalEntrances,
-	)
-}
-
-func newPrecomputedGardenWithEntranceDepth(
-	gar *garden,
-	entrance coord,
-	initialDepth int,
-	additionalEntrances []coord,
-) precomputedGarden {
-	pg := precomputedGarden{
-		entrance:       entrance,
-		otherEntrances: additionalEntrances,
+	starts := make(map[coord]int, gridSize)
+	for row := 0; row < gridSize; row++ {
+		starts[coord{
+			row: row,
+			col: 0,
+		}] = left[row]
 	}
+	return newPrecomputedGardenWithStarts(
+		gar,
+		starts,
+	)
+}
+
+func newPrecomputedGardenWithRightColumn(
+	gar *garden,
+	right [gridSize]int,
+) precomputedGarden {
+	starts := make(map[coord]int, gridSize)
+	for row := 0; row < gridSize; row++ {
+		starts[coord{
+			row: row,
+			col: gridSize - 1,
+		}] = right[row]
+	}
+	return newPrecomputedGardenWithStarts(
+		gar,
+		starts,
+	)
+}
+
+func newPrecomputedGardenWithBottomRow(
+	gar *garden,
+	bottom [gridSize]int,
+) precomputedGarden {
+	starts := make(map[coord]int, gridSize)
+	for col := 0; col < gridSize; col++ {
+		starts[coord{
+			row: gridSize - 1,
+			col: col,
+		}] = bottom[col]
+	}
+	return newPrecomputedGardenWithStarts(
+		gar,
+		starts,
+	)
+}
+
+func newPrecomputedGardenWithTopRow(
+	gar *garden,
+	top [gridSize]int,
+) precomputedGarden {
+	starts := make(map[coord]int, gridSize)
+	for col := 0; col < gridSize; col++ {
+		starts[coord{
+			row: 0,
+			col: col,
+		}] = top[col]
+	}
+	return newPrecomputedGardenWithStarts(
+		gar,
+		starts,
+	)
+}
+
+func newPrecomputedGardenWithStarts(
+	gar *garden,
+	starts map[coord]int,
+) precomputedGarden {
+	pg := precomputedGarden{}
 
 	for ri := range pg.distances {
 		for ci := range pg.distances[ri] {
@@ -92,15 +113,11 @@ func newPrecomputedGardenWithEntranceDepth(
 	}
 	pending := make([]pos, 0, gridSize*gridSize)
 
-	pending = append(pending, pos{
-		coord: pg.entrance,
-		depth: initialDepth,
-	})
-
-	for _, entrance := range additionalEntrances {
+	for c := range starts {
+		c := c
 		pending = append(pending, pos{
-			coord: entrance,
-			depth: initialDepth,
+			coord: c,
+			depth: starts[c],
 		})
 	}
 
@@ -109,28 +126,15 @@ func newPrecomputedGardenWithEntranceDepth(
 		pending = pending[1:]
 
 		if pg.distances[c.row][c.col] > 0 {
-			if c.depth < pg.distances[c.row][c.col] {
-				fmt.Printf("c.depth: %d, actual: %d", c.depth, pg.distances[c.row][c.col])
-				panic(`unexpected`)
+			if c.depth >= pg.distances[c.row][c.col] {
+				continue
 			}
-			continue
 		}
 
 		pg.distances[c.row][c.col] = c.depth
 
 		if c.row == 0 {
-			if pg.exits.top.row == 0 {
-				// I can exit at this col
-				pg.exits.top.row = -1
-				pg.exits.top.col = c.col
-			} else {
-				otherVal := pg.distances[0][pg.exits.top.col]
-				if c.depth <= otherVal {
-					exit := c.coord
-					exit.row = gridSize - 1
-					pg.additionalExits.top = append(pg.additionalExits.top, exit)
-				}
-			}
+			// do nothing
 		} else if pg.distances[c.row-1][c.col] == 0 { // c.row MUST be > 0
 			pending = append(pending, pos{
 				coord: coord{
@@ -142,18 +146,7 @@ func newPrecomputedGardenWithEntranceDepth(
 		}
 
 		if c.col == 0 {
-			if pg.exits.left.col == 0 {
-				// I can exit at this row
-				pg.exits.left.col = -1
-				pg.exits.left.row = c.row
-			} else {
-				otherVal := pg.distances[pg.exits.left.row][0]
-				if c.depth <= otherVal {
-					exit := c.coord
-					exit.col = gridSize - 1
-					pg.additionalExits.left = append(pg.additionalExits.left, exit)
-				}
-			}
+			// do nothing
 		} else if pg.distances[c.row][c.col-1] == 0 {
 			pending = append(pending, pos{
 				coord: coord{
@@ -164,18 +157,7 @@ func newPrecomputedGardenWithEntranceDepth(
 			})
 		}
 		if c.row == gridSize-1 {
-			if pg.exits.bottom.row == 0 {
-				// I can exit at this col
-				pg.exits.bottom.row = gridSize
-				pg.exits.bottom.col = c.col
-			} else {
-				otherVal := pg.distances[gridSize-1][pg.exits.bottom.col]
-				if c.depth <= otherVal {
-					exit := c.coord
-					exit.row = 0
-					pg.additionalExits.bottom = append(pg.additionalExits.bottom, exit)
-				}
-			}
+			// do nothing
 		} else if pg.distances[c.row+1][c.col] == 0 {
 			pending = append(pending, pos{
 				coord: coord{
@@ -186,18 +168,7 @@ func newPrecomputedGardenWithEntranceDepth(
 			})
 		}
 		if c.col == gridSize-1 {
-			if pg.exits.right.col == 0 {
-				// I can exit at this row
-				pg.exits.right.col = gridSize
-				pg.exits.right.row = c.row
-			} else {
-				otherVal := pg.distances[pg.exits.right.row][gridSize-1]
-				if c.depth <= otherVal {
-					exit := c.coord
-					exit.col = 0
-					pg.additionalExits.right = append(pg.additionalExits.right, exit)
-				}
-			}
+			// do nothing
 		} else if pg.distances[c.row][c.col+1] == 0 {
 			pending = append(pending, pos{
 				coord: coord{
@@ -208,18 +179,6 @@ func newPrecomputedGardenWithEntranceDepth(
 			})
 		}
 	}
-
-	if pg.exits.left.col == 0 ||
-		pg.exits.right.col == 0 ||
-		pg.exits.top.row == 0 ||
-		pg.exits.bottom.row == 0 {
-		panic(`unexpected`)
-	}
-	// now they can be used as the entrance for that direction
-	pg.exits.left.col = gridSize - 1
-	pg.exits.right.col = 0
-	pg.exits.top.row = gridSize - 1
-	pg.exits.bottom.row = 0
 
 	for ri := range pg.distances {
 		for ci := range pg.distances[ri] {
@@ -235,22 +194,6 @@ func newPrecomputedGardenWithEntranceDepth(
 	}
 
 	return pg
-}
-
-func (pg *precomputedGarden) leftDepth() int {
-	return pg.distances[pg.exits.left.row][0]
-}
-
-func (pg *precomputedGarden) rightDepth() int {
-	return pg.distances[pg.exits.right.row][gridSize-1]
-}
-
-func (pg *precomputedGarden) topDepth() int {
-	return pg.distances[pg.exits.top.row][0]
-}
-
-func (pg *precomputedGarden) bottomDepth() int {
-	return pg.distances[pg.exits.bottom.row][gridSize-1]
 }
 
 func (pg *precomputedGarden) getNumEven(
@@ -282,42 +225,6 @@ func (pg *precomputedGarden) getNumEven(
 
 func (pg precomputedGarden) String() string {
 	var sb strings.Builder
-
-	sb.WriteString(`Entrance: `)
-	sb.WriteString(fmt.Sprintf("%+v", pg.entrance))
-	sb.WriteByte('\n')
-
-	for _, entrance := range pg.otherEntrances {
-		sb.WriteString(`Additional Entrance: `)
-		sb.WriteString(fmt.Sprintf("%+v", entrance))
-		sb.WriteByte('\n')
-	}
-
-	sb.WriteString("Exits:\n")
-	sb.WriteString(` top:`)
-	sb.WriteString(fmt.Sprintf("%+v", pg.exits.top))
-	for _, exit := range pg.additionalExits.top {
-		sb.WriteString(fmt.Sprintf(", %+v", exit))
-	}
-	sb.WriteByte('\n')
-	sb.WriteString(` right:`)
-	sb.WriteString(fmt.Sprintf("%+v", pg.exits.right))
-	for _, exit := range pg.additionalExits.right {
-		sb.WriteString(fmt.Sprintf(", %+v", exit))
-	}
-	sb.WriteByte('\n')
-	sb.WriteString(` bottom:`)
-	sb.WriteString(fmt.Sprintf("%+v", pg.exits.bottom))
-	for _, exit := range pg.additionalExits.bottom {
-		sb.WriteString(fmt.Sprintf(", %+v", exit))
-	}
-	sb.WriteByte('\n')
-	sb.WriteString(` left:`)
-	sb.WriteString(fmt.Sprintf("%+v", pg.exits.left))
-	for _, exit := range pg.additionalExits.left {
-		sb.WriteString(fmt.Sprintf(", %+v", exit))
-	}
-	sb.WriteByte('\n')
 
 	sb.WriteString(`Max Distance: `)
 	sb.WriteString(fmt.Sprintf("%d", pg.maxDistance))

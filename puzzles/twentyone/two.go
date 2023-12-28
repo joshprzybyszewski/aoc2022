@@ -8,8 +8,8 @@ func Two(
 	for _, depth := range []int{
 		6,
 		10,
-		// 50,
-		// 100,
+		50,
+		100,
 		// 500,
 		// 1000,
 		// 5000,
@@ -29,9 +29,9 @@ func getAnswerFromGrid(
 
 	gardenProvider := newGardenProvider(initial)
 
-	galaxy := newGalaxyBuilder()
+	galaxy := newGalaxyBuilder(&gardenProvider)
 
-	galaxy.populate(&gardenProvider, depth)
+	galaxy.populate(depth)
 	// galaxy.populate(&gardenProvider, stepGoal)
 
 	return galaxy.totalEven
@@ -41,54 +41,23 @@ const (
 	stepGoal = 26501365
 )
 
-type plotPosition struct {
-	plot coord
-
-	entrance    coord
-	depthBefore int
-
-	additionalEntrances []coord
-}
-
 type galaxyBuilder struct {
-	seenPlots map[coord]struct{}
-
-	pending []plotPosition
+	gp *gardenProvider
 
 	maxDepth int
 
 	totalEven int
 }
 
-func newGalaxyBuilder() galaxyBuilder {
-	return galaxyBuilder{
-		seenPlots: make(map[coord]struct{}, 4096),
-		pending:   make([]plotPosition, 0, 4096), // gonna be way more than this
-	}
-}
-
-func (gb *galaxyBuilder) addInitial(
+func newGalaxyBuilder(
 	gp *gardenProvider,
-) {
-	if gb.totalEven != 0 {
-		panic(`unexpected`)
+) galaxyBuilder {
+	return galaxyBuilder{
+		gp: gp,
 	}
-
-	gb.process(
-		gp,
-		plotPosition{
-			plot: coord{
-				row: 0,
-				col: 0,
-			},
-			entrance:    gp.start.entrance,
-			depthBefore: 0,
-		},
-	)
 }
 
 func (gb *galaxyBuilder) populate(
-	gp *gardenProvider,
 	maxDepth int,
 ) {
 	if gb.maxDepth != 0 {
@@ -96,70 +65,157 @@ func (gb *galaxyBuilder) populate(
 	}
 	gb.maxDepth = maxDepth
 
-	gb.addInitial(gp)
+	// get the starting plot
+	groundzero := gb.gp.get(gb.gp.gar.start)
 
-	for len(gb.pending) > 0 {
-		p := gb.pending[0]
-		gb.pending = gb.pending[1:]
-
-		if _, ok := gb.seenPlots[p.plot]; ok {
-			continue
-		}
-
-		gb.seenPlots[p.plot] = struct{}{}
-
-		gb.process(gp, p)
-	}
-}
-
-func (gb *galaxyBuilder) process(
-	gp *gardenProvider,
-	pos plotPosition,
-) {
-	fmt.Printf("Processing plot %d, %+v\n", pos.depthBefore, pos.plot)
-
-	plot := gp.get(pos.entrance, pos.additionalEntrances...)
-	fmt.Printf("%s\n\n", plot)
-
-	gb.totalEven += plot.getNumEven(
-		gb.maxDepth - pos.depthBefore,
+	gb.totalEven += groundzero.getNumEven(
+		gb.maxDepth, /*- pos.depthBefore*/
 	)
 
-	pos.additionalEntrances = nil
+	// extend up and down from the start
+	gb.extendUp(
+		gb.getRowAbove(&groundzero),
+	)
+	gb.extendDown(
+		gb.getRowBelow(&groundzero),
+	)
 
-	above := pos
-	above.plot.row--
-	above.entrance = plot.exits.top
-	above.additionalEntrances = plot.additionalExits.top
-	above.depthBefore += plot.topDepth()
-	if above.depthBefore < gb.maxDepth {
-		gb.pending = append(gb.pending, above)
+	// extend right, which extends up and down along the way
+	gb.extendRight(
+		gb.getColumnToTheRight(&groundzero),
+	)
+
+	// extend left, which extends up and down along the way
+	gb.extendLeft(
+		gb.getColumnToTheLeft(&groundzero),
+	)
+}
+
+func (gb *galaxyBuilder) getColumnToTheRight(
+	pg *precomputedGarden,
+) [gridSize]int {
+	var output [gridSize]int
+	for row := 0; row < gridSize; row++ {
+		output[row] = pg.distances[row][gridSize-1] + 1
+	}
+	return output
+}
+
+func (gb *galaxyBuilder) getColumnToTheLeft(
+	pg *precomputedGarden,
+) [gridSize]int {
+	var output [gridSize]int
+	for row := 0; row < gridSize; row++ {
+		output[row] = pg.distances[row][0] + 1
+	}
+	return output
+}
+
+func (gb *galaxyBuilder) getRowAbove(
+	pg *precomputedGarden,
+) [gridSize]int {
+	var output [gridSize]int
+	for col := 0; col < gridSize; col++ {
+		output[col] = pg.distances[0][col] + 1
+	}
+	return output
+}
+
+func (gb *galaxyBuilder) getRowBelow(
+	pg *precomputedGarden,
+) [gridSize]int {
+	var output [gridSize]int
+	for col := 0; col < gridSize; col++ {
+		output[col] = pg.distances[gridSize-1][col] + 1
+	}
+	return output
+}
+
+func (gb *galaxyBuilder) extendRight(
+	leftColumn [gridSize]int,
+) {
+	myplot := gb.gp.getRight(leftColumn)
+	num := myplot.getNumEven(
+		gb.maxDepth,
+	)
+	if num == 0 {
+		return
 	}
 
-	below := pos
-	below.plot.row++
-	below.entrance = plot.exits.bottom
-	below.additionalEntrances = plot.additionalExits.bottom
-	below.depthBefore += plot.bottomDepth()
-	if below.depthBefore < gb.maxDepth {
-		gb.pending = append(gb.pending, below)
+	gb.totalEven += num
+
+	gb.extendUp(
+		gb.getRowAbove(&myplot),
+	)
+	gb.extendDown(
+		gb.getRowBelow(&myplot),
+	)
+
+	gb.extendRight(
+		gb.getColumnToTheRight(&myplot),
+	)
+
+}
+
+func (gb *galaxyBuilder) extendLeft(
+	rightColumn [gridSize]int,
+) {
+	myplot := gb.gp.getLeft(rightColumn)
+	num := myplot.getNumEven(
+		gb.maxDepth,
+	)
+	if num == 0 {
+		return
 	}
 
-	left := pos
-	left.plot.col--
-	left.entrance = plot.exits.left
-	left.additionalEntrances = plot.additionalExits.left
-	left.depthBefore += plot.leftDepth()
-	if left.depthBefore < gb.maxDepth {
-		gb.pending = append(gb.pending, left)
+	gb.totalEven += num
+
+	gb.extendUp(
+		gb.getRowAbove(&myplot),
+	)
+	gb.extendDown(
+		gb.getRowBelow(&myplot),
+	)
+
+	gb.extendLeft(
+		gb.getColumnToTheLeft(&myplot),
+	)
+}
+
+func (gb *galaxyBuilder) extendUp(
+	bottomRow [gridSize]int,
+) {
+	myplot := gb.gp.getUp(bottomRow)
+	num := myplot.getNumEven(
+		gb.maxDepth,
+	)
+	if num == 0 {
+		return
 	}
 
-	right := pos
-	right.plot.col++
-	right.entrance = plot.exits.right
-	right.additionalEntrances = plot.additionalExits.right
-	right.depthBefore += plot.rightDepth()
-	if right.depthBefore < gb.maxDepth {
-		gb.pending = append(gb.pending, right)
+	gb.totalEven += num
+
+	gb.extendUp(
+		gb.getRowAbove(&myplot),
+	)
+
+}
+
+func (gb *galaxyBuilder) extendDown(
+	topRow [gridSize]int,
+) {
+	myplot := gb.gp.getDown(topRow)
+	num := myplot.getNumEven(
+		gb.maxDepth,
+	)
+	if num == 0 {
+		return
 	}
+
+	gb.totalEven += num
+
+	gb.extendDown(
+		gb.getRowBelow(&myplot),
+	)
+
 }
