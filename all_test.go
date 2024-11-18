@@ -13,10 +13,10 @@ func BenchmarkAll(b *testing.B) {
 	now := time.Now()
 	today := now.Day()
 	if now.Year() > 2022 || today > 25 {
-		today = 25
+		today = 6
 	}
 
-	for day := 1; day <= today; day++ {
+	for day := 6; day <= today; day++ {
 		b.Run(fmt.Sprintf("Day %d", day), func(b *testing.B) {
 			input, err := util.Input(day)
 			if err != nil {
