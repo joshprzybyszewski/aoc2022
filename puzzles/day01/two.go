@@ -1,17 +1,14 @@
 package day01
 
-import (
-	"strings"
-)
+import "github.com/joshprzybyszewski/aoc2022/util/lines"
 
 func Two(
 	input string,
 ) (int, error) {
 	sum := 0
-	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
-		sum += getValueWithString(input[:nli])
-		input = input[nli+1:]
-	}
+	lines.ForEach(input, func(line string) {
+		sum += getValueWithString(line)
+	})
 
 	return sum, nil
 }
