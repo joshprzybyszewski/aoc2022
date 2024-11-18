@@ -4,31 +4,31 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/joshprzybyszewski/aoc2022/puzzles/eight"
-	"github.com/joshprzybyszewski/aoc2022/puzzles/eighteen"
-	"github.com/joshprzybyszewski/aoc2022/puzzles/eleven"
-	"github.com/joshprzybyszewski/aoc2022/puzzles/fifteen"
-	"github.com/joshprzybyszewski/aoc2022/puzzles/five"
-	"github.com/joshprzybyszewski/aoc2022/puzzles/four"
-	"github.com/joshprzybyszewski/aoc2022/puzzles/fourteen"
-	"github.com/joshprzybyszewski/aoc2022/puzzles/nine"
-	"github.com/joshprzybyszewski/aoc2022/puzzles/nineteen"
-	"github.com/joshprzybyszewski/aoc2022/puzzles/one"
-	"github.com/joshprzybyszewski/aoc2022/puzzles/seven"
-	"github.com/joshprzybyszewski/aoc2022/puzzles/seventeen"
-	"github.com/joshprzybyszewski/aoc2022/puzzles/six"
-	"github.com/joshprzybyszewski/aoc2022/puzzles/sixteen"
-	"github.com/joshprzybyszewski/aoc2022/puzzles/ten"
-	"github.com/joshprzybyszewski/aoc2022/puzzles/thirteen"
-	"github.com/joshprzybyszewski/aoc2022/puzzles/three"
-	"github.com/joshprzybyszewski/aoc2022/puzzles/twelve"
-	"github.com/joshprzybyszewski/aoc2022/puzzles/twenty"
-	"github.com/joshprzybyszewski/aoc2022/puzzles/twentyfive"
-	"github.com/joshprzybyszewski/aoc2022/puzzles/twentyfour"
-	"github.com/joshprzybyszewski/aoc2022/puzzles/twentyone"
-	"github.com/joshprzybyszewski/aoc2022/puzzles/twentythree"
-	"github.com/joshprzybyszewski/aoc2022/puzzles/twentytwo"
-	"github.com/joshprzybyszewski/aoc2022/puzzles/two"
+	"github.com/joshprzybyszewski/aoc2022/puzzles/day01"
+	"github.com/joshprzybyszewski/aoc2022/puzzles/day02"
+	"github.com/joshprzybyszewski/aoc2022/puzzles/day03"
+	"github.com/joshprzybyszewski/aoc2022/puzzles/day04"
+	"github.com/joshprzybyszewski/aoc2022/puzzles/day05"
+	"github.com/joshprzybyszewski/aoc2022/puzzles/day06"
+	"github.com/joshprzybyszewski/aoc2022/puzzles/day07"
+	"github.com/joshprzybyszewski/aoc2022/puzzles/day08"
+	"github.com/joshprzybyszewski/aoc2022/puzzles/day09"
+	"github.com/joshprzybyszewski/aoc2022/puzzles/day10"
+	"github.com/joshprzybyszewski/aoc2022/puzzles/day11"
+	"github.com/joshprzybyszewski/aoc2022/puzzles/day12"
+	"github.com/joshprzybyszewski/aoc2022/puzzles/day13"
+	"github.com/joshprzybyszewski/aoc2022/puzzles/day14"
+	"github.com/joshprzybyszewski/aoc2022/puzzles/day15"
+	"github.com/joshprzybyszewski/aoc2022/puzzles/day16"
+	"github.com/joshprzybyszewski/aoc2022/puzzles/day17"
+	"github.com/joshprzybyszewski/aoc2022/puzzles/day18"
+	"github.com/joshprzybyszewski/aoc2022/puzzles/day19"
+	"github.com/joshprzybyszewski/aoc2022/puzzles/day20"
+	"github.com/joshprzybyszewski/aoc2022/puzzles/day21"
+	"github.com/joshprzybyszewski/aoc2022/puzzles/day22"
+	"github.com/joshprzybyszewski/aoc2022/puzzles/day23"
+	"github.com/joshprzybyszewski/aoc2022/puzzles/day24"
+	"github.com/joshprzybyszewski/aoc2022/puzzles/day25"
 )
 
 func Solvers(
@@ -40,7 +40,7 @@ func Solvers(
 	}
 	switch day {
 	case 25:
-		return twentyfive.One, nil
+		return day25.One, nil
 
 	}
 	return nil, nil
@@ -51,53 +51,53 @@ func IntSolvers(
 ) (part1, part2 func(string) (int, error)) {
 	switch day {
 	case 1:
-		return one.One, one.Two
+		return day01.One, day01.Two
 	case 2:
-		return two.One, two.Two
+		return day02.One, day02.Two
 	case 3:
-		return three.One, three.Two
+		return day03.One, day03.Two
 	case 4:
-		return four.One, four.Two
+		return day04.One, day04.Two
 	case 5:
-		return five.One, five.Two
+		return day05.One, day05.Two
 	case 6:
-		return six.One, six.Two
+		return day06.One, day06.Two
 	case 7:
-		return seven.One, seven.Two
+		return day07.One, day07.Two
 	case 8:
-		return eight.One, eight.Two
+		return day08.One, day08.Two
 	case 9:
-		return nine.One, nine.Two
+		return day09.One, day09.Two
 	case 10:
-		return ten.One, ten.Two
+		return day10.One, day10.Two
 	case 11:
-		return eleven.One, eleven.Two
+		return day11.One, day11.Two
 	case 12:
-		return twelve.One, twelve.Two
+		return day12.One, day12.Two
 	case 13:
-		return thirteen.One, thirteen.Two
+		return day13.One, day13.Two
 	case 14:
-		return fourteen.One, fourteen.Two
+		return day14.One, day14.Two
 	case 15:
-		return fifteen.One, fifteen.Two
+		return day15.One, day15.Two
 	case 16:
-		return sixteen.One, sixteen.Two
+		return day16.One, day16.Two
 	case 17:
-		return seventeen.One, seventeen.Two
+		return day17.One, day17.Two
 	case 18:
-		return eighteen.One, eighteen.Two
+		return day18.One, day18.Two
 	case 19:
-		return nineteen.One, nineteen.Two
+		return day19.One, day19.Two
 	case 20:
-		return twenty.One, twenty.Two
+		return day20.One, day20.Two
 	case 21:
-		return twentyone.One, twentyone.Two
+		return day21.One, day21.Two
 	case 22:
-		return twentytwo.One, twentytwo.Two
+		return day22.One, day22.Two
 	case 23:
-		return twentythree.One, twentythree.Two
+		return day23.One, day23.Two
 	case 24:
-		return twentyfour.One, twentyfour.Two
+		return day24.One, day24.Two
 	}
 	return nil, nil
 }
