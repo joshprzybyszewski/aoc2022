@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	year = 2022
+	year = 2024
 )
 
 func Input(
