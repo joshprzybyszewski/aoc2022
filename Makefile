@@ -8,3 +8,6 @@ help: ## Citation: https://marmelab.com/blog/2016/02/29/auto-documented-makefile
 results: ## Regenerate the results shown in the README
 	./scripts/populateResults.sh
 
+.PHONY: start
+start: ## Start today's puzzle! Cleans out last year's input and answers and fetches today's input
+	./scripts/startDay.sh
