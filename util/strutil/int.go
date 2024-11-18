@@ -51,3 +51,19 @@ func IntBeforeSpace(s string) (int, int) {
 
 	return out, len(s)
 }
+
+func UintBeforeNonInt(s string) (uint, int) {
+	if len(s) == 0 || s[0] > '9' {
+		return 0, 0
+	}
+	out := uint(s[0] - '0')
+	for i := 1; i < len(s); i++ {
+		if s[i] > '9' || s[i] < '0' {
+			return out, i
+		}
+		out *= 10
+		out += uint(s[i] - '0')
+	}
+
+	return out, len(s)
+}
