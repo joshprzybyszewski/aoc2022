@@ -1,9 +1,5 @@
 package six
 
-import (
-	"fmt"
-)
-
 const (
 	lastSeenSize = int(byte('z')) + 1
 )
@@ -27,24 +23,23 @@ func getMarkerOfUniqueWindow(
 	var seen uint32
 	var bit uint32
 
-	var min, j int
-	i := window
-	max := len(input)
+	var tmp int
+	start := -1
+	end := window - 1
 START:
-	for max > i {
-		seen = 0
-		for j = i - 1; min <= j; j-- {
-			bit = 1 << (input[j] % 32)
-			if seen&bit != 0 { // have we already seen this character in this window?
-				min = j + 1
-				i = min + window // move the end of the window forward to after this known duplicate
-				goto START
-			}
-
-			seen |= bit
+	tmp = end
+	seen = 1 << (input[tmp] % 32)
+	tmp--
+	for start < tmp {
+		bit = 1 << (input[tmp] % 32)
+		if seen&bit != 0 {
+			start = tmp
+			end = tmp + window
+			goto START
 		}
-		return i, nil
-	}
 
-	return 0, fmt.Errorf("didn't find a window of %d unique characters\n", window)
+		seen |= bit
+		tmp--
+	}
+	return end + 1, nil
 }
