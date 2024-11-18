@@ -1,21 +1,22 @@
 
 #!/bin/bash
 
-# get today's date
-YEAR=$(date +%Y)
-MONTH=$(date +%m)
-DAY=$(date +%d)
-
-# if it's not 2024, exit
-if [ "$YEAR" -ne 2024 ]; then
-  echo "It's not 2024. Exiting."
-  exit 1
-fi
-
-# if it's not December, exit
-if [ "$MONTH" -ne 12 ]; then
-  echo "It's not December. Exiting."
-  exit 1
+# get today's date, if not provided
+if [ -z "$DAY" ]; then
+  # if the day wasn't provided...
+  # if it's not 2024, exit
+  YEAR=$(date +%Y)
+  if [ "$YEAR" -ne 2024 ]; then
+    echo "It's not 2024. Exiting."
+    exit 1
+  fi
+  # if it's not December, exit
+  MONTH=$(date +%m)
+  if [ "$MONTH" -ne 12 ]; then
+    echo "It's not December. Exiting."
+    exit 1
+  fi
+  DAY=$(date +%d)
 fi
 
 # Make today's old input file empty: 
@@ -30,7 +31,6 @@ rm -f $ANSWER_FILE1 $ANSWER_FILE2
 echo "Deleted $ANSWER_FILE1 and $ANSWER_FILE2"
 
 # Fetch today's new input file by running go run main.go -day=X:
-#  - util/inputfiles/dayX.txt
 go run main.go -day=$DAY
 
 echo "Fetched new input file for day $DAY"
