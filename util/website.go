@@ -1,6 +1,7 @@
 package util
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -51,7 +52,24 @@ func getInputFromWebsite(
 		return ``, err
 	}
 
+	err = checkBody(string(body))
+	if err != nil {
+		return ``, err
+	}
+
 	return string(body), nil
+}
+
+func checkBody(body string) error {
+	if strings.HasPrefix(body, `Puzzle inputs differ by user.`) {
+		return errors.New(`Puzzle inputs differ by user.`)
+	}
+
+	if strings.HasPrefix(body, `Please don't repeatedly request this endpoint before it unlocks!`) {
+		return errors.New(`Please don't repeatedly request this endpoint before it unlocks!`)
+	}
+
+	return nil
 }
 
 func postAnswerToWebsite(
