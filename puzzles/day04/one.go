@@ -2,6 +2,8 @@ package day04
 
 import (
 	"strings"
+
+	"github.com/joshprzybyszewski/aoc2022/util/lines"
 )
 
 type card struct {
@@ -98,16 +100,12 @@ func One(
 
 	total := 0
 
-	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
-		if nli == 0 {
-			input = input[1:]
-			continue
+	lines.ForEach(input, func(line string) {
+		if len(line) == 0 {
+			return
 		}
-
-		total += newCard(input[:nli]).value()
-
-		input = input[nli+1:]
-	}
+		total += newCard(line).value()
+	})
 
 	return total, nil
 }

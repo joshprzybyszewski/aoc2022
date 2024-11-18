@@ -1,6 +1,6 @@
 package day11
 
-import "strings"
+import "github.com/joshprzybyszewski/aoc2022/util/lines"
 
 const (
 	double = 1
@@ -30,9 +30,9 @@ func newUniverse(
 
 	var rowsWith, colsWith [140]bool
 
-	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
-		for ci = 0; ci < nli; ci++ {
-			if input[ci] == '.' {
+	lines.ForEach(input, func(line string) {
+		for ci = 0; ci < len(line); ci++ {
+			if line[ci] == '.' {
 				continue
 			}
 			u.tiles[ri][ci] = true
@@ -47,8 +47,7 @@ func newUniverse(
 		}
 
 		ri++
-		input = input[nli+1:]
-	}
+	})
 
 	for ci = 1; ci < len(rowsWith); ci++ {
 		u.rowEmptysBefore[ci] = u.rowEmptysBefore[ci-1]

@@ -1,7 +1,7 @@
 package day03
 
 import (
-	"strings"
+	"github.com/joshprzybyszewski/aoc2022/util/lines"
 )
 
 const (
@@ -86,37 +86,34 @@ func (g *gears) addPartValue(row, col int, val int) {
 }
 
 func Two(
-	fullInput string,
+	input string,
 ) (int, error) {
-	input := fullInput
-
 	var row, col int
 	g := newGears()
 
-	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
-		for col = 0; col < nli; col++ {
-			g.addGear(row, col, input[col])
+	lines.ForEach(input, func(line string) {
+		for col = 0; col < len(line); col++ {
+			g.addGear(row, col, line[col])
 		}
 		row++
-		input = input[nli+1:]
-	}
+	})
 
 	curNum := 0
 	row = 0
-	input = fullInput
-	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
-		for col = 0; col <= nli; col++ {
-			if input[col] < '0' || input[col] > '9' {
+	lines.ForEach(input, func(line string) {
+		for col = 0; col < len(line); col++ {
+			if line[col] < '0' || line[col] > '9' {
 				g.addPart(row, col, curNum)
 				curNum = 0
 				continue
 			}
 			curNum *= 10
-			curNum += int(input[col] - '0')
+			curNum += int(line[col] - '0')
 		}
-		input = input[nli+1:]
+		g.addPart(row, col, curNum)
+		curNum = 0
 		row++
-	}
+	})
 
 	total := 0
 

@@ -3,6 +3,7 @@ package day09
 import (
 	"strings"
 
+	"github.com/joshprzybyszewski/aoc2022/util/lines"
 	"github.com/joshprzybyszewski/aoc2022/util/strutil"
 )
 
@@ -74,17 +75,14 @@ func One(
 	var p puzzle
 
 	total := 0
-	for nli := strings.Index(input, newline); nli >= 0; nli = strings.Index(input, newline) {
-		if nli == 0 {
-			input = input[nli+1:]
-			continue
+	lines.ForEach(input, func(line string) {
+		if len(line) == 0 {
+			return
 		}
 
-		p = newPuzzle(input[:nli])
+		p = newPuzzle(line)
 		total += p.getNext()
-
-		input = input[nli+1:]
-	}
+	})
 
 	return total, nil
 }

@@ -3,6 +3,8 @@ package day10
 import (
 	"fmt"
 	"strings"
+
+	"github.com/joshprzybyszewski/aoc2022/util/lines"
 )
 
 const (
@@ -103,9 +105,9 @@ func createPipeMap(
 	pm := pipeMap{}
 
 	ri, ci := 0, 0
-	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
-		for ci = 0; ci < nli; ci++ {
-			pm.tiles[ri][ci] = newPipe(input[ci])
+	lines.ForEach(input, func(line string) {
+		for ci = 0; ci < len(line); ci++ {
+			pm.tiles[ri][ci] = newPipe(line[ci])
 			if pm.tiles[ri][ci] == start {
 				pm.start = coord{
 					row: ri,
@@ -115,8 +117,7 @@ func createPipeMap(
 		}
 
 		ri++
-		input = input[nli+1:]
-	}
+	})
 
 	return pm
 }

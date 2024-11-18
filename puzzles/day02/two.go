@@ -2,6 +2,8 @@ package day02
 
 import (
 	"strings"
+
+	"github.com/joshprzybyszewski/aoc2022/util/lines"
 )
 
 func Two(
@@ -11,13 +13,12 @@ func Two(
 	sum := 0
 	var isFirst bool
 	var hi int
-	var line string
 	var handful, min handful
 
-	for nli := strings.Index(input, newline); nli >= 0; nli = strings.Index(input, newline) {
+	lines.ForEach(input, func(line string) {
 		isFirst = true
 
-		line = input[strings.Index(input, `:`)+1 : nli]
+		line = line[strings.Index(line, `:`)+1:]
 		for {
 			hi = strings.Index(line, semicolon)
 			if hi == -1 {
@@ -48,8 +49,7 @@ func Two(
 		}
 
 		sum += (min.red * min.blue * min.green)
-		input = input[nli+1:]
-	}
+	})
 
 	return sum, nil
 }

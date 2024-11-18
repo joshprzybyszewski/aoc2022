@@ -3,7 +3,8 @@ package day07
 import (
 	"slices"
 	"strconv"
-	"strings"
+
+	"github.com/joshprzybyszewski/aoc2022/util/lines"
 )
 
 func convertCardToOrder(b byte) int {
@@ -183,12 +184,10 @@ func One(
 	hi := 0
 	handInts := make([]int, 1000)
 
-	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
-		handInts[hi] = newHand(input[:nli]).toInt()
+	lines.ForEach(input, func(line string) {
+		handInts[hi] = newHand(line).toInt()
 		hi++
-
-		input = input[nli+1:]
-	}
+	})
 
 	slices.Sort(handInts)
 	total := 0

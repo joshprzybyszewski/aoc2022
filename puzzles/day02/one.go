@@ -3,6 +3,7 @@ package day02
 import (
 	"strings"
 
+	"github.com/joshprzybyszewski/aoc2022/util/lines"
 	"github.com/joshprzybyszewski/aoc2022/util/strutil"
 )
 
@@ -24,10 +25,9 @@ func One(
 	i := 0
 	sum := 0
 	var hi int
-	var line string
 	var hasImpossible bool
-	for nli := strings.Index(input, newline); nli >= 0; nli = strings.Index(input, newline) {
-		line = input[strings.Index(input, `:`)+1 : nli]
+	lines.ForEach(input, func(line string) {
+		line = line[strings.Index(line, `:`)+1:]
 		hasImpossible = false
 		for {
 			hi = strings.Index(line, semicolon)
@@ -51,9 +51,8 @@ func One(
 		if !hasImpossible {
 			sum += (i + 1)
 		}
-		input = input[nli+1:]
 		i++
-	}
+	})
 
 	return sum, nil
 }

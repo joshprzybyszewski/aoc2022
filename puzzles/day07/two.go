@@ -3,7 +3,8 @@ package day07
 import (
 	"slices"
 	"strconv"
-	"strings"
+
+	"github.com/joshprzybyszewski/aoc2022/util/lines"
 )
 
 const (
@@ -169,12 +170,10 @@ func Two(
 	hi := 0
 	handInts := make([]int, 1000)
 
-	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
-		handInts[hi] = newHandWilds(input[:nli]).toInt()
+	lines.ForEach(input, func(line string) {
+		handInts[hi] = newHandWilds(line).toInt()
 		hi++
-
-		input = input[nli+1:]
-	}
+	})
 
 	slices.Sort(handInts)
 

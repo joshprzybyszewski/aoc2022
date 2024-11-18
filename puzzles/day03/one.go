@@ -2,6 +2,8 @@ package day03
 
 import (
 	"strings"
+
+	"github.com/joshprzybyszewski/aoc2022/util/lines"
 )
 
 type coord struct {
@@ -68,13 +70,12 @@ func One(
 	var row, col int
 	s := newSymbols()
 
-	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
-		for col = 0; col < nli; col++ {
-			s.addSymbol(row, col, input[col])
+	lines.ForEach(input, func(line string) {
+		for col = 0; col < len(line); col++ {
+			s.addSymbol(row, col, line[col])
 		}
 		row++
-		input = input[nli+1:]
-	}
+	})
 
 	total := 0
 	curNum, numDigits := 0, 0
