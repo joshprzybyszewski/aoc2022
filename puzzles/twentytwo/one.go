@@ -19,47 +19,71 @@ func One(
 func safeToDisintegrate(
 	blocks []block,
 ) int {
-	isNeeded := make([]bool, len(blocks))
+	isSupportedBy := make([]int, len(blocks))
 
-	var j, n int
+	var j int
 	var z uint
 	for i := len(blocks) - 1; i >= 0; i-- {
 		z = blocks[i].minZ() - 1
+		if z == 0 {
+			// there's no blocks below it. we can't check if it has a single support or not.
+			continue
+		}
 
-		n = -1
 		for j = i - 1; j >= 0; j-- {
-			// TODO be smarter about breaking out of this j loop?
 			if blocks[j].maxZ() != z {
+				// block j is not in the plane below us.
 				continue
 			}
 			// block j rests in the target plane just below block i.
 			// If it intersects block i, then i rests on j.
 
-			if !intersectsInZPlane(blocks[i], blocks[j]) {
+			if !intersectsInXYPlane(blocks[i], blocks[j]) {
 				continue
 			}
 
-			if n != -1 {
-				// There's already a block holding this one up.
-				// That means neither is necessary.
-				n = -1
-				break
-			}
-
-			n = j
+			isSupportedBy[i]++
+			// if n > 1 {
+			// 	// There's more than one block holding this up. We can stop searching now.
+			// 	break
+			// }
 		}
 
-		if n != -1 {
-			// There's only one possible way to hold up block i and it's block j (which is now block n)
-			isNeeded[n] = true
+		fmt.Printf("blocks[%d] has %d supports\n", i, isSupportedBy[i])
+	}
+	fmt.Printf("\n")
+
+	isNotSafe := make([]bool, len(blocks))
+
+	// now look above
+	for i := range blocks {
+		z = blocks[i].maxZ() + 1
+
+		for j = i + 1; j < len(blocks); j++ {
+			if blocks[j].minZ() != z {
+				continue
+			}
+			// block j rests in the target plane just below block i.
+			// If it intersects block i, then i rests on j.
+
+			if !intersectsInXYPlane(blocks[i], blocks[j]) {
+				continue
+			}
+
+			if isSupportedBy[j] == 1 {
+				fmt.Printf("blocks[%d] is supporting blocks[%d]\n", i, j)
+				isNotSafe[i] = true
+			}
 		}
 	}
 
 	output := 0
-	for _, n := range isNeeded {
-		if !n {
-			output++
+	for i, n := range isNotSafe {
+		if n {
+			continue
 		}
+		fmt.Printf("safe to remove blocks[%d]: %+v\n", i, blocks[i])
+		output++
 	}
 
 	return output

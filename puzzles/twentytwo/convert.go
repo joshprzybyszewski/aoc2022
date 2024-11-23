@@ -1,7 +1,6 @@
 package twentytwo
 
 import (
-	"fmt"
 	"slices"
 
 	"github.com/joshprzybyszewski/aoc2022/util/strutil"
@@ -97,10 +96,10 @@ func willStop(above, below block) bool {
 	if above.minZ() <= below.maxZ() {
 		return false
 	}
-	return intersectsInZPlane(above, below)
+	return intersectsInXYPlane(above, below)
 }
 
-func intersectsInZPlane(one, two block) bool {
+func intersectsInXYPlane(one, two block) bool {
 	if one.maxX() < two.minX() || one.minX() > two.maxX() {
 		// one's x value cannot intersect two's
 		return false
@@ -113,15 +112,8 @@ func intersectsInZPlane(one, two block) bool {
 	return true
 }
 
-func moveToAbove(above, below block) block {
-	zDiff := above.minZ() - 1 - below.maxZ()
-	above.a.z -= zDiff
-	above.b.z -= zDiff
-	return above
-}
-
-func moveToGround(above block) block {
-	zDiff := above.minZ() - 1
+func moveToAbove(above block, maxZ uint) block {
+	zDiff := above.minZ() - 1 - maxZ
 	above.a.z -= zDiff
 	above.b.z -= zDiff
 	return above
@@ -137,7 +129,7 @@ func settle(
 		}
 
 		if a.maxZ() != b.maxZ() {
-			return int(a.maxZ()) - int(b.maxZ())
+			return int(b.maxZ()) - int(a.maxZ())
 		}
 
 		if a.minX() != b.minX() {
@@ -158,27 +150,20 @@ func settle(
 		panic(`wat`)
 	})
 
-	var j, t int
+	var j int
+	var maxZ uint
 	for i := range blocks {
 		// if blocks[i].minZ() == 1 {
 		// 	continue
 		// }
-		t = -1
+		maxZ = 0
 		for j = i - 1; j >= 0; j-- {
 			if willStop(blocks[i], blocks[j]) {
-				fmt.Printf("---STOPPED---\n")
-				fmt.Printf("blocks[i]: %+v\n", blocks[i])
-				fmt.Printf("blocks[j]: %+v\n", blocks[j])
-				t = j
-				break
+				maxZ = max(maxZ, blocks[j].maxZ())
 			}
 		}
 
-		if t >= 0 {
-			blocks[i] = moveToAbove(blocks[i], blocks[t])
-		} else {
-			blocks[i] = moveToGround(blocks[i])
-		}
+		blocks[i] = moveToAbove(blocks[i], maxZ)
 	}
 	return blocks
 }

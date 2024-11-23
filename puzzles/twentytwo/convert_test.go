@@ -40,3 +40,27 @@ func Test_willStop(t *testing.T) {
 		}
 	}
 }
+
+func Test_intersectsInXYPlane(t *testing.T) {
+	testCases := []struct {
+		input string
+		exp   bool
+	}{{
+		input: `0,1,4~2,1,4
+1,1,5~1,1,6
+`,
+		exp: true,
+		// 	}, {
+		// 		input: `0,0,1~0,0,2
+		// 0,0,3~0,0,3
+		// `,
+		// 		exp: true,
+	}}
+
+	for _, tc := range testCases {
+		blocks := convertInput(tc.input)
+		if intersectsInXYPlane(blocks[1], blocks[0]) != tc.exp {
+			t.Fail()
+		}
+	}
+}
