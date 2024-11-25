@@ -1,15 +1,11 @@
 package twentytwo
 
-import "fmt"
-
 func Two(
 	input string,
 ) (int, error) {
 
 	blocks := convertInput(input)
-	fmt.Print(getPrintableBlockString(blocks))
 	blocks = settle(blocks)
-	fmt.Print(getPrintableBlockString(blocks))
 
 	return getSumChainReactions(blocks), nil
 }

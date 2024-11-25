@@ -1,17 +1,11 @@
 package twentytwo
 
-import "fmt"
-
 func One(
 	input string,
 ) (int, error) {
 
 	blocks := convertInput(input)
-	fmt.Print(getPrintableBlockString(blocks))
 	blocks = settle(blocks)
-	fmt.Print(getPrintableBlockString(blocks))
-
-	// 837 and 412 is the wrong answer: it's too high
 
 	return safeToDisintegrate(blocks), nil
 }
@@ -43,21 +37,19 @@ func safeToDisintegrate(
 			}
 
 			isSupportedBy[i]++
-			// if n > 1 {
-			// 	// There's more than one block holding this up. We can stop searching now.
-			// 	break
-			// }
+			if isSupportedBy[i] > 1 {
+				break
+			}
 		}
-
-		fmt.Printf("blocks[%d] has %d supports\n", i, isSupportedBy[i])
 	}
-	fmt.Printf("\n")
 
-	isNotSafe := make([]bool, len(blocks))
+	output := 0
+	isSafe := false
 
 	// now look above
 	for i := range blocks {
 		z = blocks[i].maxZ() + 1
+		isSafe = true
 
 		for j = i + 1; j < len(blocks); j++ {
 			if blocks[j].minZ() != z {
@@ -71,19 +63,13 @@ func safeToDisintegrate(
 			}
 
 			if isSupportedBy[j] == 1 {
-				fmt.Printf("blocks[%d] is supporting blocks[%d]\n", i, j)
-				isNotSafe[i] = true
+				isSafe = false
+				break
 			}
 		}
-	}
-
-	output := 0
-	for i, n := range isNotSafe {
-		if n {
-			continue
+		if isSafe {
+			output++
 		}
-		fmt.Printf("safe to remove blocks[%d]: %+v\n", i, blocks[i])
-		output++
 	}
 
 	return output

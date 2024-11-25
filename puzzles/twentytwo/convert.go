@@ -153,9 +153,6 @@ func settle(
 	var j int
 	var maxZ uint
 	for i := range blocks {
-		// if blocks[i].minZ() == 1 {
-		// 	continue
-		// }
 		maxZ = 0
 		for j = i - 1; j >= 0; j-- {
 			if willStop(blocks[i], blocks[j]) {
