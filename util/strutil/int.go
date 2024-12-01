@@ -20,6 +20,18 @@ func Int(s string) int {
 	return out
 }
 
+func IntTrimSpace(s string) (int, int) {
+
+	prev := 0
+	for len(s) > 0 && s[0] == ' ' {
+		s = s[1:]
+		prev++
+	}
+
+	val, n := IntBeforeSpace(s)
+	return val, n + prev
+}
+
 func IntBeforeSpace(s string) (int, int) {
 	if s[0] == '-' {
 		// the first byte was a dash character and signals a negative number
