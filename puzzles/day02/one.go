@@ -1,114 +1,54 @@
 package day02
 
 import (
-	"strings"
-
 	"github.com/joshprzybyszewski/aoc2022/util/lines"
 	"github.com/joshprzybyszewski/aoc2022/util/strutil"
-)
-
-const (
-	newline   = "\n"
-	semicolon = ";"
-	comma     = ","
 )
 
 func One(
 	input string,
 ) (int, error) {
-	max := handful{
-		red:   12,
-		green: 13,
-		blue:  14,
-	}
 
-	i := 0
-	sum := 0
-	var hi int
-	var hasImpossible bool
+	numSafe := 0
+	var l1, l2, n int
+	var isAscending bool
 	lines.ForEach(input, func(line string) {
-		line = line[strings.Index(line, `:`)+1:]
-		hasImpossible = false
+		l1, n = strutil.IntBeforeSpace(line)
+		line = line[n+1:]
+		l2, n = strutil.IntBeforeSpace(line)
+		isAscending = l2 > l1
+		if isAscending {
+			for {
+				if l2 <= l1 || l2 > l1+3 {
+					// isSafe = false
+					return
+				}
+				if n >= len(line) {
+					break
+				}
+				line = line[n+1:]
+				l1 = l2
+				l2, n = strutil.IntBeforeSpace(line)
+			}
+			numSafe++
+			return
+		}
+
+		// is descending
 		for {
-			hi = strings.Index(line, semicolon)
-			if hi == -1 {
-				hi = len(line)
+			if l2 >= l1 || l2 < l1-3 {
+				// isSafe = false
+				return
 			}
-
-			handful := interpretSeen(line[:hi])
-			if !isPossible(handful, max) {
-				hasImpossible = true
+			if n >= len(line) {
 				break
 			}
-			if hi == len(line) {
-				break
-			}
-
-			line = line[hi+1:]
-
+			line = line[n+1:]
+			l1 = l2
+			l2, n = strutil.IntBeforeSpace(line)
 		}
-
-		if !hasImpossible {
-			sum += (i + 1)
-		}
-		i++
+		numSafe++
 	})
 
-	return sum, nil
-}
-
-func interpretSeen(
-	input string,
-) handful {
-
-	output := handful{}
-	var val, valEndIndex, ci int
-	for {
-		input = strutil.TrimSpaces(input)
-		ci = strings.Index(input, comma)
-		if ci == -1 {
-			ci = len(input)
-		}
-
-		val, valEndIndex = strutil.IntBeforeSpace(input[:ci])
-		valEndIndex++
-
-		if input[valEndIndex:ci] == `red` {
-			if output.red != 0 {
-				panic(`already red set`)
-			}
-			output.red = val
-		} else if input[valEndIndex:ci] == `blue` {
-			if output.blue != 0 {
-				panic(`already blue set`)
-			}
-			output.blue = val
-		} else if input[valEndIndex:ci] == `green` {
-			if output.green != 0 {
-				panic(`already green set`)
-			}
-			output.green = val
-		} else {
-			panic(`unknown line: ` + input[:ci])
-		}
-		if ci == len(input) {
-			return output
-		}
-		input = input[ci+1:]
-	}
-
-}
-
-type handful struct {
-	red   int
-	blue  int
-	green int
-}
-
-func isPossible(
-	seen, max handful,
-) bool {
-	return seen.red <= max.red &&
-		seen.green <= max.green &&
-		seen.blue <= max.blue
+	return numSafe, nil
 }
