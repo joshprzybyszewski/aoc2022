@@ -1,16 +1,101 @@
 package four
 
 import (
-	"strconv"
 	"strings"
 )
+
+type card struct {
+	winners [2]uint64
+	shown   [25]int
+}
+
+func newCard(input string) card {
+	tmpi := 0
+	tmpVal := 0
+	pi := strings.Index(input, "|")
+	c := card{}
+	for tmpi = strings.Index(input, ":") + 1; tmpi < pi; tmpi++ {
+		if input[tmpi] == ' ' {
+			if tmpVal != 0 {
+				c = c.addWinner(tmpVal)
+			}
+			tmpVal = 0
+			continue
+		}
+		tmpVal *= 10
+		tmpVal += int(input[tmpi] - '0')
+	}
+	if tmpVal != 0 {
+		c = c.addWinner(tmpVal)
+	}
+
+	tmpi = pi + 1
+	tmpVal = 0
+	pi = 0
+	for ; tmpi < len(input); tmpi++ {
+		if input[tmpi] == ' ' {
+			if tmpVal != 0 {
+				c.shown[pi] = tmpVal
+				pi++
+			}
+			tmpVal = 0
+			continue
+		}
+		tmpVal *= 10
+		tmpVal += int(input[tmpi] - '0')
+	}
+	if tmpVal != 0 {
+		c.shown[pi] = tmpVal
+	}
+
+	return c
+}
+
+func (c card) addWinner(w int) card {
+	if w >= 64 {
+		c.winners[1] |= 1 << (w - 64)
+	} else {
+		c.winners[0] |= 1 << w
+	}
+	return c
+}
+
+func (c card) isWinner(s int) bool {
+	if s >= 64 {
+		return c.winners[1]&(1<<(s-64)) != 0
+	}
+	return c.winners[0]&(1<<s) != 0
+}
+
+func (c card) numMatching() int {
+	total := 0
+	for _, s := range c.shown {
+		if c.isWinner(s) {
+			total++
+		}
+	}
+	return total
+}
+
+func (c card) value() int {
+	total := 0
+	for _, s := range c.shown {
+		if !c.isWinner(s) {
+			continue
+		}
+		if total == 0 {
+			total = 1
+		} else {
+			total <<= 1
+		}
+	}
+	return total
+}
 
 func One(
 	input string,
 ) (int, error) {
 
-	var s1, e1, s2, e2, i1, i2 int
-	var err error
 	total := 0
 
 	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
@@ -19,39 +104,8 @@ func One(
 			continue
 		}
 
-		// Sscanf takes 5000 allocs, but only 87000 B
-		// strings.Split takes 3000 allocs, but 112000 B
-		// Using Index takes 2 allocs, and 16387 B
-		i1 = 0
-		i2 = strings.Index(input, `-`)
-		s1, err = strconv.Atoi(input[i1:i2])
-		if err != nil {
-			return 0, err
-		}
-		i1 = i2 + 1
-		i2 = strings.Index(input, `,`)
-		e1, err = strconv.Atoi(input[i1:i2])
-		if err != nil {
-			return 0, err
-		}
-		i1 = i2 + 1
-		i2 = i1 + strings.Index(input[i1:], `-`)
-		s2, err = strconv.Atoi(input[i1:i2])
-		if err != nil {
-			return 0, err
-		}
-		i1 = i2 + 1
-		i2 = nli
-		e2, err = strconv.Atoi(input[i1:i2])
-		if err != nil {
-			return 0, err
-		}
+		total += newCard(input[:nli]).value()
 
-		if (s1 >= s2 && e1 <= e2) ||
-			(s2 >= s1 && e2 <= e1) {
-			// the ranges are completely overlapping
-			total++
-		}
 		input = input[nli+1:]
 	}
 

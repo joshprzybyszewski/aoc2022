@@ -3,28 +3,49 @@ package twelve
 func Two(
 	input string,
 ) (int, error) {
-	g, _, e := newGrid(input)
-	steps := paint(
-		&g,
-		e,
-		coord{
-			row: numRows + 1,
-			col: numCols + 1,
-		},
-	)
+	var p possibilities
 
-	min := len(g)*len(g[0]) + 1
-	var n int
-	for r := 0; r < len(g); r++ {
-		for c := 0; c < len(g[r]); c++ {
-			if g[r][c] != 0 {
-				continue
-			}
-			n = steps[r][c]
-			if n > 0 && n < min {
-				min = n
-			}
+	var total int
+
+	for len(input) > 0 {
+		if input[0] == '\n' {
+			input = input[1:]
+			continue
+		}
+
+		p, input = newPossibilities(input)
+		unfold(&p)
+
+		p.build()
+
+		total += p.answer()
+	}
+
+	return total, nil
+}
+
+func unfold(
+	p *possibilities,
+) {
+
+	cpGI := p.numGroups
+	for i := 1; i < 5; i++ {
+		for j := 0; j < p.numGroups; j++ {
+			p.groups[cpGI] = p.groups[j]
+			cpGI++
 		}
 	}
-	return min, nil
+	p.numGroups = cpGI
+
+	cpI := p.lineLength
+	for i := 1; i < 5; i++ {
+		p.line[cpI] = unknown
+		cpI++
+		for j := 0; j < p.lineLength; j++ {
+			p.line[cpI] = p.line[j]
+			cpI++
+		}
+	}
+	p.lineLength = cpI
+
 }

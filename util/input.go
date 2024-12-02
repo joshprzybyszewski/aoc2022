@@ -8,15 +8,19 @@ import (
 )
 
 const (
-	year = 2022
+	year = 2023
 )
 
 func Input(
 	day int,
 ) (string, error) {
 	input, err := inputfiles.Fetch(day)
-	if err != nil {
-		fmt.Printf("inputfiles.Fetch errored: %q\n", err.Error())
+	if err != nil || input == `` {
+		if err != nil {
+			fmt.Printf("inputfiles.Fetch errored: %q\n", err.Error())
+		} else {
+			fmt.Printf("inputfiles.Fetch got an empty file\n")
+		}
 		fmt.Printf("Attempting to fetch input file from website...\n")
 		err = writeInputToLocalFile(day)
 		if err != nil {
