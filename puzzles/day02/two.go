@@ -42,17 +42,15 @@ func isPart2Safe(vals []int) bool {
 		return true
 	}
 	valsCpy := make([]int, len(vals)-1)
-	place := func(skip int) {
-		copy(valsCpy, vals[:skip])
-		copy(valsCpy[skip:], vals[skip+1:])
-	}
-	for i := 0; i < len(vals); i++ {
-		place(i)
+	copy(valsCpy, vals[1:])
+
+	for i := 0; i < len(valsCpy); i++ {
 		if isPart1Safe(valsCpy) {
 			return true
 		}
+		valsCpy[i] = vals[i]
 	}
-	return false
+	return isPart1Safe(valsCpy)
 }
 
 func isPart1Safe(vals []int) bool {
