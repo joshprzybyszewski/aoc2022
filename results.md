@@ -19,7 +19,9 @@ cpu: Intel(R) Core(TM) i5-3570 CPU @ 3.40GHz
 
 |Puzzle|Duration|Bytes allocated to Heap|# of Heap allocations|
 |-|-:|-:|-:|
-|Day 1 Part One|99.30 µs|0|0|
-|Day 1 Part Two|168.47 µs|40990|2|
-|Day 2 Part One|47.42 µs|0|0|
-|Day 2 Part Two|91.28 µs|0|0|
+|Day 1 Part One|101.92 µs|0|0|
+|Day 1 Part Two|166.26 µs|40990|2|
+|Day 2 Part One|47.43 µs|0|0|
+|Day 2 Part Two|90.86 µs|0|0|
+|Day 3 Part One|38.20 µs|0|0|
+|Day 3 Part Two|35.66 µs|0|0|
