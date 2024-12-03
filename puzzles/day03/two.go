@@ -121,7 +121,5 @@ func Two(
 		sum += (l1 * l2)
 	}
 
-	// 153469856 is too high
-
 	return sum, nil
 }
