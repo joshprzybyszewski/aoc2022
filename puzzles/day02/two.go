@@ -11,7 +11,7 @@ func Two(
 
 	numSafe := 0
 	var l, n int
-	vals := make([]int, 0, 12)
+	vals := make([]int, 0, 16)
 	lines.ForEach(input, func(line string) {
 		vals = vals[:0]
 		for {
@@ -38,7 +38,7 @@ func abs(a, b int) int {
 }
 
 func isPart2Safe(vals []int) bool {
-	valsCpy := make([]int, len(vals)-1)
+	valsCpy := make([]int, len(vals)-1, 16)
 	copy(valsCpy, vals[1:])
 
 	for i := 0; i < len(valsCpy); i++ {
