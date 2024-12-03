@@ -1,103 +1,88 @@
 package day03
 
-import (
-	"strings"
-
-	"github.com/joshprzybyszewski/aoc2022/util/lines"
-)
-
-type coord struct {
-	row int
-	col int
-}
-
-type symbols struct {
-	symbols [size][size]bool
-}
-
-func newSymbols() symbols {
-	return symbols{}
-}
-
-func (s *symbols) addSymbol(row, col int, c byte) {
-	if c == '.' || (c >= '0' && c <= '9') {
-		return
-	}
-
-	s.symbols[row][col] = true
-}
-
-func (s *symbols) isNextToSymbol(row, col int, numDigits int) bool {
-	minCol := col - 1 - numDigits
-	if minCol < 0 {
-		minCol = 0
-	}
-
-	if col == size {
-		col--
-	}
-
-	if s.symbols[row][col] || s.symbols[row][minCol] {
-		return true
-	}
-
-	var tmpCol int
-
-	if row > 0 {
-		for tmpCol = col; tmpCol >= minCol; tmpCol-- {
-			if s.symbols[row-1][tmpCol] {
-				return true
-			}
-		}
-	}
-
-	if row+1 < size {
-		for tmpCol = col; tmpCol >= minCol; tmpCol-- {
-			if s.symbols[row+1][tmpCol] {
-				return true
-			}
-		}
-	}
-
-	return false
-}
+import "fmt"
 
 func One(
-	fullInput string,
+	inputString string,
 ) (int, error) {
-	input := fullInput
+	fmt.Printf("starting day 3 pt 1\n")
+	sum := 0
 
-	var row, col int
-	s := newSymbols()
+	var l1, l2 int
+	var ok bool
 
-	lines.ForEach(input, func(line string) {
-		for col = 0; col < len(line); col++ {
-			s.addSymbol(row, col, line[col])
-		}
-		row++
-	})
+	input := []byte(inputString)
+	maxI := len(input) - 8 // need space at the end for mul(x,y)
 
-	total := 0
-	curNum, numDigits := 0, 0
-	row = 0
-	input = fullInput
-	for nli := strings.Index(input, "\n"); nli >= 0; nli = strings.Index(input, "\n") {
-		for col = 0; col <= nli; col++ {
-			if input[col] < '0' || input[col] > '9' {
-				if curNum > 0 && s.isNextToSymbol(row, col, numDigits) {
-					total += curNum
-				}
-				curNum = 0
-				numDigits = 0
-				continue
+	getL1 := func(i *int) bool {
+		l1 = 0
+		for *i < maxI {
+			if input[*i] == ',' {
+				*i++
+				return true
 			}
-			numDigits++
-			curNum *= 10
-			curNum += int(input[col] - '0')
+			if input[*i] < '0' || input[*i] > '9' {
+				return false
+			}
+			l1 *= 10
+			l1 += int(input[*i] - '0')
+			*i++
 		}
-		input = input[nli+1:]
-		row++
+		return false
 	}
 
-	return total, nil
+	getL2 := func(i *int) bool {
+		l2 = 0
+		for *i < maxI {
+			if input[*i] == ')' {
+				*i++
+				return true
+			}
+			if input[*i] < '0' || input[*i] > '9' {
+				return false
+			}
+			l2 *= 10
+			l2 += int(input[*i] - '0')
+			*i++
+		}
+		return false
+	}
+
+	for i := 0; i < maxI; {
+		// fmt.Printf("%s", string(input[i]))
+		if input[i] != 'm' {
+			i++
+			continue
+		}
+		if input[i+1] != 'u' {
+			i += 1
+			continue
+		}
+		if input[i+2] != 'l' {
+			i += 2
+			continue
+		}
+		if input[i+3] != '(' {
+			i += 3
+			continue
+		}
+		i += 4
+		ok = getL1(&i)
+		if !ok {
+			fmt.Printf("\nnot l1. i = %d\n", i)
+			continue
+		}
+		fmt.Printf("\nl1 = %d\n", l1)
+
+		ok = getL2(&i)
+		if !ok {
+			fmt.Printf("\nnot l2. i = %d\n", i)
+			continue
+		}
+		fmt.Printf("\nl2 = %d\n", l2)
+		fmt.Printf("adding (%d * %d)\n", l1, l2)
+		sum += (l1 * l2)
+	}
+
+	return sum, nil
 }
