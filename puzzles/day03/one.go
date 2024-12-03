@@ -1,11 +1,8 @@
 package day03
 
-import "fmt"
-
 func One(
 	inputString string,
 ) (int, error) {
-	fmt.Printf("starting day 3 pt 1\n")
 	sum := 0
 
 	var l1, l2 int
@@ -49,7 +46,6 @@ func One(
 	}
 
 	for i := 0; i < maxI; {
-		// fmt.Printf("%s", string(input[i]))
 		if input[i] != 'm' {
 			i++
 			continue
@@ -69,18 +65,13 @@ func One(
 		i += 4
 		ok = getL1(&i)
 		if !ok {
-			fmt.Printf("\nnot l1. i = %d\n", i)
 			continue
 		}
-		fmt.Printf("\nl1 = %d\n", l1)
 
 		ok = getL2(&i)
 		if !ok {
-			fmt.Printf("\nnot l2. i = %d\n", i)
 			continue
 		}
-		fmt.Printf("\nl2 = %d\n", l2)
-		fmt.Printf("adding (%d * %d)\n", l1, l2)
 		sum += (l1 * l2)
 	}
 
