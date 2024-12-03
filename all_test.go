@@ -12,7 +12,7 @@ import (
 func BenchmarkAll(b *testing.B) {
 	now := time.Now()
 	today := now.Day()
-	if now.Year() > 2023 || today > 25 {
+	if now.Year() > 2024 || today > 25 {
 		today = 25
 	}
 

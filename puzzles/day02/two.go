@@ -38,9 +38,6 @@ func abs(a, b int) int {
 }
 
 func isPart2Safe(vals []int) bool {
-	if isPart1Safe(vals) {
-		return true
-	}
 	valsCpy := make([]int, len(vals)-1)
 	copy(valsCpy, vals[1:])
 
@@ -54,9 +51,6 @@ func isPart2Safe(vals []int) bool {
 }
 
 func isPart1Safe(vals []int) bool {
-	if len(vals) < 2 {
-		return true
-	}
 	if vals[1] > vals[0] {
 		for i := 1; i < len(vals); i++ {
 			if vals[i] <= vals[i-1] || vals[i] > vals[i-1]+3 {
